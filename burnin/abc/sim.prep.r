@@ -11,6 +11,9 @@ p_load(
   pscl
 )
 
+# Source target stat helper functions.
+source(here::here("R", "target-stats.R"))
+
 # Main Model Function ----------------------------------------------------------
 
 xgc <- function(x) {
@@ -24,6 +27,7 @@ xgc <- function(x) {
   require(stringr)
   require(pscl)
 
+  tail_length <- 12
   est_path  <- here::here("est")
   netstats  <- readRDS(file.path(est_path, "netstats.Rds"))
   est       <- readRDS(file.path(est_path, "netest.Rds"))
@@ -34,7 +38,6 @@ xgc <- function(x) {
     netstats          = netstats,
     epistats          = epistats,
     # demography
-    a.rate            = 0.00052,
     arrival.age       = 18,
     u2rgc.tprob       = x[2], # urethral-to-rectal transmission probability
     u2pgc.tprob       = x[3], # urethral-to-pharyngeal transmission probability
@@ -48,6 +51,10 @@ xgc <- function(x) {
     rgc.ntx.int       = x[6],
     ugc.ntx.int       = 2,
     pgc.ntx.int       = x[7],
+    ## Treated GC resolution probs c(after 1 week, after 2 weeks, after 3 weeks)
+    rgc.tx.recov.pr   = c(1 - 0.06, 0.5, 1),
+    ugc.tx.recov.pr   = c(1 - 0.05, 0.5, 1),
+    pgc.tx.recov.pr   = c(1 - 0.13, 0.5, 1),
     rgc.sympt.prob    = x[8], # rectal symptom probability
     ugc.sympt.prob    = x[9], # urethral symptom probability
     pgc.sympt.prob    = x[10], # pharyngeal symptom probability
@@ -61,18 +68,17 @@ xgc <- function(x) {
     ## NOTE: Order of probs: rectal, urethral, pharyngeal
     gc.asympt.prob.test = c(x[12], x[13], x[14]),
     # HIV testing
-    hiv.test.rate       = c(x[15], x[16], x[17], x[18]), # by race/eth
     # @ORIG, prop. of MSM testing only at late-stage (AIDS)
     hiv.test.late.prob  = rep(0.25, 4),
     # HIV treatment parameters
     tt.part.supp        = rep(0.2, 4), # ORIGPARAM, partial VLS post ART start
     tt.full.supp        = rep(0.4, 4), # ORIGPARAM, full VLS w/ post ART start
     tt.dur.supp         = rep(0.4, 4),  # ORIGPARAM, durable VLS post ART start
-    tx.init.prob        = c(x[19], x[20], x[21], x[22]),
-    tx.halt.part.prob   = c(x[23], x[24], x[25], x[26]),
+    tx.init.prob        = c(x[15], x[16], x[17], x[18]),
+    tx.halt.part.prob   = c(x[19], x[20], x[21], x[22]),
     tx.halt.full.rr     = rep(0.9, 4), # ORIGPARAM
     tx.halt.dur.rr      = rep(0.5, 4),  # ORIGPARAM
-    tx.reinit.part.prob = c(x[27], x[28], x[29], x[30]), # @ORIG
+    tx.reinit.part.prob = c(x[23], x[24], x[25], x[26]), # @ORIG
     tx.reinit.full.rr   = rep(1.0, 4), # ORIGPARAM
     tx.reinit.dur.rr    = rep(1.0, 4),  # ORIGPARAM
     # Scaling parameters
@@ -87,18 +93,18 @@ xgc <- function(x) {
     trans.scale         = rep(1.0, 4), # ORIGPARAM
     cdc.sti.int         = 12,
     cdc.sti.hr.int      = 6,
-    cond.eff            = 0.95,
+    cond.eff            = x[27],
     cond.fail           = rep(0, 4),
     # NOTE: Change to 0 to turn off (reflect uncertainty in cond. effect)
     sti.cond.fail       = rep(0, 4),
-    sti.cond.eff        = x[31],
+    sti.cond.eff        = x[28],
     circ.prob           = c(0.798, 0.435, 0.600, 0.927)
   )
 
   init <- init_msm(
-    prev.ugc = 0.0,
-    prev.rgc = 0.0,
-    prev.pgc = 0.0
+    prev.ugc = 0.01,
+    prev.rgc = 0.01,
+    prev.pgc = 0.01
   )
 
   control <- control_msm(
@@ -135,7 +141,7 @@ xgc <- function(x) {
     debug_stitx   = FALSE
   )
 
-  sim <- netsim(est, param, init, control)
+  sim <<- netsim(est, param, init, control)
 
   ## Calculate target stats.
   targ.hiv.prev <- mean(tail(unlist(sim$epi$i.num)) / tail(unlist(sim$epi$num)))
@@ -143,104 +149,19 @@ xgc <- function(x) {
   targ.hiv.incid <-
     mean(tail(unlist(sim$epi$incid)) / tail(unlist(sim$epi$num))) * 52 * 100000
 
-  i.num.dx.B <- tail(unlist(sim$epi$i.num.dx.B))
-
-  targ.age1.among.B.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.B.age1)) / i.num.dx.B)
-
-  targ.age2.among.B.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.B.age2)) / i.num.dx.B)
-
-  targ.age3.among.B.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.B.age3)) / i.num.dx.B)
-
-  targ.age4.among.B.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.B.age4)) / i.num.dx.B)
-
-  targ.age5.among.B.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.B.age5)) / i.num.dx.B)
-
-
-  i.num.dx.H <- tail(unlist(sim$epi$i.num.dx.H))
-
-  targ.age1.among.H.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.H.age1)) / i.num.dx.H)
-
-  targ.age2.among.H.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.H.age2)) / i.num.dx.H)
-
-  targ.age3.among.H.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.H.age3)) / i.num.dx.H)
-
-  targ.age4.among.H.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.H.age4)) / i.num.dx.H)
-
-  targ.age5.among.H.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.H.age5)) / i.num.dx.H)
-
-
-  i.num.dx.O <- tail(unlist(sim$epi$i.num.dx.O))
-
-  targ.age1.among.O.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.O.age1)) / i.num.dx.O)
-
-  targ.age2.among.O.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.O.age2)) / i.num.dx.O)
-
-  targ.age3.among.O.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.O.age3)) / i.num.dx.O)
-
-  targ.age4.among.O.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.O.age4)) / i.num.dx.O)
-
-  targ.age5.among.O.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.O.age5)) / i.num.dx.O)
-
-
-  i.num.dx.W <- tail(unlist(sim$epi$i.num.dx.W))
-
-  targ.age1.among.W.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.W.age1)) / i.num.dx.W)
-
-  targ.age2.among.W.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.W.age2)) / i.num.dx.W)
-
-  targ.age3.among.W.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.W.age3)) / i.num.dx.W)
-
-  targ.age4.among.W.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.W.age4)) / i.num.dx.W)
-
-  targ.age5.among.W.dx <-
-    mean(tail(unlist(sim$epi$i.num.dx.W.age5)) / i.num.dx.W)
-
   ## Return vector of target stats.
   targs.out <- c(
-    targ.hiv.prev, targ.hiv.incid,
-    targ.age1.among.B.dx,
-    targ.age2.among.B.dx,
-    targ.age3.among.B.dx,
-    targ.age4.among.B.dx,
-    targ.age5.among.B.dx,
-    targ.age1.among.H.dx,
-    targ.age2.among.H.dx,
-    targ.age3.among.H.dx,
-    targ.age4.among.H.dx,
-    targ.age5.among.H.dx,
-    targ.age1.among.O.dx,
-    targ.age2.among.O.dx,
-    targ.age3.among.O.dx,
-    targ.age4.among.O.dx,
-    targ.age5.among.O.dx,
-    targ.age1.among.W.dx,
-    targ.age2.among.W.dx,
-    targ.age3.among.W.dx,
-    targ.age4.among.W.dx,
-    targ.age5.among.W.dx
+    targ.hiv.prev,
+    targ.hiv.incid,
+    target_prob_agedx_byrace(sim, tailn = tail_length),
+    target_prob_hivdx_byraceage(sim, tailn = tail_length),
+    target_prob_vls_byraceage(sim, tailn = tail_length),
+    target_prop_anatsites_tested(sim, tailn = tail_length),
+    target_prob_gcpos_tested_anatsites(sim, tailn = tail_length),
+    target_prob_prep_byrace(sim, tailn = tail_length)
   )
 
   targs.out
-
 }
 
 
@@ -266,11 +187,6 @@ priors <- list(
   c("unif", 0.85, 0.85),  # rectal
   c("unif", 0.85, 0.85),  # urethral
   c("unif", 0.85, 0.85),  # pharyngeal
-  # HIV test rate (from Sam's CombPrev paper)
-  c("unif", 0.001, 0.02),
-  c("unif", 0.001, 0.02),
-  c("unif", 0.001, 0.02),
-  c("unif", 0.001, 0.02),
   # tx.init.prob (from Sam's CombPrev paper)
   c("unif", 1 / 24, 1 / 1.1),
   c("unif", 1 / 24, 1 / 1.1),
@@ -286,25 +202,45 @@ priors <- list(
   c("unif", 1 / 36, 1 / 1.1),
   c("unif", 1 / 36, 1 / 1.1),
   c("unif", 1 / 36, 1 / 1.1),
+  # cond.eff (HIV)
+  c("unif", 0.8, 1),
   # sti.cond.eff
-  c("unif", 0.8, 0.8)
+  c("unif", 0.2, 0.8)
 )
 
 targets <- c(
+  # HIV TARGETS
   0.124, 514, # HIV prevalence, HIV incidence
-  0.095, 0.340, 0.193, 0.191, 0.182, # Age distro among Black HIV-diagnosed
-  0.061, 0.265, 0.244, 0.248, 0.183, # Age distro among Hispanic HIV-diagnosed
-  0.047, 0.254, 0.220, 0.252, 0.226, # Age distro among Other HIV-diagnosed
-  0.021, 0.125, 0.149, 0.280, 0.425, # Age distro among White HIV-diagnosed
-  0.188, 0.212, 0.309, 0.271 # Past 12-mo. PrEP use (Black, Hisp, Other, White)
+  ## Age distribution among HIV-diagnosed
+  0.095, 0.340, # Age distro among Black HIV dx'd: ages 1, 2
+  0.061, 0.183, # Age distro among Hispanic HIV dx'd: ages 1, 5
+  0.047, # Age distro among Other HIV dx'd: ages 1
+  0.021, 0.280, 0.425, # Age dist among White HIV dx'd: ages 1, 4, 5
+  ## Age- and race-specific HIV diagnosed probabilities
+  0.557, 0.724, 0.859, 0.937, 0.959, # Prob. HIV dx by age, among Black HIV+
+  0.488, 0.651, 0.808, 0.909, 0.947, # Prob. HIV dx by age, among Hispanic HIV+
+  0.577, 0.706, 0.835, 0.926, 0.962, # Prob. HIV dx by age, among Other HIV+
+  0.589, 0.726, 0.846, 0.922, 0.952, # Prob. HIV dx by age, among White HIV+
+  ## Viral suppression targets
+  0.471, 0.549, # Prob. VLS for Black HIV dx: 18-34, 35-65
+  0.588, 0.631, # Prob. VLS for White HIV dx: 18-44, 45-65
+  0.603, 0.684, # Prob. VLS for Other HIV dx: 18-34, 35-65
+  0.569, 0.667, # Prob. VLS for White HIV dx: 18-24, 25-65
+  ## PrEP use among MSM with indications (Finlayson 2019, MMWR)
+  0.262, 0.300, 0.398, 0.424, # Past 12-mo. PrEP use (Black, Hisp, Other, White)
+  # GONORRHEA TARGETS
+  ## targets refer to STI testing that's not part of routine testing as
+  ## part of being on PrEP
+  0.657, 0.657, 0.749, # Proportion of anat sites tested in clinic (R, U, P)
+  0.148, 0.079, 0.129 # Proportion of tests positive in clinic (R, U, P)
 )
 
 abc_test <- ABC_sequential(
   method = "Lenormand",
   model = xgc,
   prior = priors,
-  nb_simul = 100,
-  n_cluster = 6,
+  nb_simul = 30,
+  n_cluster = 1,
   summary_stat_target = targets,
   use_seed = TRUE,
   progress_bar = TRUE
