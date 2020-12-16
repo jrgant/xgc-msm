@@ -52,21 +52,21 @@ xgc <- function(x) {
     ugc.ntx.int       = 2,
     pgc.ntx.int       = x[7],
     ## Treated GC resolution probs c(after 1 week, after 2 weeks, after 3 weeks)
-    rgc.tx.recov.pr   = c(1 - 0.06, 0.5, 1),
-    ugc.tx.recov.pr   = c(1 - 0.05, 0.5, 1),
-    pgc.tx.recov.pr   = c(1 - 0.13, 0.5, 1),
-    rgc.sympt.prob    = x[8], # rectal symptom probability
-    ugc.sympt.prob    = x[9], # urethral symptom probability
-    pgc.sympt.prob    = x[10], # pharyngeal symptom probability
+    rgc.tx.recov.pr   = c(1 - x[8], x[9], 1),
+    ugc.tx.recov.pr   = c(1 - x[10], x[11], 1),
+    pgc.tx.recov.pr   = c(1 - x[12], x[13], 1),
+    rgc.sympt.prob    = x[14], # rectal symptom probability
+    ugc.sympt.prob    = x[15], # urethral symptom probability
+    pgc.sympt.prob    = x[16], # pharyngeal symptom probability
     # STI testing
-    gc.sympt.seek.test.scale  = x[11],
+    gc.sympt.seek.test.scale  = x[17],
     ## NOTE: Changed the treatment probs to be conditional on someone's seeking
     ##       STI treatment. Repeat 3 times, one for each anatomic site.
     ##       Tune asymptomatic treatment probability to achieve the overall
     ##       probability of receiving an STI test.
     gc.sympt.prob.test  = rep(1, 3),
     ## NOTE: Order of probs: rectal, urethral, pharyngeal
-    gc.asympt.prob.test = c(x[12], x[13], x[14]),
+    gc.asympt.prob.test = c(x[18], x[19], x[20]),
     # HIV testing
     # @ORIG, prop. of MSM testing only at late-stage (AIDS)
     hiv.test.late.prob  = rep(0.25, 4),
@@ -74,11 +74,11 @@ xgc <- function(x) {
     tt.part.supp        = rep(0.2, 4), # ORIGPARAM, partial VLS post ART start
     tt.full.supp        = rep(0.4, 4), # ORIGPARAM, full VLS w/ post ART start
     tt.dur.supp         = rep(0.4, 4),  # ORIGPARAM, durable VLS post ART start
-    tx.init.prob        = c(x[15], x[16], x[17], x[18]),
-    tx.halt.part.prob   = c(x[19], x[20], x[21], x[22]),
+    tx.init.prob        = c(x[21], x[22], x[23], x[24]),
+    tx.halt.part.prob   = c(x[25], x[26], x[27], x[28]),
     tx.halt.full.rr     = rep(0.9, 4), # ORIGPARAM
     tx.halt.dur.rr      = rep(0.5, 4),  # ORIGPARAM
-    tx.reinit.part.prob = c(x[23], x[24], x[25], x[26]), # @ORIG
+    tx.reinit.part.prob = c(x[29], x[30], x[31], x[32]), # @ORIG
     tx.reinit.full.rr   = rep(1.0, 4), # ORIGPARAM
     tx.reinit.dur.rr    = rep(1.0, 4),  # ORIGPARAM
     # Scaling parameters
@@ -93,11 +93,11 @@ xgc <- function(x) {
     trans.scale         = rep(1.0, 4), # ORIGPARAM
     cdc.sti.int         = 12,
     cdc.sti.hr.int      = 6,
-    cond.eff            = x[27],
+    cond.eff            = x[33],
     cond.fail           = rep(0, 4),
     # NOTE: Change to 0 to turn off (reflect uncertainty in cond. effect)
     sti.cond.fail       = rep(0, 4),
-    sti.cond.eff        = x[28],
+    sti.cond.eff        = x[34],
     circ.prob           = c(0.798, 0.435, 0.600, 0.927)
   )
 
@@ -170,23 +170,29 @@ xgc <- function(x) {
 # NOTE: When use_seed = TRUE abc in_test(), priors list starts with x[2].
 priors <- list(
   # GC per-act transmission probability by pathways
-  c("unif", 0.35, 0.35), # u2rgc.prob
-  c("unif", 0.45, 0.45), # u2pgc.prob
-  c("unif", 0.55, 0.55), # r2ugc.prob
-  c("unif", 0.25, 0.25), # p2ugc.prob
+  c("unif", 0, 0.35), # u2rgc.prob
+  c("unif", 0, 0.45), # u2pgc.prob
+  c("unif", 0, 0.55), # r2ugc.prob
+  c("unif", 0, 0.25), # p2ugc.prob
   # Untreated infection durations
-  c("unif", 2, 2), # rectal
-  c("unif", 3, 3), # pharyngeal
+  c("unif", 2, 22), # rectal
+  c("unif", 3, 27), # pharyngeal
   # Symptom probability
   c("unif", 0.06, 0.46), # rectal
   c("unif", 0.46, 0.99), # urethral
   c("unif", 0, 0.15), # pharyngeal
   # GC symptomatic testing scalar
-  c("unif", 3, 3),
+  c("unif", 1, 10),
   # Probability of testing at asymptomatic sites in clinic
-  c("unif", 0.85, 0.85),  # rectal
-  c("unif", 0.85, 0.85),  # urethral
-  c("unif", 0.85, 0.85),  # pharyngeal
+  c("unif", 0.400, 0.800),  # rectal
+  c("unif", 0.497, 0.657),  # urethral
+  c("unif", 0.522, 0.749),  # pharyngeal
+  c("unif", 0.01, 0.11), # treated rectal gc, 1st week still infected prop.
+  c("unif", 0.05, 0.95), # treated rectal gc, 2nd week resolution prop.
+  c("unif", 0.01, 0.20), # treated urethral gc, 1st week still infected prop.
+  c("unif", 0.05, 0.95), # treated urethral gc, 2nd week resolution prop.
+  c("unif", 0.06, 0.20), # treated pharyngeal gc, 1st week still infected prop.
+  c("unif", 0.05, 0.95), # treated pharyngeal gc, 2nd week resolution prop.
   # tx.init.prob (from Sam's CombPrev paper)
   c("unif", 1 / 24, 1 / 1.1),
   c("unif", 1 / 24, 1 / 1.1),
@@ -235,15 +241,15 @@ targets <- c(
   0.148, 0.079, 0.129 # Proportion of tests positive in clinic (R, U, P)
 )
 
-abc_test <- ABC_sequential(
+abc <- ABC_sequential(
   method = "Lenormand",
   model = xgc,
   prior = priors,
-  nb_simul = 30,
+  nb_simul = 500,
   n_cluster = 1,
   summary_stat_target = targets,
   use_seed = TRUE,
   progress_bar = TRUE
 )
 
-saveRDS(abc_test, "C:/Users/jason/Downloads/abc_test.Rds")
+saveRDS(abc, "abc_posterior.Rds")
