@@ -88,7 +88,7 @@ target_prob_prep_byrace <- function(dat, tailn) {
 # the clinic.
 target_prop_anatsites_tested <- function(dat, tailn) {
   vars <- names(dat$epi)[grepl("^prop", names(dat$epi))]
-  sapply(setNames(vars, vars), function(x) {
+  sapply(vars, function(x) {
     mean(tail(unlist(dat$epi[x]), n = tailn))
   })
 }
@@ -96,7 +96,7 @@ target_prop_anatsites_tested <- function(dat, tailn) {
 # Return probability of being GC+ at tested anatomic sites.
 target_prob_gcpos_tested_anatsites <- function(dat, tailn) {
   vars <- names(dat$epi)[grepl("^prob", names(dat$epi))]
-  sapply(setNames(vars, vars), function(x) {
+  sapply(vars, function(x) {
     mean(tail(unlist(dat$epi[x]), n = tailn))
   })
 }
