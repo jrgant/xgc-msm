@@ -11,13 +11,13 @@ p_load(
   pscl
 )
 
-# Source target stat helper functions.
-source(here::here("R", "target-stats.R"))
 
 # Main Model Function ----------------------------------------------------------
 
 xgc <- function(x) {
 
+  #  Source target stat helper functions.
+  source(here::here("R", "target-stats.R"))
   set.seed(x[1])
 
   require(EpiModelHIV)
@@ -27,7 +27,7 @@ xgc <- function(x) {
   require(stringr)
   require(pscl)
 
-  tail_length <- 12
+  tail_length <- 52
   est_path  <- here::here("est")
   netstats  <- readRDS(file.path(est_path, "netstats.Rds"))
   est       <- readRDS(file.path(est_path, "netest.Rds"))
@@ -110,7 +110,7 @@ xgc <- function(x) {
   control <- control_msm(
     # Computing options
     simno   = 1,
-    nsteps  = 20,
+    nsteps  = 520,
     # Epidemic simulation Modules
     initialize.FUN    = initialize_msm,
     aging.FUN         = aging_msm,
@@ -147,7 +147,7 @@ xgc <- function(x) {
   targ.hiv.prev <- mean(tail(unlist(sim$epi$i.num)) / tail(unlist(sim$epi$num)))
 
   targ.hiv.incid <-
-    mean(tail(unlist(sim$epi$incid)) / tail(unlist(sim$epi$num))) * 52 * 100000
+    mean(tail(unlist(sim$epi$incid)) / tail(unlist(sim$epi$s.num))) * 52 * 100000
 
   ## Return vector of target stats.
   targs.out <- c(
@@ -209,7 +209,7 @@ priors <- list(
   c("unif", 1 / 36, 1 / 1.1),
   c("unif", 1 / 36, 1 / 1.1),
   # cond.eff (HIV)
-  c("unif", 0.8, 1),
+  c("unif", 0.6, 1),
   # sti.cond.eff
   c("unif", 0.2, 0.8)
 )
@@ -237,7 +237,7 @@ targets <- c(
   # GONORRHEA TARGETS
   ## targets refer to STI testing that's not part of routine testing as
   ## part of being on PrEP
-  0.657, 0.657, 0.749, # Proportion of anat sites tested in clinic (R, U, P)
+  0.657, 0.826, 0.749, # Proportion of anat sites tested in clinic (R, U, P)
   0.148, 0.079, 0.129 # Proportion of tests positive in clinic (R, U, P)
 )
 
@@ -245,11 +245,14 @@ abc <- ABC_sequential(
   method = "Lenormand",
   model = xgc,
   prior = priors,
-  nb_simul = 500,
-  n_cluster = 1,
+  nb_simul = as.numeric(Sys.getenv("SIMS_BELOW_TOL")),
+  n_cluster = as.numeric(Sys.getenv("SLURM_NPROCS")),
   summary_stat_target = targets,
   use_seed = TRUE,
   progress_bar = TRUE
 )
 
-saveRDS(abc, "abc_posterior.Rds")
+saveRDS(
+  abc,
+  paste0("abc_posterior_", format(Sys.time(), "%Y-%m-%d_%H:%M"), Sys.getenv("SLURM_JOBID"), ".Rds")
+)
