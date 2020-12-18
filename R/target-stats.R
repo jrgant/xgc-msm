@@ -110,3 +110,14 @@ test_xgc <- function(seed = 123, priorlist = priors) {
   })
   c(seed, pl)
 }
+
+# Helper function to set temporary environment variable.
+setenv <- function(nsteps = 30, tail_length = 10,
+                   sims_below_tol = 50, slurm_nprocs = 1) {
+  Sys.setenv(
+    "NSTEPS"          = nsteps,
+    "TAIL_LENGTH"     = tail_length,
+    "SIMS_BELOW_TOL"  = sims_below_tol,
+    "SLURM_NPROCS"    = slurm_nprocs
+  )
+}
