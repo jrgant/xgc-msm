@@ -80,7 +80,7 @@ target_prob_prep_byrace <- function(dat, tailn) {
       tail(unlist(dat$epi[paste0("prepCurr.", r[x])]), n = tailn) /
       tail(unlist(dat$epi[paste0("prepElig.", r[x])]), n = tailn)
 
-    mean(prep.cov)
+    ifelse(is.nan(prep.cov), 0, mean(prep.cov))
   })
 }
 
