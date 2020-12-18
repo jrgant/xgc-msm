@@ -27,7 +27,7 @@ xgc <- function(x) {
   require(stringr)
   require(pscl)
 
-  tail_length <- 52
+  tail_length <- Sys.getenv("TAIL_LENGTH")
   est_path  <- here::here("est")
   netstats  <- readRDS(file.path(est_path, "netstats.Rds"))
   est       <- readRDS(file.path(est_path, "netest.Rds"))
@@ -110,7 +110,7 @@ xgc <- function(x) {
   control <- control_msm(
     # Computing options
     simno   = 1,
-    nsteps  = 520,
+    nsteps  = as.numeric(Sys.getenv("NSTEPS")),
     # Epidemic simulation Modules
     initialize.FUN    = initialize_msm,
     aging.FUN         = aging_msm,
@@ -147,7 +147,8 @@ xgc <- function(x) {
   targ.hiv.prev <- mean(tail(unlist(sim$epi$i.num)) / tail(unlist(sim$epi$num)))
 
   targ.hiv.incid <-
-    mean(tail(unlist(sim$epi$incid)) / tail(unlist(sim$epi$s.num))) * 52 * 100000
+    mean(tail(unlist(sim$epi$incid)) /
+         tail(unlist(sim$epi$s.num))) * 52 * 100000
 
   ## Return vector of target stats.
   targs.out <- c(
@@ -254,5 +255,9 @@ abc <- ABC_sequential(
 
 saveRDS(
   abc,
-  paste0("abc_posterior_", format(Sys.time(), "%Y-%m-%d_%H:%M"), Sys.getenv("SLURM_JOBID"), ".Rds")
+  paste0(
+    "abc_posterior_",
+    format(Sys.time(), "%Y-%m-%d_%H:%M"),
+    Sys.getenv("SLURM_JOBID"), ".Rds"
+  )
 )
