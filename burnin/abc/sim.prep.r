@@ -11,7 +11,6 @@ p_load(
   pscl
 )
 
-
 # Main Model Function ----------------------------------------------------------
 
 xgc <- function(x) {
@@ -39,6 +38,7 @@ xgc <- function(x) {
     epistats          = epistats,
     # demography
     arrival.age       = 18,
+    a.rate            = netstats$demog$mortrate.marginal,
     u2rgc.tprob       = x[2], # urethral-to-rectal transmission probability
     u2pgc.tprob       = x[3], # urethral-to-pharyngeal transmission probability
     r2ugc.tprob       = x[4], # rectal-to-urethral transmission probability
