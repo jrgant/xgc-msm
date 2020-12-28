@@ -20,7 +20,9 @@ target_prob_hivdx_byraceage <- function(dat, tailn) {
       n = tailn
     )
 
-    out <- mean(num / den)
+    out1 <- mean(num / den)
+    out <- ifelse(is.na(out1), 0, out1)
+    names(out) <- paste0("prob.hivdx.", df$race[x], ".age", df$age.grp[x])
     out
   })
 }
@@ -51,7 +53,9 @@ target_prob_agedx_byrace <- function(dat, tailn) {
         n = tailn
       )
 
-      mean(num / den)
+      t <- mean(num / den)
+      names(t) <- paste0("prob.agedx.hiv.", rslug, ".age", x[[1 + z]])
+      t
     })
   })
 
@@ -77,10 +81,14 @@ target_prob_prep_byrace <- function(dat, tailn) {
 
   sapply(seq_along(r), function(x) {
     prep.cov <-
-      tail(unlist(dat$epi[paste0("prepCurr.", r[x])]), n = tailn) /
-      tail(unlist(dat$epi[paste0("prepElig.", r[x])]), n = tailn)
+      mean(
+        tail(unlist(dat$epi[paste0("prepCurr.", r[x])]), n = tailn) /
+        tail(unlist(dat$epi[paste0("prepElig.", r[x])]), n = tailn)
+      )
 
-    ifelse(is.nan(prep.cov), 0, mean(prep.cov))
+    out <- ifelse(is.nan(prep.cov), 0, prep.cov)
+    names(out) <- paste0("prep.cov.", r[x])
+    out
   })
 }
 
