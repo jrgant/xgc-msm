@@ -27,7 +27,7 @@ xgc <- function(x) {
   require(stringr)
   require(pscl)
 
-  tail_length <- Sys.getenv("TAIL_LENGTH")
+  tail_length <- as.numeric(Sys.getenv("TAIL_LENGTH"))
   est_path  <- here::here("est")
   netstats  <- readRDS(file.path(est_path, "netstats.Rds"))
   est       <- readRDS(file.path(est_path, "netest.Rds"))
