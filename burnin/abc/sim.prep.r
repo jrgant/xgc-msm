@@ -130,7 +130,6 @@ xgc <- function(x) {
     stitx.FUN         = stitx_msm,
     stitrans.FUN      = stitrans_msm_rand,
     prev.FUN          = prevalence_msm,
-    verbose.FUN       = verbose.net,
     # Epidemic simulation options
     transRoute_Kissing    = FALSE,  # FLAG: Toggle kissing transmission
     transRoute_Rimming    = FALSE,  # FLAG: Toggle rimming transmission
@@ -141,25 +140,31 @@ xgc <- function(x) {
     debug_stitx   = FALSE
   )
 
-  sim <<- netsim(est, param, init, control)
+  sim <- netsim(est, param, init, control)
 
   ## Calculate target stats.
-  targ.hiv.prev <- mean(tail(unlist(sim$epi$i.num)) / tail(unlist(sim$epi$num)))
+  targ.hiv.prev <-
+    mean(
+      tail(unlist(sim$epi$i.num), n = tail_length) /
+      tail(unlist(sim$epi$num), n = tail_length)
+    )
 
   targ.hiv.incid <-
-    mean(tail(unlist(sim$epi$incid)) /
-         tail(unlist(sim$epi$s.num))) * 52 * 100000
+    mean(
+      tail(unlist(sim$epi$incid), n = tail_length) /
+      tail(unlist(sim$epi$s.num), n = tail_length)
+    ) * 52 * 100000
 
   ## Return vector of target stats.
   targs.out <- c(
-    targ.hiv.prev,
-    targ.hiv.incid,
+    hiv.prev = targ.hiv.prev,
+    hiv.incid.100k = targ.hiv.incid,
     target_prob_agedx_byrace(sim, tailn = tail_length),
     target_prob_hivdx_byraceage(sim, tailn = tail_length),
     target_prob_vls_byraceage(sim, tailn = tail_length),
+    target_prob_prep_byrace(sim, tailn = tail_length),
     target_prop_anatsites_tested(sim, tailn = tail_length),
-    target_prob_gcpos_tested_anatsites(sim, tailn = tail_length),
-    target_prob_prep_byrace(sim, tailn = tail_length)
+    target_prob_gcpos_tested_anatsites(sim, tailn = tail_length)
   )
 
   targs.out
