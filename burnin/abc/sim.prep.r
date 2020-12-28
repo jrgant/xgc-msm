@@ -71,14 +71,14 @@ xgc <- function(x) {
     # @ORIG, prop. of MSM testing only at late-stage (AIDS)
     hiv.test.late.prob  = rep(0.25, 4),
     # HIV treatment parameters
-    tt.part.supp        = rep(0.2, 4), # ORIGPARAM, partial VLS post ART start
-    tt.full.supp        = rep(0.4, 4), # ORIGPARAM, full VLS w/ post ART start
-    tt.dur.supp         = rep(0.4, 4),  # ORIGPARAM, durable VLS post ART start
-    tx.init.prob        = c(x[21], x[22], x[23], x[24]),
-    tx.halt.part.prob   = c(x[25], x[26], x[27], x[28]),
+    tt.part.supp        = c(x[21], x[22], x[23], x[24]), # ORIGPARAM, partial VLS post ART start
+    tt.full.supp        = c(x[25], x[26], x[27], x[28]), # ORIGPARAM, full VLS w/ post ART start
+    tt.dur.supp         = c(x[29], x[30], x[31], x[32]),  # ORIGPARAM, durable VLS post ART start
+    tx.init.prob        = c(x[33], x[34], x[35], x[36]),
+    tx.halt.part.prob   = c(x[37], x[38], x[39], x[40]),
     tx.halt.full.rr     = rep(0.9, 4), # ORIGPARAM
     tx.halt.dur.rr      = rep(0.5, 4),  # ORIGPARAM
-    tx.reinit.part.prob = c(x[29], x[30], x[31], x[32]), # @ORIG
+    tx.reinit.part.prob = c(x[41], x[42], x[43], x[44]), # @ORIG
     tx.reinit.full.rr   = rep(1.0, 4), # ORIGPARAM
     tx.reinit.dur.rr    = rep(1.0, 4),  # ORIGPARAM
     # Scaling parameters
@@ -93,11 +93,11 @@ xgc <- function(x) {
     trans.scale         = rep(1.0, 4), # ORIGPARAM
     cdc.sti.int         = 12,
     cdc.sti.hr.int      = 6,
-    cond.eff            = x[33],
+    cond.eff            = x[45],
     cond.fail           = rep(0, 4),
     # NOTE: Change to 0 to turn off (reflect uncertainty in cond. effect)
     sti.cond.fail       = rep(0, 4),
-    sti.cond.eff        = x[34],
+    sti.cond.eff        = x[46],
     circ.prob           = c(0.798, 0.435, 0.600, 0.927)
   )
 
@@ -173,51 +173,71 @@ xgc <- function(x) {
 
 # ABC Priors and Target Stats --------------------------------------------------
 
+# convenience function to add a uniform prior to the prior list
+pvec <- function(ll, ul) {
+  c("unif", ll, ul)
+}
+
 # NOTE: When use_seed = TRUE abc in_test(), priors list starts with x[2].
 priors <- list(
   # GC per-act transmission probability by pathways
-  c("unif", 0, 0.35), # u2rgc.prob
-  c("unif", 0, 0.45), # u2pgc.prob
-  c("unif", 0, 0.55), # r2ugc.prob
-  c("unif", 0, 0.25), # p2ugc.prob
+  pvec(0, 0.35), # u2rgc.prob
+  pvec(0, 0.45), # u2pgc.prob
+  pvec(0, 0.55), # r2ugc.prob
+  pvec(0, 0.25), # p2ugc.prob
   # Untreated infection durations
-  c("unif", 2, 22), # rectal
-  c("unif", 3, 27), # pharyngeal
+  pvec(2, 22), # rectal
+  pvec(3, 27), # pharyngeal
   # Symptom probability
-  c("unif", 0.06, 0.46), # rectal
-  c("unif", 0.46, 0.99), # urethral
-  c("unif", 0, 0.15), # pharyngeal
+  pvec(0.06, 0.46), # rectal
+  pvec(0.46, 0.99), # urethral
+  pvec(0, 0.15), # pharyngeal
   # GC symptomatic testing scalar
-  c("unif", 1, 10),
+  pvec(1, 20),
   # Probability of testing at asymptomatic sites in clinic
-  c("unif", 0.400, 0.800),  # rectal
-  c("unif", 0.497, 0.657),  # urethral
-  c("unif", 0.522, 0.749),  # pharyngeal
-  c("unif", 0.01, 0.11), # treated rectal gc, 1st week still infected prop.
-  c("unif", 0.05, 0.95), # treated rectal gc, 2nd week resolution prop.
-  c("unif", 0.01, 0.20), # treated urethral gc, 1st week still infected prop.
-  c("unif", 0.05, 0.95), # treated urethral gc, 2nd week resolution prop.
-  c("unif", 0.06, 0.20), # treated pharyngeal gc, 1st week still infected prop.
-  c("unif", 0.05, 0.95), # treated pharyngeal gc, 2nd week resolution prop.
+  pvec(0.400, 0.800),  # rectal
+  pvec(0.497, 0.657),  # urethral
+  pvec(0.522, 0.749),  # pharyngeal
+  pvec(0.01, 0.11), # treated rectal gc, 1st week still infected prop.
+  pvec(0.05, 0.95), # treated rectal gc, 2nd week resolution prop.
+  pvec(0.01, 0.20), # treated urethral gc, 1st week still infected prop.
+  pvec(0.05, 0.95), # treated urethral gc, 2nd week resolution prop.
+  pvec(0.06, 0.20), # treated pharyngeal gc, 1st week still infected prop.
+  pvec(0.05, 0.95), # treated pharyngeal gc, 2nd week resolution prop.
   # tx.init.prob (from Sam's CombPrev paper)
-  c("unif", 1 / 24, 1 / 1.1),
-  c("unif", 1 / 24, 1 / 1.1),
-  c("unif", 1 / 24, 1 / 1.1),
-  c("unif", 1 / 24, 1 / 1.1),
+  pvec(1 / 36, 1 / 1.1),
+  pvec(1 / 36, 1 / 1.1),
+  pvec(1 / 36, 1 / 1.1),
+  pvec(1 / 36, 1 / 1.1),
   # tx.halt.part.prob (from Sam's CombPrev paper)
-  c("unif", 1 / 36, 1 / 1.1),
-  c("unif", 1 / 36, 1 / 1.1),
-  c("unif", 1 / 36, 1 / 1.1),
-  c("unif", 1 / 36, 1 / 1.1),
+  pvec(1 / 36, 1 / 1.1),
+  pvec(1 / 36, 1 / 1.1),
+  pvec(1 / 36, 1 / 1.1),
+  pvec(1 / 36, 1 / 1.1),
   # tx.reinit.part.prob (from Sam's CombPrev paper)
-  c("unif", 1 / 36, 1 / 1.1),
-  c("unif", 1 / 36, 1 / 1.1),
-  c("unif", 1 / 36, 1 / 1.1),
-  c("unif", 1 / 36, 1 / 1.1),
+  pvec(1 / 36, 1 / 1.1),
+  pvec(1 / 36, 1 / 1.1),
+  pvec(1 / 36, 1 / 1.1),
+  pvec(1 / 36, 1 / 1.1),
+  # tt.part.suppr
+  pvec(0, 1),
+  pvec(0, 1),
+  pvec(0, 1),
+  pvec(0, 1),
+  # tt.full.suppr
+  pvec(0, 1),
+  pvec(0, 1),
+  pvec(0, 1),
+  pvec(0, 1),
+  # tt.dur.suppr
+  pvec(0, 1),
+  pvec(0, 1),
+  pvec(0, 1),
+  pvec(0, 1),
   # cond.eff (HIV)
-  c("unif", 0.6, 1),
+  pvec(0.6, 1),
   # sti.cond.eff
-  c("unif", 0.2, 0.8)
+  pvec(0.2, 0.8)
 )
 
 targets <- c(
