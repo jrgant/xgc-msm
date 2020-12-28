@@ -261,22 +261,52 @@ targets <- c(
   ## PrEP use among MSM with indications (Finlayson 2019, MMWR)
   0.262, 0.300, 0.398, 0.424, # Past 12-mo. PrEP use (Black, Hisp, Other, White)
   # GONORRHEA TARGETS
-  ## targets refer to STI testing that's not part of routine testing as
+  ## targets refer to STI testing that's NOT PART of routine testing as
   ## part of being on PrEP
   0.657, 0.826, 0.749, # Proportion of anat sites tested in clinic (R, U, P)
-  0.148, 0.079, 0.129 # Proportion of tests positive in clinic (R, U, P)
+  0.148, 0.079, 0.129  # Proportion of tests positive in clinic (R, U, P)
+)
+
+rlabs <- c("B", "H", "O", "W")
+anatlabs <- c("rect", "ureth", "phar")
+
+hivdx.targ.labs <-
+  as.vector(sapply(rlabs, function(.x) {
+    paste0("prob.HIVdx.", .x, ".age", 1:5)
+  }))
+
+vls.targ.labs <-
+  c("B.vls.prob.ages1.2", "B.vls.prob.ages3.5",
+    "H.vls.prob.ages1.3", "H.vls.prob.ages4.5",
+    "O.vls.prob.ages1.2", "O.vls.prob.ages3.5",
+    "W.vls.prob.ages1", "W.vls.probs.age2.5")
+
+names(targets) <- c(
+  "HIV.prev", "HIV.incid.100k",
+  "B.age1.prob.HIVdx", "B.age2.prob.HIVdx",
+  "H.age1.prob.HIVdx", "H.age5.prob.HIVdx",
+  "O.age1.prob.HIVdx",
+  "W.age1.prob.HIVdx", "W.age4.prob.HIVdx", "W.age5.prob.HIVdx",
+  hivdx.targ.labs,
+  vls.targ.labs,
+  paste0(rlabs, ".PrEP.past12mo"),
+  paste0("prop.", anatlabs, ".tested"),
+  paste0("prop.", anatlabs, ".pos")
 )
 
 abc <- ABC_sequential(
-  method = "Lenormand",
-  model = xgc,
-  prior = priors,
-  nb_simul = as.numeric(Sys.getenv("SIMS_BELOW_TOL")),
-  n_cluster = as.numeric(Sys.getenv("SLURM_NPROCS")),
-  summary_stat_target = targets,
-  use_seed = TRUE,
-  progress_bar = TRUE
+  method                = "Lenormand",
+  model                 = xgc,
+  prior                 = priors,
+  nb_simul              = as.numeric(Sys.getenv("SIMS_BELOW_TOL")),
+  n_cluster             = as.numeric(Sys.getenv("SLURM_NPROCS")),
+  summary_stat_target   = targets,
+  use_seed              = TRUE,
+  inside_prior          = TRUE,
+  progress_bar          = FALSE,
+  verbose               = FALSE
 )
+
 
 saveRDS(
   abc,
