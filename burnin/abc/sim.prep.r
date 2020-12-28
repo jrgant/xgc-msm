@@ -193,7 +193,7 @@ priors <- list(
   pvec(0.46, 0.99), # urethral
   pvec(0, 0.15), # pharyngeal
   # GC symptomatic testing scalar
-  pvec(1, 20),
+  pvec(1, 1e5),
   # Probability of testing at asymptomatic sites in clinic
   pvec(0.400, 0.800),  # rectal
   pvec(0.497, 0.657),  # urethral
