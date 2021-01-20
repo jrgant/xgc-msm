@@ -1,0 +1,15 @@
+Package: xgcmsm
+Title: Calibrate EpiModelHIV-XGC
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Jason",
+           family = "Gantenberg",
+           role = c("aut", "cre"),
+           email = "jason.gantenberg@gmail.com",
+           comment = c(ORCID = "0000-0002-8144-4273"))
+Description: This package contains the code necessary to calibrate and diagnose EpiModelHIV-XGC.
+License: `use_mit_license()`
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
