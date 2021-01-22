@@ -1,8 +1,9 @@
-library(pacman)
+# SETUP ------------------------------------------------------------------------
 
-p_load(
-  methods,
+pacman::p_load(
+  xgcmsm,
   EasyABC,
+  methods,
   EpiModelHIV,
   data.table,
   magrittr,
@@ -11,14 +12,26 @@ p_load(
   pscl
 )
 
-# Main Model Function ----------------------------------------------------------
+
+# CALIBRATION TARGETS ----------------------------------------------------------
+
+targl <- readRDS(here::here("est", "caltargets.Rds"))
+
+targets <- unlist(
+  sapply(seq_along(targl), function(x) unlist(targl[x]))
+)
+
+
+# MAIN MODEL FUNCTION ----------------------------------------------------------
 
 xgc <- function(x) {
 
-  #  Source target stat helper functions.
-  source(here::here("R", "target-stats.R"))
+  require(xgcmsm)
+
+  # Source target stat helper functions.
   set.seed(x[1])
 
+  # Load libraries in function so they're seen on all parallel cores.
   require(EpiModelHIV)
   require(data.table)
   require(magrittr)
@@ -27,10 +40,9 @@ xgc <- function(x) {
   require(pscl)
 
   tail_length <- as.numeric(Sys.getenv("TAIL_LENGTH"))
-  est_path  <- here::here("est")
-  netstats  <- readRDS(file.path(est_path, "netstats.Rds"))
-  est       <- readRDS(file.path(est_path, "netest.Rds"))
-  epistats  <- readRDS(file.path(est_path, "epistats.Rds"))
+  netstats    <- get_est("netstats")
+  est         <- get_est("netest")
+  epistats    <- get_est("epistats")
 
   param <- param_msm(
     # external objects
@@ -71,9 +83,9 @@ xgc <- function(x) {
     # @ORIG, prop. of MSM testing only at late-stage (AIDS)
     hiv.test.late.prob  = rep(0.25, 4),
     # HIV treatment parameters
-    tt.part.supp        = c(x[21], x[22], x[23], x[24]), # ORIGPARAM, partial VLS post ART start
-    tt.full.supp        = c(x[25], x[26], x[27], x[28]), # ORIGPARAM, full VLS w/ post ART start
-    tt.dur.supp         = c(x[29], x[30], x[31], x[32]),  # ORIGPARAM, durable VLS post ART start
+    tt.part.supp        = c(x[21], x[22], x[23], x[24]), # Partial VLS post ART
+    tt.full.supp        = c(x[25], x[26], x[27], x[28]), # Full VLS post ART
+    tt.dur.supp         = c(x[29], x[30], x[31], x[32]), # Durable VLS post ART
     tx.init.prob        = c(x[33], x[34], x[35], x[36]),
     tx.halt.part.prob   = c(x[37], x[38], x[39], x[40]),
     tx.halt.full.rr     = rep(0.9, 4), # ORIGPARAM
@@ -159,9 +171,10 @@ xgc <- function(x) {
   targs.out <- c(
     hiv.prev = targ.hiv.prev,
     hiv.incid.100k = targ.hiv.incid,
-    target_prob_agedx_byrace(sim, tailn = tail_length),
-    target_prob_hivdx_byraceage(sim, tailn = tail_length),
-    target_prob_vls_byraceage(sim, tailn = tail_length),
+    target_prob_hivdx(sim, tail_length, "age"),
+    target_prob_hivdx(sim, tail_length, "race"),
+    target_prob_vls(sim, tail_length, "age"),
+    target_prob_vls(sim, tail_length, "race"),
     target_prob_prep_byrace(sim, tailn = tail_length),
     target_prop_anatsites_tested(sim, tailn = tail_length),
     target_prob_gcpos_tested_anatsites(sim, tailn = tail_length)
@@ -171,12 +184,10 @@ xgc <- function(x) {
 }
 
 
-# ABC Priors and Target Stats --------------------------------------------------
+# ABC PRIORS AND TARGET STATS --------------------------------------------------
 
 # convenience function to add a uniform prior to the prior list
-pvec <- function(ll, ul) {
-  c("unif", ll, ul)
-}
+pvec <- function(ll, ul) c("unif", ll, ul)
 
 # NOTE: When use_seed = TRUE abc in_test(), priors list starts with x[2].
 priors <- list(
@@ -198,6 +209,7 @@ priors <- list(
   pvec(0.400, 0.800),  # rectal
   pvec(0.497, 0.657),  # urethral
   pvec(0.522, 0.749),  # pharyngeal
+  # Probability of still being GC-infected after x weeks of treatment
   pvec(0.01, 0.11), # treated rectal gc, 1st week still infected prop.
   pvec(0.05, 0.95), # treated rectal gc, 2nd week resolution prop.
   pvec(0.01, 0.20), # treated urethral gc, 1st week still infected prop.
@@ -240,59 +252,8 @@ priors <- list(
   pvec(0.2, 0.8)
 )
 
-targets <- c(
-  # HIV TARGETS
-  0.124, 514, # HIV prevalence, HIV incidence
-  ## Age distribution among HIV-diagnosed
-  0.095, 0.340, # Age distro among Black HIV dx'd: ages 1, 2
-  0.061, 0.183, # Age distro among Hispanic HIV dx'd: ages 1, 5
-  0.047, # Age distro among Other HIV dx'd: ages 1
-  0.021, 0.280, 0.425, # Age dist among White HIV dx'd: ages 1, 4, 5
-  ## Age- and race-specific HIV diagnosed probabilities
-  0.557, 0.724, 0.859, 0.937, 0.959, # Prob. HIV dx by age, among Black HIV+
-  0.488, 0.651, 0.808, 0.909, 0.947, # Prob. HIV dx by age, among Hispanic HIV+
-  0.577, 0.706, 0.835, 0.926, 0.962, # Prob. HIV dx by age, among Other HIV+
-  0.589, 0.726, 0.846, 0.922, 0.952, # Prob. HIV dx by age, among White HIV+
-  ## Viral suppression targets
-  0.471, 0.549, # Prob. VLS for Black HIV dx: 18-34, 35-65
-  0.588, 0.631, # Prob. VLS for White HIV dx: 18-44, 45-65
-  0.603, 0.684, # Prob. VLS for Other HIV dx: 18-34, 35-65
-  0.569, 0.667, # Prob. VLS for White HIV dx: 18-24, 25-65
-  ## PrEP use among MSM with indications (Finlayson 2019, MMWR)
-  0.262, 0.300, 0.398, 0.424, # Past 12-mo. PrEP use (Black, Hisp, Other, White)
-  # GONORRHEA TARGETS
-  ## targets refer to STI testing that's NOT PART of routine testing as
-  ## part of being on PrEP
-  0.657, 0.826, 0.749, # Proportion of anat sites tested in clinic (R, U, P)
-  0.148, 0.079, 0.129  # Proportion of tests positive in clinic (R, U, P)
-)
 
-rlabs <- c("B", "H", "O", "W")
-anatlabs <- c("rect", "ureth", "phar")
-
-hivdx.targ.labs <-
-  as.vector(sapply(rlabs, function(.x) {
-    paste0("prob.HIVdx.", .x, ".age", 1:5)
-  }))
-
-vls.targ.labs <-
-  c("B.vls.prob.ages1.2", "B.vls.prob.ages3.5",
-    "H.vls.prob.ages1.3", "H.vls.prob.ages4.5",
-    "O.vls.prob.ages1.2", "O.vls.prob.ages3.5",
-    "W.vls.prob.ages1", "W.vls.probs.age2.5")
-
-names(targets) <- c(
-  "HIV.prev", "HIV.incid.100k",
-  "B.age1.prob.HIVdx", "B.age2.prob.HIVdx",
-  "H.age1.prob.HIVdx", "H.age5.prob.HIVdx",
-  "O.age1.prob.HIVdx",
-  "W.age1.prob.HIVdx", "W.age4.prob.HIVdx", "W.age5.prob.HIVdx",
-  hivdx.targ.labs,
-  vls.targ.labs,
-  paste0(rlabs, ".PrEP.past12mo"),
-  paste0("prop.", anatlabs, ".tested"),
-  paste0("prop.", anatlabs, ".pos")
-)
+# RUN ABC ----------------------------------------------------------------------
 
 abc <- ABC_sequential(
   method                = "Lenormand",
@@ -308,6 +269,7 @@ abc <- ABC_sequential(
 )
 
 
+# WRITE ABC RESULTS ------------------------------------------------------------
 saveRDS(
   abc,
   paste0(
