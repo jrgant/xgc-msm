@@ -4,34 +4,68 @@
 #' based on the calibration target statistics specified.
 #'
 #' @param dat An object of class netsim.
-#' @param tailn The number of weeks (always at the tail) to extract and average over.
+#' @param tailn The number of weeks (always at the tail) to extract and average
+#'              over.
+#' @param strat Stratification group: one of "age", "race", or "both".
 
-#' @describeIn calculate_targets Probability of being diagnosed with HIV among those with HIV, by race and age.
+#' @describeIn calculate_targets Probability of being diagnosed with HIV among
+#' those with HIV, by race and age.
 #' @export
-target_prob_hivdx_byraceage <- function(dat, tailn) {
+target_prob_hivdx <- function(dat, tailn, strat) {
+
+  stopifnot(strat %in% c("age", "race", "both"))
+
   df <- raceage_grid()
 
-  sapply(seq_len(nrow(df)), function(x) {
+  if (strat == "age") {
+    ages <- sort(unique(df$age.grp))
 
-    num <- tail(
-      unlist(dat$epi[paste0("i.num.dx.", df$race[x], ".age", df$age.grp[x])]),
-      n = tailn
-    )
+    out1 <- sapply(seq_along(ages), function(x) {
+      num <- tail(unlist(dat$epi[paste0("i.num.dx.", ages[x])]), n = tailn)
+      den <- tail(unlist(dat$epi[paste0("i.num.", ages[x])]), n = tailn)
+      mv <- mean(num / den)
+      names(mv) <- paste0("prob.hivdx.age", ages[x])
+      mv
+    })
 
-    den <- tail(
-      unlist(dat$epi[paste0("i.num.", df$race[x], ".age", df$age.grp[x])]),
-      n = tailn
-    )
+  }
 
-    out1 <- mean(num / den)
-    out <- ifelse(is.na(out1), 0, out1)
-    names(out) <- paste0("prob.hivdx.", df$race[x], ".age", df$age.grp[x])
-    out
-  })
+  if (strat == "race") {
+    races <- sort(unique(df$race))
+    out1 <- sapply(seq_along(races), function(x) {
+      num <- tail(unlist(dat$epi[paste0("i.num.dx.", races[x])]), n = tailn)
+      den <- tail(unlist(dat$epi[paste0("i.num.", races[x])]), n = tailn)
+      mv <- mean(num / den)
+      names(mv) <- paste0("prob.hivdx.", races[x])
+      mv
+    })
+  }
+
+  if (strat == "both") {
+    out1 <- sapply(seq_len(nrow(df)), function(x) {
+
+      num <- tail(
+        unlist(dat$epi[paste0("i.num.dx.", df$race[x], ".age", df$age.grp[x])]),
+        n = tailn
+      )
+
+      den <- tail(
+        unlist(dat$epi[paste0("i.num.", df$race[x], ".age", df$age.grp[x])]),
+        n = tailn
+      )
+
+      mv <- mean(num / den)
+      names(mv) <- paste0("prob.hivdx.", df$race[x], ".age", df$age.grp[x])
+      mv
+    })
+  }
+
+  out <- ifelse(is.na(out1), 0, out1)
+  out
 }
 
-#' @describeIn calculate_targets Calculate age distribution among
-#' those diagnosed with HIV, by race/ethnicity.
+#' @describeIn calculate_targets Calculate age distribution among those
+#' diagnosed with HIV, by race/ethnicity.
 #' @export
 target_prob_agedx_byrace <- function(dat, tailn) {
 
@@ -68,17 +102,56 @@ target_prob_agedx_byrace <- function(dat, tailn) {
   out
 }
 
-#' @describeIn calculate_targets Calculate probability of viral suppression among those with diagnosed HIV, by race/ethnicity and age.
+#' @describeIn calculate_targets Calculate probability of viral suppression
+#' among those with diagnosed HIV, by race/ethnicity and age.
 #' @export
-target_prob_vls_byraceage <- function(dat, tailn) {
-  vsupp.targs <- names(dat$epi)[grepl("cct", names(dat$epi))]
-  sapply(vsupp.targs, function(x) {
-    vls.prob <- tail(unlist(dat$epi[x]), n = tailn)
-    mean(vls.prob)
-  })
+target_prob_vls <- function(dat, tailn, strat) {
+
+  stopifnot(strat %in% c("age", "race", "both"))
+
+  df <- raceage_grid()
+
+  if (strat == "age") {
+    ages <- sort(unique(df$age.grp))
+
+    out <- sapply(seq_along(ages), function(x) {
+      v <- tail(unlist(dat$epi[paste0("cc.vsupp.age", ages[x])]), n = tailn)
+      mv <- mean(v)
+      names(mv) <- paste0("prob.vsupp.age", ages[x])
+      mv
+    })
+  }
+
+  if (strat == "race") {
+    races <- sort(unique(df$race))
+
+    out <- sapply(seq_along(races), function(x) {
+      v <- tail(unlist(dat$epi[paste0("cc.vsupp.", races[x])]), n = tailn)
+      mv <- mean(v)
+      names(mv) <- paste0("prob.vsupp.", races[x])
+      mv
+    })
+
+  }
+
+  if (strat == "both") {
+    out <- sapply(seq_len(nrow(df)), function(x) {
+
+      v <- tail(
+        unlist(dat$epi[paste0("cc.vsupp.", df$race[x], ".age", df$age.grp[x])]),
+        n = tailn
+      )
+      mv <- mean(v)
+      names(mv) <- paste0("cc.vsupp.", df$race[x], ".age", df$age.grp[x])
+      mv
+    })
+  }
+
+  out
 }
 
-#' @describeIn calculate_targets Calculate probability of PrEP use among indicated agents, by race/ethnicity.
+#' @describeIn calculate_targets Calculate probability of PrEP use among
+#' indicated agents, by race/ethnicity.
 #' @export
 target_prob_prep_byrace <- function(dat, tailn) {
   r <- unique(raceage_grid()$race)
@@ -96,7 +169,8 @@ target_prob_prep_byrace <- function(dat, tailn) {
   })
 }
 
-#' @describeIn calculate_targets Return proportion of anatomic sites tested among MSM seeking testing at the clinic.
+#' @describeIn calculate_targets Return proportion of anatomic sites tested
+#' among MSM seeking testing at the clinic.
 #' @export
 target_prop_anatsites_tested <- function(dat, tailn) {
   vars <- names(dat$epi)[grepl("^prop", names(dat$epi))]
@@ -105,7 +179,8 @@ target_prop_anatsites_tested <- function(dat, tailn) {
   })
 }
 
-#' @describeIn calculate_targets Return probability of being GC+ at tested anatomic sites.
+#' @describeIn calculate_targets Return probability of being GC+ at tested
+#' anatomic sites.
 #' @export
 target_prob_gcpos_tested_anatsites <- function(dat, tailn) {
   vars <- names(dat$epi)[grepl("^prob", names(dat$epi))]
