@@ -4,6 +4,7 @@
 \alias{raceage_grid}
 \alias{test_xgc}
 \alias{setenv}
+\alias{get_est}
 \title{Helper functions}
 \usage{
 raceage_grid()
@@ -16,6 +17,8 @@ setenv(
   sims_below_tol = 50,
   slurm_nprocs = Sys.getenv("SLURM_NPROCS")
 )
+
+get_est(string = c("epistats", "netest", "netstats"))
 }
 \description{
 These functions provide easy access to demographic distributions
@@ -30,5 +33,7 @@ race/ethnicity and age group.
 \item \code{test_xgc}: Helper function to use as input into the xgc() function
 
 \item \code{setenv}: Helper function to set temporary environment variable.
+
+\item \code{get_est}: Retrieve epistats object.
 }}
 

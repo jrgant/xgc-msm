@@ -27,6 +27,7 @@ test_xgc <- function(seed = 123, priorlist = priors) {
   c(seed, pl)
 }
 
+
 #' @describeIn helpers Helper function to set temporary environment variable.
 #' @export
 setenv <- function(nsteps = 200,
@@ -39,4 +40,12 @@ setenv <- function(nsteps = 200,
     "SIMS_BELOW_TOL"  = sims_below_tol,
     "SLURM_NPROCS"    = slurm_nprocs
   )
+}
+
+
+#' @describeIn helpers Retrieve epistats object.
+#' @export
+#' @importFrom here here
+get_est <- function(string = c("epistats", "netest", "netstats")) {
+  readRDS(here::here("est", paste0(string, ".Rds")))
 }
