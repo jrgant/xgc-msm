@@ -8,6 +8,16 @@ Authors@R:
            email = "jason.gantenberg@gmail.com",
            comment = c(ORCID = "0000-0002-8144-4273"))
 Description: This package contains the code necessary to calibrate and diagnose EpiModelHIV-XGC.
+Depends: 
+  R (>= 3.5.0)
+Imports:
+  EpiModelHIV,
+  EpiModel (== 1.8.0),
+  magrittr,
+  data.table,
+  rms,
+  stringr,
+  pscl
 License: `use_mit_license()`
 Encoding: UTF-8
 LazyData: true
