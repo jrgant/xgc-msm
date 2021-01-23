@@ -60,7 +60,7 @@ target_prob_hivdx <- function(dat, tailn, strat) {
     })
   }
 
-  out <- ifelse(is.na(out1), 0, out1)
+  out <- ifelse(is.na(out1) | is.nan(out1), 0, out1)
   out
 }
 
@@ -147,7 +147,7 @@ target_prob_vls <- function(dat, tailn, strat) {
     })
   }
 
-  out
+  out <- ifelse(is.na(out) | is.nan(out), 0, out)
 }
 
 #' @describeIn calculate_targets Calculate probability of PrEP use among
@@ -163,7 +163,7 @@ target_prob_prep_byrace <- function(dat, tailn) {
         tail(unlist(dat$epi[paste0("prepElig.", r[x])]), n = tailn)
       )
 
-    out <- ifelse(is.nan(prep.cov), 0, prep.cov)
+    out <- ifelse(is.na(prep.cov) | is.nan(prep.cov), 0, prep.cov)
     names(out) <- paste0("prep.cov.", r[x])
     out
   })
