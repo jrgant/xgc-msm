@@ -104,7 +104,7 @@ ct_hiv_prev <- 0.124
 # Gonorrhea targets (in STD clinic)
 
 ## Tests received by anatomic site
-ct_prop_anatsite_tested <- c(0.657, 0826, 0.749)
+ct_prop_anatsite_tested <- c(0.657, 0.826, 0.749)
 names(ct_prop_anatsite_tested) <- anatlabs
 
 ## Proportion of tested anatomic sites positive
