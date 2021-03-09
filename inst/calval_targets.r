@@ -104,8 +104,9 @@ ct_hiv_prev <- 0.124
 ct_prop_anatsite_tested <- c(0.657, 0.826, 0.749)
 names(ct_prop_anatsite_tested) <- anatlabs
 
-## Proportion of tested anatomic sites positive
-ct_prop_anatsite_pos <- c(0.18, 0.079, 0.129)
+## Proportion of tested anatomic sites positive (Abara et al. 2020)
+## 95% CLs: [10.4, 13.2], [5.7, 9.3], [7.9, 10.3]
+ct_prop_anatsite_pos <- c(0.118, 0.075, 0.091)
 names(ct_prop_anatsite_pos) <- anatlabs
 
 
