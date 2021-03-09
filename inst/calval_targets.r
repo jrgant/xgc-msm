@@ -16,10 +16,7 @@ anatlabs <- c("rect", "ureth", "phar")
 # Centers for Disease Control and Prevention, “Estimated HIV Incidence and
 # Prevalence in the United States, 2014–2018,” HIV Surveillance Report,
 # vol. 25, no. 1, Art. no. 1, 2020-05, [Online]. Available:
-# http://www.cdc.gov/hiv/library/reports/hiv-surveillance.html.
-# Table 12. HIV Surveillance Report, Vol. 25, No. 1 -- 2018
-
-base_prop_hivdx <- data.table(
+prop_hivdx <- data.table(
   race = rep(c(racelabs[c(1:2, 4)], "Total"), each = 5),
   age.grp = rep(1:5, 4),
   hiv_prev_N = c(
