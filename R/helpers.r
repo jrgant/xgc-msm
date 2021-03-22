@@ -49,3 +49,31 @@ setenv <- function(nsteps = 200,
 get_est <- function(string = c("epistats", "netest", "netstats")) {
   readRDS(here::here("est", paste0(string, ".Rds")))
 }
+
+#' @describeIn helpers Make parameter sets
+#' @export
+#' @param num_sets Number of parameter sets to generate.
+#' @param priorlist A prior list generated for use in the EasyABC sequential algorithm.
+#' @importFrom lhs randomLHS
+#' @export
+
+param_sets <- function(num_sets, priorlist) {
+
+  blist <- rbindlist(lapply(priorlist, function(.x) {
+    data.table(
+      lower.bound = as.numeric(.x[2]),
+      upper.bound = as.numeric(.x[3])
+    )
+  }))
+
+  random_tab <- transpose(as.data.table(randomLHS(num_sets, nrow(blist))))
+  blist <- cbind(blist, random_tab)
+
+  unif_scaled <- paste0("D", 1:num_sets)
+
+  blist[, (unif_scaled) := lapply(.SD, function(.x) {
+    lower.bound + ((upper.bound - lower.bound) * .x)
+  }), .SDcols = paste0("V", 1:num_sets)]
+
+  blist
+}

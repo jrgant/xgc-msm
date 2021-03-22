@@ -5,6 +5,7 @@
 \alias{test_xgc}
 \alias{setenv}
 \alias{get_est}
+\alias{param_sets}
 \title{Helper functions}
 \usage{
 raceage_grid()
@@ -19,6 +20,13 @@ setenv(
 )
 
 get_est(string = c("epistats", "netest", "netstats"))
+
+param_sets(num_sets, priorlist)
+}
+\arguments{
+\item{priorlist}{A prior list generated for use in the EasyABC sequential algorithm.}
+
+\item{num_sets}{Number of parameter sets to generate.}
 }
 \description{
 These functions provide easy access to demographic distributions
@@ -35,5 +43,7 @@ race/ethnicity and age group.
 \item \code{setenv}: Helper function to set temporary environment variable.
 
 \item \code{get_est}: Retrieve epistats object.
+
+\item \code{param_sets}: Make parameter sets
 }}
 
