@@ -1,10 +1,10 @@
 {
   "R": {
-    "Version": "4.0.4",
+    "Version": "4.0.3",
     "Repositories": [
       {
         "Name": "CRAN",
-        "URL": "https://mirrors.nics.utk.edu/cran"
+        "URL": "https://cloud.r-project.org"
       }
     ]
   },
@@ -38,18 +38,20 @@
     "EpiModelHIV": {
       "Package": "EpiModelHIV",
       "Version": "1.5.0",
-      "Source": "Local",
-      "RemoteType": "local",
-      "RemoteUrl": "/home/jrgant/R/x86_64-pc-linux-gnu-library/4.0/EpiModelHIV",
-      "Hash": "b531b7b129f17f385e0c7abd61d2b4e5"
+      "Source": "unknown",
+      "Hash": "c6f0b8a9e596caf201d189f89284df31"
     },
     "EpiModelHPC": {
       "Package": "EpiModelHPC",
       "Version": "2.1.1",
-      "Source": "Local",
-      "RemoteType": "local",
-      "RemoteUrl": "/home/jrgant/R/x86_64-pc-linux-gnu-library/4.0/EpiModelHPC",
-      "Hash": "a52c200507b1a4de3c1e2cf2ddf2e716"
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "EpiModelHPC",
+      "RemoteUsername": "statnet",
+      "RemoteRef": "master",
+      "RemoteSha": "87980b8cf37c67820d6323ac3ec165666d19688c",
+      "Hash": "262e0e7076150402d28eb9a47125edb0"
     },
     "Formula": {
       "Package": "Formula",
@@ -543,10 +545,10 @@
     },
     "mgcv": {
       "Package": "mgcv",
-      "Version": "1.8-33",
+      "Version": "1.8-34",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "eb7b6439bc6d812eed2cddba5edc6be3"
+      "Hash": "bd4a6c4b600f58651d60d381b0e9a397"
     },
     "mime": {
       "Package": "mime",
@@ -690,10 +692,10 @@
     },
     "renv": {
       "Package": "renv",
-      "Version": "0.13.0",
+      "Version": "0.13.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "9f10d9db5b50400c348920c5c603385e"
+      "Hash": "be02499761baab60d58b808efd08c3fc"
     },
     "rlang": {
       "Package": "rlang",
