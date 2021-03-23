@@ -25,15 +25,15 @@
     },
     "EpiModel": {
       "Package": "EpiModel",
-      "Version": "1.8.0",
+      "Version": "2.0.4",
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteUsername": "statnet",
       "RemoteRepo": "EpiModel",
-      "RemoteRef": "v1.8.0",
-      "RemoteSha": "597c403ada019cf96c95b914252566a441874200",
-      "Hash": "712f525665545b3fe26f3e5b3e50f8bb"
+      "RemoteRef": "master",
+      "RemoteSha": "7101ee53c71ac28e6be937224689c4d358f21aaa",
+      "Hash": "8586f87f6f4a8c88039c5deb0d19e84d"
     },
     "EpiModelHIV": {
       "Package": "EpiModelHIV",
@@ -41,7 +41,7 @@
       "Source": "Local",
       "RemoteType": "local",
       "RemoteUrl": "/home/jrgant/R/x86_64-pc-linux-gnu-library/4.0/EpiModelHIV",
-      "Hash": "f77165a7b3cda220096caf9021f81fd0"
+      "Hash": "b531b7b129f17f385e0c7abd61d2b4e5"
     },
     "EpiModelHPC": {
       "Package": "EpiModelHPC",
@@ -331,6 +331,27 @@
       "Repository": "CRAN",
       "Hash": "74628ea7a3be5ee8a7b5bb0a8e84882e"
     },
+    "formatR": {
+      "Package": "formatR",
+      "Version": "1.8",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "3a5d6129643015003ab29e9aef8d6367"
+    },
+    "futile.logger": {
+      "Package": "futile.logger",
+      "Version": "1.4.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "99f0ace8c05ec7d3683d27083c4f1e7e"
+    },
+    "futile.options": {
+      "Package": "futile.options",
+      "Version": "1.0.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "0d9bf02413ddc2bbe8da9ce369dcdd2b"
+    },
     "generics": {
       "Package": "generics",
       "Version": "0.1.0",
@@ -442,6 +463,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "3d5108641f47470611a32d0bdf357a72"
+    },
+    "lambda.r": {
+      "Package": "lambda.r",
+      "Version": "1.2.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "b1e925c4b9ffeb901bacf812cbe9a6ad"
     },
     "lattice": {
       "Package": "lattice",
@@ -806,6 +834,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "f50614d2145ba1012b62ff75f2129d5b"
+    },
+    "tryCatchLog": {
+      "Package": "tryCatchLog",
+      "Version": "1.2.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "1b993c51bef196d2f9c5e689177e8c90"
     },
     "utf8": {
       "Package": "utf8",
