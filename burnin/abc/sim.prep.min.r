@@ -91,13 +91,13 @@ xgc <- function(x) {
     # @ORIG, prop. of MSM testing only at late-stage (AIDS)
     hiv.test.late.prob  = c(x[22], x[23], x[24], x[25]),
     # HIV treatment parameters
-    tt.part.supp        = c(x[26], x[27], x[28], x[29]), # Partial VLS post ART
-    tt.full.supp        = c(x[30], x[31], x[32], x[33]), # Full VLS post ART
-    tt.dur.supp         = c(x[30], x[31], x[32], x[33]), # Durable VLS post ART
+    tt.part.supp        = c(x[26], x[27], x[28], x[29]), # Partial VLS class, post ART
+    tt.full.supp        = c(x[30], x[31], x[32], x[33]), # Full VLS class, post ART
+    tt.dur.supp         = rep(0, 4), # Durable VLS post ART
     tx.init.prob        = c(x[34], x[35], x[36], x[37]),
     tx.halt.part.prob   = c(x[38], x[39], x[40], x[41]),
-    tx.halt.full.rr     = rep(0.9, 4), # ORIGPARAM
-    tx.halt.dur.rr      = rep(0.5, 4),  # ORIGPARAM
+    tx.halt.full.rr     = rep(1, 4), # ORIGPARAM
+    tx.halt.dur.rr      = rep(1, 4),  # ORIGPARAM
     tx.reinit.part.prob = c(x[42], x[43], x[44], x[45]), # @ORIG
     tx.reinit.full.rr   = rep(1.0, 4), # ORIGPARAM
     tx.reinit.dur.rr    = rep(1.0, 4),  # ORIGPARAM
@@ -114,11 +114,12 @@ xgc <- function(x) {
     cdc.sti.int         = 12,
     cdc.sti.hr.int      = 6,
     cond.eff            = x[52],
+    ## NOTE: Change cond.fail params to 0 to turn off (reflect uncertainty
+    ##       in cond. effect)
     cond.fail           = rep(0, 4),
-    # NOTE: Change to 0 to turn off (reflect uncertainty in cond. effect)
     sti.cond.fail       = rep(0, 4),
     sti.cond.eff        = x[53],
-    circ.prob           = c(0.798, 0.435, 0.600, 0.927)
+    circ.prob           = netstats$inputs$circ.probs
   )
 
   init <- init_msm(
@@ -219,7 +220,7 @@ priors <- list(
   pvec(0.06, 0.46), # rectal
   pvec(0.46, 0.99), # urethral
   pvec(0.00, 0.15), # pharyngeal
-  # GC sympotmatic, weekly probability of testing
+  # GC symptomatic, weekly probability of testing
   pvec(0.5, 1),
   # Probability of testing at asymptomatic sites in clinic
   pvec(0.400, 0.800),  # rectal
@@ -235,7 +236,7 @@ priors <- list(
   pvec(0.2, 0.2),
   pvec(0.2, 0.2),
   pvec(0.2, 0.2),
-  # tt.full.suppr / tt.dur.suppr
+  # tt.full.suppr TODO: Update this to cross-sectional full viral suppression (< 200 copies)
   pvec(0.40, 0.56),
   pvec(0.30, 0.80),
   pvec(0.30, 0.80),
@@ -246,10 +247,10 @@ priors <- list(
   pvec(1 / 62, 1 / 27),
   pvec(1 / 62, 1 / 27),
   # tx.halt.part.prob (Singh 2017, MMWR)
-  pvec(0.464 / 12, 0.464 / 12),
-  pvec(0.416 / 12, 0.416 / 12),
-  pvec(0.366 / 12, 0.366 / 12),
-  pvec(0.406 / 12, 0.406 / 12),
+  pvec(1 - (1 - 0.464)^(1/52), 1 - (1 - 0.464)^(1/52)),
+  pvec(1 - (1 - 0.416)^(1/52), 1 - (1 - 0.416)^(1/52)),
+  pvec(1 - (1 - 0.366)^(1/52), 1 - (1 - 0.366)^(1/52)),
+  pvec(1 - (1 - 0.406)^(1/52), 1 - (1 - 0.406)^(1/52)),
   # tx.reinit.part.prob -- TODO: These are way different than Sam's CombPrev. Check plausibility.
   pvec(0.0001, 0.20),
   pvec(0.0001, 0.20),
