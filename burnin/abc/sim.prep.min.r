@@ -102,8 +102,8 @@ xgc <- function(x) {
     tx.reinit.full.rr   = rep(1.0, 4), # ORIGPARAM
     tx.reinit.dur.rr    = rep(1.0, 4),  # ORIGPARAM
     # Scaling parameters
-    ai.acts.scale       = x[46],
-    oi.acts.scale       = x[47],
+    ai.acts.scale.mc    = x[46],
+    oi.acts.scale.mc    = x[47],
     kiss.rate.main      = 0,
     kiss.rate.casl      = 0,
     kiss.prob.oo        = 0,
@@ -156,6 +156,7 @@ xgc <- function(x) {
     transRoute_Rimming    = FALSE,  # FLAG: Toggle rimming transmission
     gcUntreatedRecovDist  = "geom",
     stiScreeningProtocol  = "base",
+    skip.check = TRUE,
     cdcExposureSite_Kissing = FALSE, # FLAG: Kissing exposure for CDC protocol?
     tergmLite     = TRUE, # NOTE Must set to avoid error from saveout.net()
     debug_stitx   = FALSE
