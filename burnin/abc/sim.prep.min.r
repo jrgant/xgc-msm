@@ -16,11 +16,11 @@ pacman::p_load(
 # CALIBRATION TARGETS ----------------------------------------------------------
 
 targl <- readRDS(here::here("est", "caltargets.Rds"))
-targl_sel <- targl[c(1:2,4)]
+targl_sel <- targl[c(1:2,6:7)]
 
-targets <- unname(unlist(
+targets <- unlist(
   sapply(seq_along(targl_sel), function(x) unlist(targl_sel[x]))
-))
+)
 
 
 # MAIN MODEL FUNCTION ----------------------------------------------------------
@@ -96,11 +96,11 @@ xgc <- function(x) {
     tt.dur.supp         = rep(0, 4), # Durable VLS post ART
     tx.init.prob        = c(x[34], x[35], x[36], x[37]),
     tx.halt.part.prob   = c(x[38], x[39], x[40], x[41]),
-    tx.halt.full.rr     = rep(1, 4), # ORIGPARAM
-    tx.halt.dur.rr      = rep(1, 4),  # ORIGPARAM
+    tx.halt.full.rr     = rep(1, 4),
+    tx.halt.dur.rr      = rep(1, 4),
     tx.reinit.part.prob = c(x[42], x[43], x[44], x[45]), # @ORIG
-    tx.reinit.full.rr   = rep(1.0, 4), # ORIGPARAM
-    tx.reinit.dur.rr    = rep(1.0, 4),  # ORIGPARAM
+    tx.reinit.full.rr   = rep(1.0, 4),
+    tx.reinit.dur.rr    = rep(1.0, 4),
     # Scaling parameters
     ai.acts.scale.mc    = x[46],
     oi.acts.scale.mc    = x[47],
@@ -181,13 +181,13 @@ xgc <- function(x) {
   targs.out <- c(
     hiv.incid.100k = targ.hiv.incid,
     hiv.prev = targ.hiv.prev,
+    ## target_prob_hivdx(sim, tail_length, "race")
+    ## target_prob_vls(sim, tail_length, "race")
     ## target_prob_hivdx(sim, tail_length, "age"),
-    target_prob_hivdx(sim, tail_length, "race")
     ## target_prob_vls(sim, tail_length, "age"),
-    ## target_prob_vls(sim, tail_length, "race"),
     ## target_prob_prep_byrace(sim, tailn = tail_length),
-    ## target_prop_anatsites_tested(sim, tailn = tail_length),
-    ## target_prob_gcpos_tested_anatsites(sim, tailn = tail_length)
+    target_prop_anatsites_tested(sim, tailn = tail_length),
+    target_prob_gcpos_tested_anatsites(sim, tailn = tail_length)
   )
 
   unname(targs.out)
