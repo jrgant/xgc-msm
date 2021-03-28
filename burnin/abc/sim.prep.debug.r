@@ -16,4 +16,4 @@ flog.appender(
 
 flog.threshold(WARN)    # TRACE, DEBUG, INFO, WARN, ERROR, FATAL
 
-tryCatchLog(source(here::here("burnin", "abc", "sim.prep.min.r")))
+tryCatchLog(source(here::here("burnin", "abc", Sys.getenv("SIMFILE"))))
