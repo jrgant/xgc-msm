@@ -131,7 +131,7 @@ make_batch_script <- function(ncores, walltime, memory, paramset, nsteps, simnum
     ",NSTEPS=", nsteps
   )
   str2 <- paste0(",SIMNO=", format(simnum, digits = 2))
-  str3 <- " sim1.lhs.submit.sh"
+  str3 <- " ~/data/jgantenb/xgcmsm/burnin/abc/sim1.lhs.submit.sh"
   paste0(str1, str2, str3)
 }
 
