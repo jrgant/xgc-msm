@@ -76,9 +76,11 @@ priors <- list(
   pvec(0.7, 1, "CONDOM_EFF_GC")   # sti.cond.eff, relative risk, condom use vs. no
 )
 
-## TODO: Update number of samples. 2 set for dev.
+
+# DRAW LATIN HYPERCUBE ---------------------------------------------------------
+
 set.seed(1971)
-lhs_unif <- randomLHS(20, length(priors))
+lhs_unif <- randomLHS(5000, length(priors))
 
 draw_param <- function(lhscol, lhsrow) {
   p_min <- as.numeric(priors[[lhscol]][2])
@@ -122,6 +124,7 @@ make_batch_script <- function(ncores, walltime, memory, paramset, nsteps, simnum
     "sbatch",
     " -n ", ncores,
     " -t ", walltime,
+    " -o ", paste0("~/scratch/sim1/SIMNO_", sprintf("%04d", simnum), ".log"),
     " --mem=", memory,
     " --export=ALL,",
     paste0(
@@ -130,7 +133,7 @@ make_batch_script <- function(ncores, walltime, memory, paramset, nsteps, simnum
     ),
     ",NSTEPS=", nsteps
   )
-  str2 <- paste0(",SIMNO=", format(simnum, digits = 2))
+  str2 <- paste0(",SIMNO=", simnum)
   str3 <- " ~/data/jgantenb/xgcmsm/burnin/abc/sim1.lhs.submit.sh"
   paste0(str1, str2, str3)
 }
@@ -143,16 +146,36 @@ scripts <- lapply(
       walltime = "2:00:00",
       memory = "2GB",
       paramset = lhs_real[[.x]],
-      nsteps = 52 * 60,
+      nsteps = 3120,
       simnum = .x
     )
   }
 )
 
-for (i in seq_len(length(scripts))) {
+# Write bash files (split into batches of 100)
+jobs_per_batch <- 100
+numfiles <- length(lhs_real) / jobs_per_batch
+start_jobs <- seq(1, length(lhs_real), by = jobs_per_batch)
+
+bfiles <- here::here(
+  "burnin", "abc", "sim1",
+  paste0("sim1.batch", sprintf("%03d", 1:numfiles), ".lhs.params.sh")
+  )
+
+dir.create(here::here("burnin", "abc", "sim1"))
+
+for (i in seq_len(length(bfiles))) {
+  cat("#!/bin/bash", file = bfiles[[i]], sep = "\n", append = FALSE)
+  if (i == 1) {
+   cat(
+     paste("mkdir", "~/scratch/sim1"),
+     file = bfiles[[i]], sep = "\n",
+     append = TRUE
+   )
+  }
   cat(
-    scripts[[i]],
-    file = here::here("burnin", "abc", "sim1.lhs.params.sh"),
+    unlist(scripts[start_jobs[i]:(start_jobs[i]+99)]),
+    file = bfiles[[i]],
     sep = "\n",
     append = TRUE
   )

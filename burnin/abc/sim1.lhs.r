@@ -27,6 +27,10 @@ netstats$attr$diag.status <- rbinom(
   length(netstats$attr$diag.status), 1, 0.01
 )
 
+## This function passes the environment variables to EpiModel functions
+## in numeric format.
+fmt_getenv <- function(x) as.numeric(Sys.getenv(x))
+
 param <- param_msm(
   # external objects
   netstats          = netstats,
@@ -34,27 +38,27 @@ param <- param_msm(
   # demography
   arrival.age       = 18,
   a.rate            = netstats$demog$mortrate.marginal,
-  u2rgc.tprob       = Sys.getenv("U2RGC_PROB"), # urethral-to-rectal transmission probability
-  u2pgc.tprob       = Sys.getenv("U2PGC_PROB"), # urethral-to-pharyngeal transmission probability
-  r2ugc.tprob       = Sys.getenv("R2UGC_PROB"), # rectal-to-urethral transmission probability
-  p2ugc.tprob       = Sys.getenv("P2UGC_PROB"), # pharyngeal-to-urethral transmission probability
+  u2rgc.tprob       = fmt_getenv("U2RGC_PROB"), # urethral-to-rectal transmission probability
+  u2pgc.tprob       = fmt_getenv("U2PGC_PROB"), # urethral-to-pharyngeal transmission probability
+  r2ugc.tprob       = fmt_getenv("R2UGC_PROB"), # rectal-to-urethral transmission probability
+  p2ugc.tprob       = fmt_getenv("P2UGC_PROB"), # pharyngeal-to-urethral transmission probability
   ## NOTE: Following tprobs used only if the kissing/rimming flags are active
   ## in control_msm.
   r2pgc.tprob       = 0, # rectal-to-pharyngeal transmission probability
   p2rgc.tprob       = 0, # pharyngeal-to-rectal transmission probability
   p2pgc.tprob       = 0, # kissing transmission probability
-  rgc.ntx.int       = Sys.getenv("RECT_GC_DURAT_NOTX"),
-  ugc.ntx.int       = Sys.getenv("URETH_GC_DURAT_NOTX"),
-  pgc.ntx.int       = Sys.getenv("PHAR_GC_DURAT_NOTX"),
+  rgc.ntx.int       = fmt_getenv("RECT_GC_DURAT_NOTX"),
+  ugc.ntx.int       = fmt_getenv("URETH_GC_DURAT_NOTX"),
+  pgc.ntx.int       = fmt_getenv("PHAR_GC_DURAT_NOTX"),
   ## Treated GC resolution probs c(after 1 week, after 2 weeks, after 3 weeks)
-  rgc.tx.recov.pr   = c(1 - Sys.getenv("RECT_GC_RX_INFPR_WK1"), 0.5, 1),
-  ugc.tx.recov.pr   = c(1 - Sys.getenv("URETH_GC_RX_INFPR_WK1"), 0.5, 1),
-  pgc.tx.recov.pr   = c(1 - Sys.getenv("PHAR_GC_RX_INFPR_WK1"), 0.5, 1),
-  rgc.sympt.prob    = Sys.getenv("RECT_GC_SYMPT_PROB"), # rectal symptom probability
-  ugc.sympt.prob    = Sys.getenv("URETH_GC_SYMPT_PROB"), # urethral symptom probability
-  pgc.sympt.prob    = Sys.getenv("PHAR_GC_SYMPT_PROB"), # pharyngeal symptom probability
+  rgc.tx.recov.pr   = c(1 - fmt_getenv("RECT_GC_RX_INFPR_WK1"), 0.5, 1),
+  ugc.tx.recov.pr   = c(1 - fmt_getenv("URETH_GC_RX_INFPR_WK1"), 0.5, 1),
+  pgc.tx.recov.pr   = c(1 - fmt_getenv("PHAR_GC_RX_INFPR_WK1"), 0.5, 1),
+  rgc.sympt.prob    = fmt_getenv("RECT_GC_SYMPT_PROB"), # rectal symptom probability
+  ugc.sympt.prob    = fmt_getenv("URETH_GC_SYMPT_PROB"), # urethral symptom probability
+  pgc.sympt.prob    = fmt_getenv("PHAR_GC_SYMPT_PROB"), # pharyngeal symptom probability
   # STI testing
-  gc.sympt.seek.test.prob = Sys.getenv("STITEST_PROB_GC_SYMPT"),
+  gc.sympt.seek.test.prob = fmt_getenv("STITEST_PROB_GC_SYMPT"),
   ## NOTE: Changed the treatment probs to be conditional on someone's seeking
   ##       STI treatment. Repeat 3 times, one for each anatomic site.
   ##       Tune asymptomatic treatment probability to achieve the overall
@@ -62,47 +66,47 @@ param <- param_msm(
   gc.sympt.prob.test  = rep(1, 3),
   ## NOTE: Order of probs: rectal, urethral, pharyngeal
   gc.asympt.prob.test = c(
-    Sys.getenv("RECT_ASYMP_STITEST_PROB"),
-    Sys.getenv("URETH_ASYMP_STITEST_PROB"),
-    Sys.getenv("PHAR_ASYMP_STITEST_PROB")
+    fmt_getenv("RECT_ASYMP_STITEST_PROB"),
+    fmt_getenv("URETH_ASYMP_STITEST_PROB"),
+    fmt_getenv("PHAR_ASYMP_STITEST_PROB")
   ),
   # HIV testing
   # @ORIG, prop. of MSM testing only at late-stage (AIDS)
   hiv.test.late.prob  = c(
-    Sys.getenv("HIV_LATE_TESTER_PROB_BLACK"),
-    Sys.getenv("HIV_LATE_TESTER_PROB_HISP"),
-    Sys.getenv("HIV_LATE_TESTER_PROB_OTHER"),
-    Sys.getenv("HIV_LATE_TESTER_PROB_WHITE")
+    fmt_getenv("HIV_LATE_TESTER_PROB_BLACK"),
+    fmt_getenv("HIV_LATE_TESTER_PROB_HISP"),
+    fmt_getenv("HIV_LATE_TESTER_PROB_OTHER"),
+    fmt_getenv("HIV_LATE_TESTER_PROB_WHITE")
   ),
   # HIV treatment parameters
   tt.part.supp        = rep(0, 4), # Partial VLS class, post ART
   tt.full.supp        = rep(1, 4), # Full VLS class, post ART
   tt.dur.supp         = rep(0, 4), # Durable VLS post ART
   tx.init.prob        = c(
-    Sys.getenv("HIV_RX_INIT_PROB_BLACK"),
-    Sys.getenv("HIV_RX_INIT_PROB_HISP"),
-    Sys.getenv("HIV_RX_INIT_PROB_OTHER"),
-    Sys.getenv("HIV_RX_INIT_PROB_WHITE")
+    fmt_getenv("HIV_RX_INIT_PROB_BLACK"),
+    fmt_getenv("HIV_RX_INIT_PROB_HISP"),
+    fmt_getenv("HIV_RX_INIT_PROB_OTHER"),
+    fmt_getenv("HIV_RX_INIT_PROB_WHITE")
   ),
   tx.halt.part.prob   = c(
-    Sys.getenv("HIV_RX_HALT_PROB_BLACK"),
-    Sys.getenv("HIV_RX_HALT_PROB_HISP"),
-    Sys.getenv("HIV_RX_HALT_PROB_OTHER"),
-    Sys.getenv("HIV_RX_HALT_PROB_WHITE")
+    fmt_getenv("HIV_RX_HALT_PROB_BLACK"),
+    fmt_getenv("HIV_RX_HALT_PROB_HISP"),
+    fmt_getenv("HIV_RX_HALT_PROB_OTHER"),
+    fmt_getenv("HIV_RX_HALT_PROB_WHITE")
   ),
   tx.halt.full.rr     = rep(1, 4), # not used
   tx.halt.dur.rr      = rep(1, 4), # not used
   tx.reinit.part.prob = c(
-    Sys.getenv("HIV_RX_REINIT_PROB_BLACK"),
-    Sys.getenv("HIV_RX_REINIT_PROB_HISP"),
-    Sys.getenv("HIV_RX_REINIT_PROB_OTHER"),
-    Sys.getenv("HIV_RX_REINIT_PROB_WHITE")
+    fmt_getenv("HIV_RX_REINIT_PROB_BLACK"),
+    fmt_getenv("HIV_RX_REINIT_PROB_HISP"),
+    fmt_getenv("HIV_RX_REINIT_PROB_OTHER"),
+    fmt_getenv("HIV_RX_REINIT_PROB_WHITE")
   ), # @ORIG
   tx.reinit.full.rr   = rep(1, 4),
   tx.reinit.dur.rr    = rep(1, 4),
   # Scaling parameters
-  ai.acts.scale.mc    = Sys.getenv("SCALAR_AI_ACT_RATE"),
-  oi.acts.scale.mc    = Sys.getenv("SCALAR_OI_ACT_RATE"),
+  ai.acts.scale.mc    = fmt_getenv("SCALAR_AI_ACT_RATE"),
+  oi.acts.scale.mc    = fmt_getenv("SCALAR_OI_ACT_RATE"),
   kiss.rate.main      = 0,
   kiss.rate.casl      = 0,
   kiss.prob.oo        = 0,
@@ -110,19 +114,19 @@ param <- param_msm(
   rim.rate.casl       = 0,
   rim.prob.oo         = 0,
   trans.scale         = c(
-    Sys.getenv("SCALAR_HIV_TRANS_PROB_BLACK"),
-    Sys.getenv("SCALAR_HIV_TRANS_PROB_HISP"),
-    Sys.getenv("SCALAR_HIV_TRANS_PROB_OTHER"),
-    Sys.getenv("SCALAR_HIV_TRANS_PROB_WHITE")
+    fmt_getenv("SCALAR_HIV_TRANS_PROB_BLACK"),
+    fmt_getenv("SCALAR_HIV_TRANS_PROB_HISP"),
+    fmt_getenv("SCALAR_HIV_TRANS_PROB_OTHER"),
+    fmt_getenv("SCALAR_HIV_TRANS_PROB_WHITE")
   ),
   cdc.sti.int         = 12,
   cdc.sti.hr.int      = 6,
-  cond.eff            = Sys.getenv("CONDOM_EFF_HIV"),
+  cond.eff            = fmt_getenv("CONDOM_EFF_HIV"),
   ## NOTE: Change cond.fail params to 0 to turn off (reflect uncertainty
   ##       in cond. effect)
   cond.fail           = rep(0, 4),
   sti.cond.fail       = rep(0, 4),
-  sti.cond.eff        = Sys.getenv("CONDOM_EFF_GC"),
+  sti.cond.eff        = fmt_getenv("CONDOM_EFF_GC"),
   circ.prob           = netstats$inputs$circ.probs
 )
 
@@ -163,8 +167,18 @@ control <- control_msm(
   skip.check              = TRUE,
   cdcExposureSite_Kissing = FALSE, # FLAG: Kissing considered exposure for CDC protocol?
   tergmLite               = TRUE, # NOTE Must set to avoid error from saveout.net()
-  debug_stitx             = FALSE
+  debug_stitx             = FALSE,
+  save.network		  = FALSE,
+  verbose                 = FALSE
 )
 
 sim <- netsim(est, param, init, control)
 
+saveRDS(
+  sim,
+  file =
+    file.path("~/scratch", "sim1",
+      paste0(
+        sprintf("episim %02d", as.numeric(Sys.getenv("SIMNO"))),
+        "_", Sys.getenv("SLURM_JOB_ID"), ".rds")
+      ))
