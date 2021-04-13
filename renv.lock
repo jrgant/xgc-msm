@@ -25,15 +25,15 @@
     },
     "EpiModel": {
       "Package": "EpiModel",
-      "Version": "2.0.4",
+      "Version": "1.8.0",
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteUsername": "statnet",
       "RemoteRepo": "EpiModel",
-      "RemoteRef": "master",
-      "RemoteSha": "7101ee53c71ac28e6be937224689c4d358f21aaa",
-      "Hash": "8586f87f6f4a8c88039c5deb0d19e84d"
+      "RemoteRef": "v1.8.0",
+      "RemoteSha": "597c403ada019cf96c95b914252566a441874200",
+      "Hash": "712f525665545b3fe26f3e5b3e50f8bb"
     },
     "EpiModelHIV": {
       "Package": "EpiModelHIV",
