@@ -20,20 +20,10 @@ netstats    <- get_est("netstats")
 est         <- get_est("netest")
 epistats    <- get_est("epistats")
 
-<<<<<<< Updated upstream
-## Start model at 1% HIV prevalence (reduce necessary burn-in time)
-## The init_status_msm() function uses the initialized diag.status
-## attribute to initialize HIV status.
-netstats$attr$diag.status <- rbinom(
-  length(netstats$attr$diag.status), 1, 0.01
-)
-
 ## This function passes the environment variables to EpiModel functions
 ## in numeric format.
 fmt_getenv <- function(x) as.numeric(Sys.getenv(x))
 
-=======
->>>>>>> Stashed changes
 param <- param_msm(
   # external objects
   netstats          = netstats,
