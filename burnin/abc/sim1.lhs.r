@@ -172,6 +172,6 @@ saveRDS(
   file =
     file.path("~/scratch", "sim1",
       paste0(
-        sprintf("episim_%02d", as.numeric(Sys.getenv("SIMNO"))),
+        sprintf("episim_%04d", as.numeric(Sys.getenv("SIMNO"))),
         "_", Sys.getenv("SLURM_JOB_ID"), ".rds")
       ))
