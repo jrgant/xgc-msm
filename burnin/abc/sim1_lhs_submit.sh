@@ -5,4 +5,4 @@
 
 module load R/4.0.3
 cd ~/data/jgantenb/xgcmsm/
-Rscript ./burnin/abc/sim1.lhs.r --vanilla
+Rscript ./burnin/abc/sim1_02_lhs.r --vanilla
