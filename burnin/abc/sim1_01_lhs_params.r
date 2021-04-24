@@ -101,7 +101,7 @@ lhs_real <-
   })
 
 # check that all priors are included in all parameter sets
-sapply(priors, function(.x) {
+priornames_ok <- sapply(priors, function(.x) {
   currname <- .x[4]
   sapply(lhs_real, function(.y) {
     currname %in% names(.y)
@@ -110,7 +110,7 @@ sapply(priors, function(.x) {
 
 # check that all sampled values across all parameter sets
 # fall within specified prior bounds
-sapply(priors, function(.x) {
+priorvals_ok <- sapply(priors, function(.x) {
   currname <- .x[4]
   p_min <- as.numeric(.x[2])
   p_max <- as.numeric(.x[3])
@@ -119,66 +119,13 @@ sapply(priors, function(.x) {
   })
 }) %>% all
 
-make_batch_script <- function(ncores, walltime, memory, paramset, nsteps, nsims, simid) {
-  str1 <- paste0(
-    "sbatch",
-    " -n ", ncores,
-    " -t ", walltime,
-    " -o ", paste0("~/scratch/sim1/SIMNO_", sprintf("%04d", simid), ".log"),
-    " --mem=", memory,
-    " --export=ALL,",
-    paste0(
-      paste0(names(paramset), "=", round(paramset, 6)),
-      collapse = ","
-    ),
-    ",NSTEPS=", nsteps,
-    ",NSIMS=", nsims,
-    ",SIMNO=", simid
-  )
-  str2 <- " ~/data/jgantenb/xgcmsm/burnin/abc/sim1_lhs_submit.sh"
-  paste0(str1, str2)
-}
+abcdir <- here::here("burnin", "abc")
 
-scripts <- lapply(
-  seq_len(length(lhs_real)),
-  function(.x) {
-    make_batch_script(
-      ncores    = 5,
-      walltime  = "4:00:00",
-      memory    = "20GB",
-      paramset  = lhs_real[[.x]],
-      nsteps    = 3120,
-      nsims     = 10,
-      simid     = .x
-    )
+if (priornames_ok & priorvals_ok) {
+  if (!file.exists(file.path(abcdir, "sim1"))) {
+    dir.create(file.path(abcdir, "sim1"))
   }
-)
-
-# Write bash files (split into batches of 1000)
-jobs_per_batch <- 1000
-numfiles <- length(lhs_real) / jobs_per_batch
-start_jobs <- seq(1, length(lhs_real), by = jobs_per_batch)
-
-bfiles <- here::here(
-  "burnin", "abc", "sim1",
-  paste0("sim1.batch", sprintf("%03d", 1:numfiles), ".lhs.params.sh")
-  )
-
-dir.create(here::here("burnin", "abc", "sim1"))
-
-for (i in seq_len(length(bfiles))) {
-  cat("#!/bin/bash", file = bfiles[[i]], sep = "\n", append = FALSE)
-  if (i == 1) {
-   cat(
-     paste("mkdir", "~/scratch/sim1"),
-     file = bfiles[[i]], sep = "\n",
-     append = TRUE
-   )
-  }
-  cat(
-    unlist(scripts[start_jobs[i]:(start_jobs[i]+(jobs_per_batch - 1))]),
-    file = bfiles[[i]],
-    sep = "\n",
-    append = TRUE
-  )
+  saveRDS(lhs_real, file = file.path(abcdir, "sim1", "lhs_sim1.rds"))
+} else {
+  stop("Check prior specification.")
 }

@@ -20,6 +20,17 @@ netstats    <- get_est("netstats")
 est         <- get_est("netest")
 epistats    <- get_est("epistats")
 
+lhs_real    <- readRDS(
+  here::here("burnin", "abc", "sim1", "lhs_sim1.rds")
+)
+
+# Set environment variables (parameter sets) based on list position
+# corresponding to SLURM_ARRAY_TASK_ID.
+do.call(
+  Sys.setenv,
+  as.list(lhs_real[[as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))]])
+)
+
 ## This function passes the environment variables to EpiModel functions
 ## in numeric format.
 fmt_getenv <- function(x) as.numeric(Sys.getenv(x))
@@ -130,8 +141,7 @@ init <- init_msm(
 )
 
 control <- control_msm(
-  # Computing options
-  simno   = paste0("SIM1_LHS_", Sys.getenv("SIMNO")),
+  # Computing options (set in batch script or using sbatch on SLURM)
   nsims   = as.numeric(Sys.getenv("NSIMS")),
   nsteps  = as.numeric(Sys.getenv("NSTEPS")),
   ncores  = as.numeric(Sys.getenv("SLURM_NPROCS")),
@@ -163,7 +173,7 @@ control <- control_msm(
   cdcExposureSite_Kissing = FALSE, # FLAG: Kissing considered exposure for CDC protocol?
   tergmLite               = TRUE, # NOTE Must set to avoid error from saveout.net()
   debug_stitx             = FALSE,
-  save.network		  = FALSE,
+  save.network		        = FALSE,
   verbose                 = FALSE
 )
 
@@ -174,6 +184,6 @@ saveRDS(
   file =
     file.path("~/scratch", "sim1",
       paste0(
-        sprintf("episim_%04d", as.numeric(Sys.getenv("SIMNO"))),
+        sprintf("episim_%04d", as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))),
         "_", Sys.getenv("SLURM_JOB_ID"), ".rds")
       ))
