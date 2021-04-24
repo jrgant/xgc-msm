@@ -148,7 +148,6 @@ make_batch_script <- function(
 
   specs <- paste(
     "#!/bin/bash",
-    "#[[ ! -d ~/scratch/sim1 ]] && mkdir ~/scratch/sim1",
     paste(  sb, "-J", jobname       ),
     paste0( sb, "--time=", walltime ),
     paste(  sb, "-p", partition     ),

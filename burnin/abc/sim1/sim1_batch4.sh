@@ -1,5 +1,4 @@
 #!/bin/bash
-#[[ ! -d ~/scratch/sim1 ]] && mkdir ~/scratch/sim1
 #SBATCH -J Sim1-LHS-XGC
 #SBATCH--time=3:00:00
 #SBATCH -p batch
