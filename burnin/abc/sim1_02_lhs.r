@@ -132,7 +132,9 @@ init <- init_msm(
 control <- control_msm(
   # Computing options
   simno   = paste0("SIM1_LHS_", Sys.getenv("SIMNO")),
+  nsims   = as.numeric(Sys.getenv("NSIMS")),
   nsteps  = as.numeric(Sys.getenv("NSTEPS")),
+  ncores  = as.numeric(Sys.getenv("SLURM_NPROCS")),
   # Epidemic simulation Modules
   initialize.FUN    = initialize_msm,
   aging.FUN         = aging_msm,

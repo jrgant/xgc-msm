@@ -59,18 +59,18 @@ priors <- list(
   pvec(1 - (1 - 0.366)^(1/52), 1 - (1 - 0.366)^(1/52), "HIV_RX_HALT_PROB_OTHER"),
   pvec(1 - (1 - 0.406)^(1/52), 1 - (1 - 0.406)^(1/52), "HIV_RX_HALT_PROB_WHITE"),
   # tx.reinit.part.prob
-  pvec(0.0001, 0.20, "HIV_RX_REINIT_PROB_BLACK"),
-  pvec(0.0001, 0.20, "HIV_RX_REINIT_PROB_HISP"),
-  pvec(0.0001, 0.20, "HIV_RX_REINIT_PROB_OTHER"),
-  pvec(0.0001, 0.20, "HIV_RX_REINIT_PROB_WHITE"),
+  pvec(0.01, 0.20, "HIV_RX_REINIT_PROB_BLACK"),
+  pvec(0.01, 0.20, "HIV_RX_REINIT_PROB_HISP"),
+  pvec(0.01, 0.20, "HIV_RX_REINIT_PROB_OTHER"),
+  pvec(0.01, 0.20, "HIV_RX_REINIT_PROB_WHITE"),
   # sex act scalars
   pvec(1, 1, "SCALAR_AI_ACT_RATE"), # ai.acts.scale
   pvec(1, 1, "SCALAR_OI_ACT_RATE"), # oi.acts.scale
   # HIV transmission prob. scalars
-  pvec(1, 1, "SCALAR_HIV_TRANS_PROB_BLACK"), # black
-  pvec(1, 1, "SCALAR_HIV_TRANS_PROB_HISP"), # hispanic
-  pvec(1, 1, "SCALAR_HIV_TRANS_PROB_OTHER"), # other
-  pvec(1, 1, "SCALAR_HIV_TRANS_PROB_WHITE"), # white
+  pvec(0.01, 5, "SCALAR_HIV_TRANS_PROB_BLACK"), # black
+  pvec(0.01, 5, "SCALAR_HIV_TRANS_PROB_HISP"), # hispanic
+  pvec(0.01, 5, "SCALAR_HIV_TRANS_PROB_OTHER"), # other
+  pvec(0.01, 5, "SCALAR_HIV_TRANS_PROB_WHITE"), # white
   # condom efficacy
   pvec(0.6, 1, "CONDOM_EFF_HIV"), # cond.eff (HIV), 1 - relative risk, condom use vs. no
   pvec(0.7, 1, "CONDOM_EFF_GC")   # sti.cond.eff, relative risk, condom use vs. no
@@ -119,41 +119,43 @@ sapply(priors, function(.x) {
   })
 }) %>% all
 
-make_batch_script <- function(ncores, walltime, memory, paramset, nsteps, simnum) {
+make_batch_script <- function(ncores, walltime, memory, paramset, nsteps, nsims, simid) {
   str1 <- paste0(
     "sbatch",
     " -n ", ncores,
     " -t ", walltime,
-    " -o ", paste0("~/scratch/sim1/SIMNO_", sprintf("%04d", simnum), ".log"),
+    " -o ", paste0("~/scratch/sim1/SIMNO_", sprintf("%04d", simid), ".log"),
     " --mem=", memory,
     " --export=ALL,",
     paste0(
       paste0(names(paramset), "=", round(paramset, 6)),
       collapse = ","
     ),
-    ",NSTEPS=", nsteps
+    ",NSTEPS=", nsteps,
+    ",NSIMS=", nsims,
+    ",SIMNO=", simid
   )
-  str2 <- paste0(",SIMNO=", simnum)
-  str3 <- " ~/data/jgantenb/xgcmsm/burnin/abc/sim1.lhs.submit.sh"
-  paste0(str1, str2, str3)
+  str2 <- " ~/data/jgantenb/xgcmsm/burnin/abc/sim1_lhs_submit.sh"
+  paste0(str1, str2)
 }
 
 scripts <- lapply(
   seq_len(length(lhs_real)),
   function(.x) {
     make_batch_script(
-      ncores = 1,
-      walltime = "2:00:00",
-      memory = "2GB",
-      paramset = lhs_real[[.x]],
-      nsteps = 3120,
-      simnum = .x
+      ncores    = 5,
+      walltime  = "4:00:00",
+      memory    = "20GB",
+      paramset  = lhs_real[[.x]],
+      nsteps    = 3120,
+      nsims     = 10,
+      simid     = .x
     )
   }
 )
 
-# Write bash files (split into batches of 100)
-jobs_per_batch <- 100
+# Write bash files (split into batches of 1000)
+jobs_per_batch <- 1000
 numfiles <- length(lhs_real) / jobs_per_batch
 start_jobs <- seq(1, length(lhs_real), by = jobs_per_batch)
 
@@ -174,7 +176,7 @@ for (i in seq_len(length(bfiles))) {
    )
   }
   cat(
-    unlist(scripts[start_jobs[i]:(start_jobs[i]+99)]),
+    unlist(scripts[start_jobs[i]:(start_jobs[i]+(jobs_per_batch - 1))]),
     file = bfiles[[i]],
     sep = "\n",
     append = TRUE
