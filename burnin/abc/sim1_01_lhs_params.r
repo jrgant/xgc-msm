@@ -129,3 +129,58 @@ if (priornames_ok & priorvals_ok) {
 } else {
   stop("Check prior specification.")
 }
+
+# make batch scripts to submit arrays
+# SLURM limit is 1200 job requests at a time
+nbatches <- 5
+start_index <- seq(1, length(lhs_real), length(lhs_real) / nbatches)
+
+arrays <- sapply(
+  start_index,
+  function(.x) paste0(.x, "-", .x + (length(lhs_real) / nbatches) - 1)
+)
+
+# This function writes a batch script to submti a job array.
+make_batch_script <- function(
+  jobname, walltime, partition, mem, ncores, array, log_fullpath, batchid ) {
+
+  sb <- "#SBATCH"
+
+  specs <- paste(
+    "#!/bin/bash",
+    "#[[ ! -d ~/scratch/sim1 ]] && mkdir ~/scratch/sim1",
+    paste(  sb, "-J", jobname       ),
+    paste0( sb, "--time=", walltime ),
+    paste(  sb, "-p", partition     ),
+    paste0( sb, "--mem=", mem       ),
+    paste(  sb, "-n", ncores        ),
+    paste0( sb, "--array=", array   ),
+    paste(  sb, "-o", log_fullpath  ),
+    paste(  sb, "--mail-type=ALL"   ),
+    paste(  sb, "--mail-user=jrgant@brown.edu"),
+    "module load R/4.0.3",
+    "cd ~/data/jgantenb/xgcmsm/",
+    "Rscript ./burnin/abc/sim1_02_lhs.r --vanilla",
+    sep = "\n"
+  )
+
+  sdir <- here::here("burnin", "abc", "sim1")
+  writeLines(
+    text = specs,
+    con = file.path(sdir, paste0("sim1_batch", batchid, ".sh"))
+  )
+
+}
+
+for (i in seq_len(length(arrays))) {
+  make_batch_script(
+    jobname = "Sim1-LHS-XGC",
+    walltime = "3:00:00",
+    partition = "batch",
+    mem = "200GB",
+    ncores = 1,
+    array = arrays[i],
+    log_fullpath = "~/scratch/sim1/LHS-Sim1_ARRAY-%A_JOB-%J_SIMNO-%4a.log",
+    batchid = i
+  )
+}
