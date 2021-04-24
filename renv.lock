@@ -38,8 +38,10 @@
     "EpiModelHIV": {
       "Package": "EpiModelHIV",
       "Version": "1.5.0",
-      "Source": "unknown",
-      "Hash": "c6f0b8a9e596caf201d189f89284df31"
+      "Source": "Local",
+      "RemoteType": "local",
+      "RemoteUrl": "/gpfs/data/bm8/jgantenb/EpiModelHIV-p",
+      "Hash": "7578b030743ac8062fe35e129c9d0ece"
     },
     "EpiModelHPC": {
       "Package": "EpiModelHPC",
