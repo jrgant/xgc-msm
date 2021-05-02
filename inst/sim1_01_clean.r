@@ -30,9 +30,11 @@ registerDoParallel(ncores)
 epi <- foreach(i = seq_along(cs), .combine = rbind) %dopar% {
   cd <- readRDS(cs[i])
   cde <- as.data.table(cd$epi)
+
   cde[, simid := i]
   cde[, at := 1:.N]
-  cde
+
+  cde[at >= 3016] # keep last 2 years of 60-year burnin
 }
 
 saveRDS(epi, here::here("burnin", "abc", "sim1", "sim1_epi.rds"))
