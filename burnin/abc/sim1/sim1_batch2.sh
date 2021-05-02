@@ -2,10 +2,11 @@
 #SBATCH -J Sim1-LHS-XGC
 #SBATCH--time=3:00:00
 #SBATCH -p batch
-#SBATCH--mem=200GB
+#SBATCH--mem=3GB
 #SBATCH -n 1
 #SBATCH--array=1001-2000
-#SBATCH -o ~/scratch/sim1/LHS-Sim1_ARRAY-%A_JOB-%J_SIMNO-%4a.log
+#SBATCH -o LHS-Sim1_ARRAY-%A_JOB-%J_SIMNO-%4a.log
+#SBATCH--export=ALL,NSIMS=1,NSTEPS=3120
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jrgant@brown.edu
 module load R/4.0.3

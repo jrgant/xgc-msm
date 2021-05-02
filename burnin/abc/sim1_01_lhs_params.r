@@ -141,8 +141,9 @@ arrays <- sapply(
 )
 
 # This function writes a batch script to submti a job array.
-make_batch_script <- function(
-  jobname, walltime, partition, mem, ncores, array, log_fullpath, batchid ) {
+make_batch_script <- function(jobname, walltime, partition, mem,
+                              ncores, array, log_fullpath, batchid,
+                              nsims, nsteps) {
 
   sb <- "#SBATCH"
 
@@ -155,6 +156,7 @@ make_batch_script <- function(
     paste(  sb, "-n", ncores        ),
     paste0( sb, "--array=", array   ),
     paste(  sb, "-o", log_fullpath  ),
+    paste0( sb, "--export=ALL,NSIMS=", nsims, ",NSTEPS=", nsteps ),
     paste(  sb, "--mail-type=ALL"   ),
     paste(  sb, "--mail-user=jrgant@brown.edu"),
     "module load R/4.0.3",
@@ -176,10 +178,12 @@ for (i in seq_len(length(arrays))) {
     jobname = "Sim1-LHS-XGC",
     walltime = "3:00:00",
     partition = "batch",
-    mem = "200GB",
+    mem = "3GB",
     ncores = 1,
     array = arrays[i],
-    log_fullpath = "~/scratch/sim1/LHS-Sim1_ARRAY-%A_JOB-%J_SIMNO-%4a.log",
-    batchid = i
+    log_fullpath = "LHS-Sim1_ARRAY-%A_JOB-%J_SIMNO-%4a.log",
+    batchid = i,
+    nsims = 1,
+    nsteps = 3120
   )
 }
