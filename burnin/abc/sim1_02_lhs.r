@@ -53,7 +53,7 @@ param <- param_msm(
   epistats          = epistats,
   # demography
   arrival.age       = 18,
-  a.rate            = netstats$demog$mortrate.marginal,
+  a.rate            = netstats$demog$mortrate.marginal + (0.75 / 20000), # tweak marginal mortality to account for AIDS
   u2rgc.tprob       = fmt_getenv("U2RGC_PROB"), # urethral-to-rectal transmission probability
   u2pgc.tprob       = fmt_getenv("U2PGC_PROB"), # urethral-to-pharyngeal transmission probability
   r2ugc.tprob       = fmt_getenv("R2UGC_PROB"), # rectal-to-urethral transmission probability
