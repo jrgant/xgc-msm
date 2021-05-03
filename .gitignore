@@ -40,3 +40,6 @@ vignettes/*.pdf
 
 # Log files from batch scripts
 *.log
+
+# ignore graveyard directories
+.graveyard
