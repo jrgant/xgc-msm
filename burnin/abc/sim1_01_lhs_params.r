@@ -10,7 +10,8 @@ pacman::p_load(
   rms,
   stringr,
   pscl,
-  lhs
+  lhs,
+  rlecuyer
 )
 
 
@@ -129,6 +130,20 @@ if (priornames_ok & priorvals_ok) {
 } else {
   stop("Check prior specification.")
 }
+
+
+# CREATE RNG STREAMS FOR SIMULATIONS -------------------------------------------
+
+## use the rlecuyer package to create independent random numbers streams
+## for each simulation.
+
+streams <- paste0("str", sprintf("%04d", seq_along(lhs_real)))
+.lec.CreateStream(streams)
+
+saveRDS(.lec.Random.seed.table, file.path(abcdir, "sim1", "seeds_sim1.rds"))
+
+
+# MAKE BATCH SCRIPTS -----------------------------------------------------------
 
 # make batch scripts to submit arrays
 # SLURM limit is 1200 job requests at a time

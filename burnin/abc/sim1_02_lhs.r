@@ -10,12 +10,24 @@ pacman::p_load(
   rms,
   stringr,
   pscl,
-  lhs
+  lhs,
+  rlecuyer
 )
 
+slurm_array_task_id <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))
 
 # EPIMODEL SIM -----------------------------------------------------------------
 
+## select seed for the current job and read it into the current environment
+.lec.Random.seed.table <- readRDS(
+  here::here("burnin", "abc", "sim1", "seeds_sim1.rds")
+)
+
+.lec.CurrentStream(
+  .lec.Random.seed.table$name[slurm_array_task_id]
+)
+
+## read in network stats
 netstats    <- get_est("netstats")
 est         <- get_est("netest")
 epistats    <- get_est("epistats")
@@ -28,7 +40,7 @@ lhs_real    <- readRDS(
 # corresponding to SLURM_ARRAY_TASK_ID.
 do.call(
   Sys.setenv,
-  as.list(lhs_real[[as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))]])
+  as.list(lhs_real[[slurm_array_task_id]])
 )
 
 ## This function passes the environment variables to EpiModel functions
@@ -179,11 +191,26 @@ control <- control_msm(
 
 sim <- netsim(est, param, init, control)
 
+.lec.CurrentStreamEnd()
+
+sim[["seed.table.state"]] <- .lec.GetState(
+  .lec.Random.seed.table$name[slurm_array_task_id]
+)
+
+
+################################################################################
+## WRITE OUTPUT ##
+################################################################################
+
+outpath <- "~/scratch/sim1"
+if (!dir.exists(outpath)) dir.create(outpath)
+
 saveRDS(
-  sim,
-  file =
-    file.path("~/scratch", "sim1",
-      paste0(
-        sprintf("episim_%04d", as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))),
-        "_", Sys.getenv("SLURM_JOB_ID"), ".rds")
-      ))
+  object = sim,
+  file = file.path(
+    outpath,
+    paste0(
+      sprintf("episim_%04d", slurm_array_task_id),
+      "_", Sys.getenv("SLURM_JOB_ID"), ".rds")
+  )
+)
