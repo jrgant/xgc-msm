@@ -370,6 +370,13 @@
       "Repository": "CRAN",
       "Hash": "3eb6477d01eb5bbdc03f7d5f70f2733e"
     },
+    "ggthemes": {
+      "Package": "ggthemes",
+      "Version": "4.2.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "617fb2c300f68e8b1ba21043fba88fd7"
+    },
     "glue": {
       "Package": "glue",
       "Version": "1.4.2",
@@ -712,6 +719,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "f84d8f430c496bb5c6769fed95705562"
+    },
+    "rlecuyer": {
+      "Package": "rlecuyer",
+      "Version": "0.3-5",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "9dec64b164b87cd686efb28c3278e075"
     },
     "rms": {
       "Package": "rms",
