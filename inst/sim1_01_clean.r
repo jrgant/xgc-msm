@@ -18,8 +18,17 @@ p_load(
 ## FILES ##
 ################################################################################
 
+
+simdir <- Sys.getenv("SIMDIR")
+
+if (Sys.getenv("SIMDIR") == "") {
+  stop("Must set the environment variable SIMDIR in sbatch.")
+}
+
+print(paste("Retrieving simulations from", simdir))
+
 cs <- list.files(
-  "~/scratch/sim1",
+  simdir,
   pattern = "rds",
   full.names = TRUE
 )
