@@ -46,9 +46,61 @@ setenv <- function(nsteps = 200,
 #' @describeIn helpers Retrieve epistats object.
 #' @export
 #' @importFrom here here
+#' @details 'get_est' checks for existence of ARTnet code repo. If so,
+#' it checks which project's copy of a file is newer. If the version
+#' in ARTnet code repo is newer, save it to this project and load. Otherwise,
+#' load the existing local file. The function is intended to ensure we're always
+#' working with the most recent file. Will load the local file by default
+#' if the ARTnet repo's file directories are not found (so that scripts contained
+#' in this package won't fail in the absence of the ARTnet code repo.)
 get_est <- function(string = c("epistats", "netest", "netstats")) {
+
+  proj_root <- here::here()
+  loc_file <- here::here("est", paste0(string, ".Rds"))
+
+  if (string %in% c("epistats", "netstats")) {
+    orig_dir <- "../egcmsm_artnet/netstats"
+  }
+
+  if (string == c("netest")) {
+    orig_dir <- "../egcmsm_artnet/netest"
+  }
+
+  if (dir.exists(orig_dir)) {
+    orig_file <- file.path(orig_dir, paste0(string, ".Rds"))
+    files <- c(orig_file, loc_file)
+    mtimes <- sapply(files, file.mtime)
+    newer_file <- which(mtimes == max(mtimes))
+
+    if (!(2 %in% newer_file)) {
+
+      fc_status <- file.copy(
+        orig_file, loc_file,
+        overwrite = TRUE,
+        copy.date = TRUE
+      )
+
+      if (fc_status == TRUE) {
+        cat("Local version of", string, "updated.", "\n")
+      }
+
+      if (fc_status == FALSE | !exists("fc_status")) {
+        cat(
+          "Something may have gone wrong while copying the original file.",
+          "Check for errors.", "\n"
+        )
+      }
+    } else {
+      cat(
+        "Local version of", string, "is current.",
+        "Returning the existing local file.", "\n"
+      )
+    }
+  }
+
   readRDS(here::here("est", paste0(string, ".Rds")))
 }
+
 
 #' @describeIn helpers Make parameter sets
 #' @export
