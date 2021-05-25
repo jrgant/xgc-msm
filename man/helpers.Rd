@@ -33,6 +33,15 @@ These functions provide easy access to demographic distributions
 in the target population as well as helper functions to generate lookup
 tables for different combinations of parameter levels.
 }
+\details{
+'get_est' checks for existence of ARTnet code repo. If so,
+it checks which project's copy of a file is newer. If the version
+in ARTnet code repo is newer, save it to this project and load. Otherwise,
+load the existing local file. The function is intended to ensure we're always
+working with the most recent file. Will load the local file by default
+if the ARTnet repo's file directories are not found (so that scripts contained
+in this package won't fail in the absence of the ARTnet code repo.)
+}
 \section{Functions}{
 \itemize{
 \item \code{raceage_grid}: Produce a lookup table of all possible combinations of

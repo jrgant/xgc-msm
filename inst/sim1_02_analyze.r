@@ -15,15 +15,173 @@ p_load(
 theme_set(theme_tufte(base_size = 20))
 
 targets <- readRDS(here::here("est", "caltargets.Rds"))
-
 epi <- readRDS(here::here("burnin", "abc", "sim1", "sim1_epi.rds"))
-epi
 
-plotepi <- function(var, target = NULL, type = "line", data = epi) {
-  p <- ggplot(data, aes(x = at, y = get(var))) +
-    ylab(var)
 
-  if (type == "line") p <- p + geom_line(aes(group = simid), alpha = 0.01)
+################################################################################
+## Calculate Time-Specific Measures ##
+################################################################################
+
+# HIV diagnosis prevalence among the infected.
+# Need this to compare to calibration target.
+epi[, i.prev.dx.inf := i.prev.dx / i.prev]
+epi[, i.prev.dx.inf.B := i.prev.dx.B / i.prev.B]
+epi[, i.prev.dx.inf.H := i.prev.dx.H / i.prev.H]
+epi[, i.prev.dx.inf.O := i.prev.dx.O / i.prev.O]
+epi[, i.prev.dx.inf.W := i.prev.dx.W / i.prev.W]
+
+
+################################################################################
+## Narrow and Select Parameter Sets ##
+################################################################################
+
+pop_N <- 20000
+t_eval <- 3016
+
+sumcols <- names(epi)[!names(epi) %like% "at|simid"]
+
+## Mark NAs as 0
+epi_noNA <-
+  epi[,
+      lapply(.SD, function(.x) fifelse(is.na(.x), 0, .x)),
+      .SDcols = c(sumcols, "at", "simid")
+      ]
+
+## Get output averages over the last 52 weeks
+epi_mn <- epi_noNA[
+  at >= t_eval,
+  lapply(.SD, mean),
+  by = simid,
+  .SDcols = sumcols
+]
+
+# TODO Tweak mortality rate so that across the initial sampled range of parameter sets, the 50% quantile is about at 20,000. Still a little low here.
+
+# Pick parameter sets that keep us within 5% of population size N = 20,000
+# (average over final burnin-in year)
+epi_mn_selnum <- epi_mn[abs(pop_N - num) / pop_N <= 0.05]
+
+get_absdiff <- function(target, output, data = epi_mn_selnum) {
+  cols <- c("simid", output)
+  d <- data[, ..cols]
+  d[, absdiff := abs(get(output) - target)]
+  dout <- d[order(absdiff)]
+  dout[, rank := 1:.N]
+  return(dout)
+}
+
+t_hiv_inc <- get_absdiff(targets$ct_hiv_incid_100k / 1000, "ir100")
+t_hiv_prv <- get_absdiff(targets$ct_hiv_prev, "i.prev")
+
+# diagnosis prevalence among infected
+t_hiv_dx_race <- lapply(
+  names(targets$ct_hivdx_pr_byrace),
+  function(.x) {
+    get_absdiff(targets$ct_hivdx_pr_byrace[[.x]], paste0("i.prev.dx.inf.", .x))
+  }
+)
+
+# viral suppression among HIV-diagnosed, by age group
+t_vls_age <- lapply(
+  names(targets$ct_vls_pr_byage),
+  function(.x) {
+    get_absdiff(targets$ct_vls_pr_byage[[.x]], paste0("cc.vsupp.", .x))
+  }
+)
+
+# gonorrhea testing in clinic, by anatomic site
+t_gc_anat_test <- lapply(
+  names(targets$ct_prop_anatsite_tested),
+  function(.x) {
+    var <- sprintf("prop.%s.tested", .x)
+    pass1 <- get_absdiff(
+      targets$ct_prop_anatsite_tested[[.x]],
+      var
+    )
+    # choose only runs where men received tests at the anat site
+    pass2 <- pass1[get(var) > 0][, rank := 1:.N][]
+    pass2
+  }
+)
+
+# gonorrhea positivity in clinic, among tested anatomic sites
+t_gc_pos <- lapply(
+  names(targets$ct_prop_anatsite_pos),
+  function(.x) {
+    lugc <- c("uGC" = "ureth", "rGC" = "rect", "pGC" = "phar")
+    slug <- names(match.arg(.x, lugc))
+    var <- sprintf("prob.%s.tested", slug)
+    get_absdiff(
+      targets$ct_prop_anatsite_pos[[.x]],
+      var
+    )[get(var) > 0][, rank := 1:.N]
+  }
+)
+
+t_hiv_inc
+t_hiv_prv
+t_hiv_dx_race
+t_vls_age
+t_gc_anat_test
+t_gc_pos
+
+tlist <- list(
+  t_hiv_inc,
+  t_hiv_prv,
+  t_hiv_dx_race[[1]],
+  t_hiv_dx_race[[2]],
+  t_hiv_dx_race[[3]],
+  t_hiv_dx_race[[4]],
+  t_vls_age[[1]],
+  t_vls_age[[2]],
+  t_vls_age[[3]],
+  t_vls_age[[4]],
+  t_vls_age[[5]],
+  t_gc_anat_test[[1]],
+  t_gc_anat_test[[2]],
+  t_gc_anat_test[[3]],
+  t_gc_pos[[1]],
+  t_gc_pos[[2]],
+  t_gc_pos[[3]]
+)
+
+names(tlist) <- sapply(tlist, function(.x) names(.x)[2])
+
+simid_sel <- lapply(tlist, function(.x) .x[rank <= .N / 2, simid])
+
+intsel <- Reduce(intersect, simid_sel)
+
+lapply(tlist, function(.x) .x[simid %in% intsel])
+
+episel <- epi[simid %in% intsel]
+episel
+
+
+################################################################################
+## Time Series Plots ##
+################################################################################
+
+plotepi <- function(var, target = NULL, type = "line",
+                    data = epi, varname = NULL, line_alpha = 1) {
+
+  keepv <- c("simid", "at", var)
+  data <- data[, ..keepv]
+
+  if (length(var) > 1) {
+    data <- melt(
+      data,
+      id.vars = c("simid", "at"),
+      measure.vars = var,
+      variable.name = varname
+    )
+
+    p <- ggplot(data, aes(x = at, y = value, color = get(varname))) +
+      facet_wrap(~ get(varname))
+  } else {
+    p <- ggplot(data, aes(x = at, y = get(var))) + ylab(var)
+  }
+
+  if (type == "line") p <- p + geom_line(aes(group = simid), alpha = line_alpha)
   if (type == "boxplot") p <- p + geom_boxplot()
 
   if (!is.null(target)) {
@@ -38,8 +196,43 @@ plotepi <- function(var, target = NULL, type = "line", data = epi) {
   return(p)
 }
 
-plotepi("num", 20000)
 
-plotepi("i.prev", targets$ct_hiv_prev)
+rlabs <- c("B", "H", "O", "W")
 
-plotepi("ir100", targets$ct_hiv_incid_100k / 1000)
+plotepi("num", 20000, data = episel)
+
+plotepi(
+  c(paste0("num.", rlabs)),
+  varname = "N",
+  line_alpha = 0.4,
+  data = episel
+)
+
+plotepi(
+  "i.prev",
+  targets$ct_hiv_prev,
+  data = episel
+)
+
+plotepi(
+  c("i.prev", paste0("i.prev.", rlabs)),
+  varname = "HIV prevalence",
+  line_alpha = 0.4,
+  data = episel
+)
+
+plotepi("ir100", targets$ct_hiv_incid_100k / 1000, data = episel)
+
+
+melt(
+  epi_mn_selnum[, lapply(.SD, mean), .SDcols = names(tlist)]
+)
+
+melt(
+  epi_mn_selnum[simid %in% intsel, lapply(.SD, mean), .SDcols = names(tlist)]
+)
+
+tnames <- names(tlist)
+epi_mn_intsel <- epi_mn_selnum[simid %in% intsel, ..tnames]
+
+ggcorrplot::ggcorrplot(cor(epi_mn_intsel))
