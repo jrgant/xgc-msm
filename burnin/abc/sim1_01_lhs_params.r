@@ -158,20 +158,26 @@ arrays <- sapply(
 # This function writes a batch script to submti a job array.
 make_batch_script <- function(jobname, walltime, partition, mem,
                               ncores, array, log_fullpath, batchid,
-                              nsims, nsteps) {
+                              nsims, nsteps, add_arrivals, simdir) {
 
   sb <- "#SBATCH"
 
   specs <- paste(
     "#!/bin/bash",
     paste(  sb, "-J", jobname       ),
-    paste0( sb, "--time=", walltime ),
+    paste0( sb, " --time=", walltime ),
     paste(  sb, "-p", partition     ),
-    paste0( sb, "--mem=", mem       ),
+    paste0( sb, " --mem=", mem       ),
     paste(  sb, "-n", ncores        ),
-    paste0( sb, "--array=", array   ),
+    paste0( sb, " --array=", array   ),
     paste(  sb, "-o", log_fullpath  ),
-    paste0( sb, "--export=ALL,NSIMS=", nsims, ",NSTEPS=", nsteps ),
+    paste0(
+      sb,
+      " --export=ALL,NSIMS=", nsims,
+      ",NSTEPS=", nsteps,
+      ",ARRIVE_RATE_ADD_PER20K=", add_arrivals,
+      ",SIMDIR=", simdir
+    ),
     paste(  sb, "--mail-type=ALL"   ),
     paste(  sb, "--mail-user=jrgant@brown.edu"),
     "module load R/4.0.3",
@@ -199,6 +205,8 @@ for (i in seq_len(length(arrays))) {
     log_fullpath = "LHS-Sim1_ARRAY-%A_JOB-%J_SIMNO-%4a.log",
     batchid = i,
     nsims = 1,
-    nsteps = 3120
+    nsteps = 3120,
+    add_arrivals = 1.285,
+    simdir = "~/scratch/sim1"
   )
 }
