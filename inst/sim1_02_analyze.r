@@ -20,8 +20,36 @@ p_load(
 extrafont::loadfonts()
 theme_set(theme_tufte(base_size = 20))
 
+## Get date from system environment if set. Otherwise, find date of most recent
+## sim1_epi run.
+sys_batch_date <- Sys.getenv("BATCH_DATE")
+
+sim_epis <- list.files(
+    here::here("burnin", "abc", "sim1"),
+    pattern = "sim1_epi",
+    full.names = TRUE
+)
+
+if (sys_batch_date != "") {
+  batch_date <- Sys.getenv("BATCH_DATE")
+} else {
+  batch_date <- max(ymd(str_extract(sim_epis, "[0-9]{4}-[0-9]{2}-[0-9]{2}")))
+}
+
+## Load calibration targets, netstats, and formatted simulated output.
+epi <- readRDS(sim_epis[sim_epis %like% batch_date])
 targets <- readRDS(here::here("est", "caltargets.Rds"))
-epi <- readRDS(here::here("burnin", "abc", "sim1", "sim1_epi.rds"))
+netstats <- get_est("netstats")
+
+## Helper function to save plots.
+psave <- function(f, p, w = 22, h = 22) {
+  caldir <- here::here("inst", "calfigs", batch_date)
+  if (!dir.exists(caldir)) dir.create(caldir)
+  ggsave(
+    here::here(caldir, paste0(f, ".pdf")),
+    p, width = w, height = h, units = "in"
+  )
+}
 
 
 ################################################################################
