@@ -53,16 +53,26 @@ psave <- function(f, p, w = 22, h = 22) {
 
 
 ################################################################################
-## Calculate Time-Specific Measures ##
+## CALCULATE DERIVED MEASURES ##
 ################################################################################
 
 # HIV diagnosis prevalence among the infected.
 # Need this to compare to calibration target.
-epi[, i.prev.dx.inf := i.prev.dx / i.prev]
-epi[, i.prev.dx.inf.B := i.prev.dx.B / i.prev.B]
-epi[, i.prev.dx.inf.H := i.prev.dx.H / i.prev.H]
-epi[, i.prev.dx.inf.O := i.prev.dx.O / i.prev.O]
-epi[, i.prev.dx.inf.W := i.prev.dx.W / i.prev.W]
+
+# ... by race/ethnicity
+rdxlabs <- c("", ".B", ".H", ".O", ".W")
+race.dx <- paste0("i.prev.dx.inf", rdxlabs)
+
+epi[, (race.dx) := lapply(1:5, function(x) {
+  get(paste0("i.prev.dx", rdxlabs[x])) / get(paste0("i.prev", rdxlabs[x]))
+})][]
+
+# ... by age group
+age.dx <- paste0("i.prev.dx.inf.age", 1:5)
+
+epi[, (age.dx) := lapply(1:5, function(x) {
+  get(paste0("i.prev.dx.age.", x)) / get(paste0("i.prev.age.", x))
+})][]
 
 
 ################################################################################
