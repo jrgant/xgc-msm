@@ -301,45 +301,68 @@ psave("prob.rGC.tested", io_scatter("prob.rGC.tested", gcpp_labs[2]))
 psave("prob.uGC.tested", io_scatter("prob.uGC.tested", gcpp_labs[3]))
 psave("prob.pGC.tested", io_scatter("prob.pGC.tested", gcpp_labs[4]))
 
+
+################################################################################
+## ABSOLUTE DIFFERENCES BETWEEN MODEL OUTPUT AND TARGETS ##
+################################################################################
+
+get_abs_stdiff <- function(target, output, data = epi_mn_selnum) {
   cols <- c("simid", output)
   d <- data[, ..cols]
-  d[, absdiff := abs(get(output) - target)]
-  dout <- d[order(absdiff)]
-  dout[, rank := 1:.N]
+  d[, abs_std_diff := abs((get(output) - target) / sd(get(output)))]
+  dout <- d[order(abs_std_diff)]
   return(dout)
 }
 
-t_hiv_inc <- get_absdiff(targets$ct_hiv_incid_100k / 1000, "ir100")
-t_hiv_prv <- get_absdiff(targets$ct_hiv_prev, "i.prev")
+t_hiv_inc <- get_abs_stdiff(targets$ct_hiv_incid_100k / 1000, "ir100")
+t_hiv_prv <- get_abs_stdiff(targets$ct_hiv_prev, "i.prev")
 
-# diagnosis prevalence among infected
+# diagnosis prevalence among infected, by race
 t_hiv_dx_race <- lapply(
   names(targets$ct_hivdx_pr_byrace),
   function(.x) {
-    get_absdiff(targets$ct_hivdx_pr_byrace[[.x]], paste0("i.prev.dx.inf.", .x))
+    get_abs_stdiff(
+      targets$ct_hivdx_pr_byrace[[.x]],
+      paste0("i.prev.dx.inf.", .x)
+    )
+  }
+)
+
+# diagnosis prevalence among infected, by age
+t_hiv_dx_age <- lapply(
+  names(targets$ct_hivdx_pr_byage),
+  function(.x) {
+    get_abs_stdiff(targets$ct_hivdx_pr_byage[[.x]], paste0("i.prev.dx.inf.", .x))
   }
 )
 
 # viral suppression among HIV-diagnosed, by age group
-t_vls_age <- lapply(
-  names(targets$ct_vls_pr_byage),
+## t_vls_age <- lapply(
+##   names(targets$ct_vls_pr_byage),
+##   function(.x) {
+##     get_abs_stdiff(targets$ct_vls_pr_byage[[.x]], paste0("cc.vsupp.", .x))
+##   }
+## )
+
+# viral suppression among HIV-diagnosed, by race
+t_vls_race <- lapply(
+  names(targets$ct_vls_pr_byrace),
   function(.x) {
-    get_absdiff(targets$ct_vls_pr_byage[[.x]], paste0("cc.vsupp.", .x))
+    get_abs_stdiff(targets$ct_vls_pr_byrace[[.x]], paste0("cc.vsupp.", .x))
   }
 )
+
 
 # gonorrhea testing in clinic, by anatomic site
 t_gc_anat_test <- lapply(
   names(targets$ct_prop_anatsite_tested),
   function(.x) {
     var <- sprintf("prop.%s.tested", .x)
-    pass1 <- get_absdiff(
+    pass1 <- get_abs_stdiff(
       targets$ct_prop_anatsite_tested[[.x]],
       var
     )
-    # choose only runs where men received tests at the anat site
-    pass2 <- pass1[get(var) > 0][, rank := 1:.N][]
-    pass2
+    pass1
   }
 )
 
