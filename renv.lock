@@ -788,6 +788,13 @@
       "Repository": "CRAN",
       "Hash": "6f76f71042411426ec8df6c54f34e6dd"
     },
+    "scico": {
+      "Package": "scico",
+      "Version": "1.2.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "8c75fb64420e2aafadbc258e2797c459"
+    },
     "statnet.common": {
       "Package": "statnet.common",
       "Version": "4.4.1",
