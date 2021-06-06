@@ -98,7 +98,47 @@ epi_mn <- epi_noNA[
 epi_mn_selnum <- epi_mn[abs(pop_N - num) / pop_N <= 0.05]
 epi_mn_selnum[, .N]
 
-get_absdiff <- function(target, output, data = epi_mn_selnum) {
+
+################################################################################
+## CORRELATIONS BETWEEN MODEL OUTPUTS ##
+################################################################################
+
+sel_regex <- paste(
+  c("i.prev$", "i.prev.dx.inf.*[A-Z]{1}$", "cc.vsupp$",
+    "cc.vsupp.[A-Z]{1}$", "prob.*GC", "prop.*tested", "ir100$"),
+  collapse = "|"
+)
+
+selepi <- names(epi_mn)[names(epi_mn) %like% sel_regex]
+
+outcorr <-
+  ggcorrplot(
+    cor(epi_mn[, ..selepi]),
+    outline.color = "black",
+    type = "upper"
+  ) +
+  scale_fill_scico(
+    name = "",
+    limits = c(-1, 1),
+    palette = "vik"
+  ) +
+  ggtitle("Correlations between Selected Model Outputs") +
+  theme(
+    text = element_text(size = 18, family = "sans"),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.key.height = unit(1, "in"),
+    plot.title = element_text(face = "bold")
+  )
+
+outcorr
+
+ggsave(
+  here::here("inst", "calfigs", batch_date, "outcorr.pdf"),
+  outcorr,
+  width = 10, height = 10, units = "in"
+)
+
   cols <- c("simid", output)
   d <- data[, ..cols]
   d[, absdiff := abs(get(output) - target)]
