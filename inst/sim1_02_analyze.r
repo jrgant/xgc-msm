@@ -76,34 +76,27 @@ epi[, (age.dx) := lapply(1:5, function(x) {
 
 
 ################################################################################
-## Narrow and Select Parameter Sets ##
+## SELECT INITIAL SIMS BASED ON POP. SIZE ##
 ################################################################################
 
 pop_N <- 20000
-t_eval <- 3016
+t_eval <- 3068
 
 sumcols <- names(epi)[!names(epi) %like% "at|simid"]
 
 ## Mark NAs as 0
-epi_noNA <-
-  epi[,
-      lapply(.SD, function(.x) fifelse(is.na(.x), 0, .x)),
-      .SDcols = c(sumcols, "at", "simid")
-      ]
+epi_noNA <- epi[, lapply(.SD, function(.x) fifelse(is.na(.x), 0, .x)),
+                  .SDcols = c(sumcols, "at", "simid")]
 
 ## Get output averages over the last 52 weeks
 epi_mn <- epi_noNA[
-  at >= t_eval,
-  lapply(.SD, mean),
-  by = simid,
-  .SDcols = sumcols
-]
-
-# TODO Tweak mortality rate so that across the initial sampled range of parameter sets, the 50% quantile is about at 20,000. Still a little low here.
+  at >= t_eval, lapply(.SD, mean),
+  by = simid, .SDcols = sumcols]
 
 # Pick parameter sets that keep us within 5% of population size N = 20,000
 # (average over final burnin-in year)
 epi_mn_selnum <- epi_mn[abs(pop_N - num) / pop_N <= 0.05]
+epi_mn_selnum[, .N]
 
 get_absdiff <- function(target, output, data = epi_mn_selnum) {
   cols <- c("simid", output)
