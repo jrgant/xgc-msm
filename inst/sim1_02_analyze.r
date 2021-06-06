@@ -9,9 +9,15 @@ p_load(
   EpiModel,
   ggplot2,
   ggthemes,
-  xgcmsm
+  ggcorrplot,
+  scico,
+  xgcmsm,
+  magrittr,
+  lubridate,
+  stringr
 )
 
+extrafont::loadfonts()
 theme_set(theme_tufte(base_size = 20))
 
 targets <- readRDS(here::here("est", "caltargets.Rds"))
