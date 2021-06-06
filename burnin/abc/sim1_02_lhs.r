@@ -43,6 +43,15 @@ do.call(
   as.list(lhs_real[[slurm_array_task_id]])
 )
 
+# Check that manually set environment variables (set in sbatch)
+if (Sys.getenv("SIMDIR") == "") {
+  outpath <- "~/scratch/sim1"
+} else {
+  outpath <- Sys.getenv("SIMDIR")
+}
+
+sprintf("Output will be saved in %s", outpath)
+
 ## This function passes the environment variables to EpiModel functions
 ## in numeric format.
 fmt_getenv <- function(x) as.numeric(Sys.getenv(x))
@@ -53,7 +62,9 @@ param <- param_msm(
   epistats          = epistats,
   # demography
   arrival.age       = 18,
-  a.rate            = netstats$demog$mortrate.marginal + (0.75 / 20000), # tweak marginal mortality to account for AIDS
+  # tweak marginal mortality to account for AIDS and achieve an arrival rate
+  # that keeps population size at N = 20,000 (in expectation)
+  a.rate            = netstats$demog$mortrate.marginal + fmt_getenv("ARRIVE_RATE_ADD_PER20K") / 20000,
   u2rgc.tprob       = fmt_getenv("U2RGC_PROB"), # urethral-to-rectal transmission probability
   u2pgc.tprob       = fmt_getenv("U2PGC_PROB"), # urethral-to-pharyngeal transmission probability
   r2ugc.tprob       = fmt_getenv("R2UGC_PROB"), # rectal-to-urethral transmission probability
@@ -152,11 +163,20 @@ init <- init_msm(
   prev.pgc = 0.01
 )
 
+## Spec summary
+nsim_env <- fmt_getenv("NSIMS")
+nsteps_env <- fmt_getenv("NSTEPS")
+ncores_env <- fmt_getenv("SLURM_NPROCS")
+
+print(paste("NSIMS:", nsim_env))
+print(paste("NSTEPS:", nsteps_env))
+print(paste("SLURM_NPROCS:", ncores_env))
+
 control <- control_msm(
   # Computing options (set in batch script or using sbatch on SLURM)
-  nsims   = as.numeric(Sys.getenv("NSIMS")),
-  nsteps  = as.numeric(Sys.getenv("NSTEPS")),
-  ncores  = as.numeric(Sys.getenv("SLURM_NPROCS")),
+  nsims   = nsim_env,
+  nsteps  = nsteps_env,
+  ncores  = ncores_env,
   # Epidemic simulation Modules
   initialize.FUN    = initialize_msm,
   aging.FUN         = aging_msm,
@@ -202,7 +222,6 @@ sim[["seed.table.state"]] <- .lec.GetState(
 ## WRITE OUTPUT ##
 ################################################################################
 
-outpath <- "~/scratch/sim1"
 if (!dir.exists(outpath)) dir.create(outpath)
 
 saveRDS(
