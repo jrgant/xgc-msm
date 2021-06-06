@@ -139,6 +139,168 @@ ggsave(
   width = 10, height = 10, units = "in"
 )
 
+
+################################################################################
+## CORRELATIONS BETWEEN INPUTS AND OUTPUTS ##
+################################################################################
+
+sel_popn <- epi_mn[simid %in% epi_mn_selnum[, simid], simid]
+
+lhs_groups <- readRDS(here::here("burnin/abc/sim1", "lhs_sim1.rds"))
+
+lhs_inputs <- rbindlist(
+  lapply(
+    lhs_groups,
+    function(.x) {
+      as.data.table(.x, keep.rownames = TRUE)
+    }),
+  idcol = "simid"
+)[simid %in% sel_popn]
+
+setnames(lhs_inputs, c("rn", ".x"), c("param", "inval"))
+
+io_join <- epi_mn[lhs_inputs, on = "simid"]
+
+drop_static <- c(
+  paste0("HIV_RX_HALT_PROB_", c("BLACK", "HISP", "OTHER", "WHITE")),
+  "SCALAR_AI_ACT_RATE",
+  "SCALAR_OI_ACT_RATE",
+  paste0("SCALAR_HIV_TRANS_PROB_", c("BLACK", "HISP", "OTHER", "WHITE"))
+)
+
+io_joinfil <- io_join[!param %in% drop_static]
+
+io_scatter <- function(outcome, ylab = NULL, data = io_joinfil) {
+
+  vars <- data[, unique(param)]
+  cors <- lapply(
+    setNames(vars, vars),
+    function(.x) data[param == .x, .(corr = cor(inval, get(outcome)))]
+  )
+
+  yrange <- data[, get(outcome)]
+  label_locs <- data[, .(xl = min(inval), xu = max(inval)), by = param]
+  label_locs[, xloc := xl + ((xu - xl) / 2)]
+  label_locs[, yloc := min(yrange) + ((max(yrange) - min(yrange)) / 1.11)]
+
+  corl <- rbindlist(cors, idcol = "param")
+
+  # print(label_locs)
+  # print(corl)
+  ifelse(!is.null(ylab), yl <- ylab, yl <- outcome)
+
+  plotout <-
+    ggplot(
+      corl[data, on = "param"], # join correlation data
+      aes(inval, get(outcome), color = corr)
+    ) +
+      geom_point(size = 0.5) +
+      geom_smooth(se = FALSE, color = "black") +
+      geom_text(
+        data = corl[label_locs, on = "param"],
+        aes(xloc, yloc, label = format(round(corr, 3), digit = 3)),
+        color = "black",
+        size = 6
+      ) +
+      facet_wrap(~param, scales = "free_x") +
+      scale_color_scico(
+        name = "Pearson correlation",
+        limits = c(-1, 1),
+        palette = "vik"
+      ) +
+      labs(
+        y = yl, x = "Input parameter value",
+        caption = sprintf(
+          paste(
+            "\n Among %s simulations that produced overall population sizes",
+            "within 5 percent of the target (N = 20,000)"
+          ),
+          format(data[, length(unique(simid))], big.mark = ",")
+        )
+      ) +
+    theme_base(base_size = 18) +
+    theme(
+      axis.title = element_text(size = 28),
+      plot.caption = element_text(size = 18, hjust = 0, face = "italic"),
+      legend.position = "top",
+      legend.spacing.x = unit(1, "cm"),
+      legend.key.width = unit(1, "in"),
+      legend.title = element_text(face = "bold", vjust = 1)
+    )
+
+  return(plotout)
+}
+
+## Plot label sets.
+racelabs <- c("", ", Black", ", Hispanic", ", Other", ", White")
+anatlabs <- c("", ", Rectal", ", Urethral", ", Pharyngeal")
+
+hivp_labs <- paste0("Simulated HIV prevalence", racelabs)
+hivd_labs <- paste0(
+  "Simulated HIV diagnosis prevalence among infected",
+  racelabs
+)
+hivi_labs <- paste0("Simulated HIV incidence (per 100 person-years)", racelabs)
+hivv_labs <- paste0("Simulated HIV viral suppression among diagnosed", racelabs)
+gcpr_labs <- paste0("Simulated GC prevalence", anatlabs)
+gcin_labs <- paste0("Simulated GC incidence", anatlabs)
+gcpt_labs <- paste0("Simulated proportion tested for GC in clinic", anatlabs)
+gcpp_labs <- paste0(
+  "Simulated proportion positive for GC in clinic among tested",
+  anatlabs
+)
+
+
+## HIV prevalence
+psave("i.prev", io_scatter("i.prev",   hivp_labs[1]))
+psave("i.prev.B", io_scatter("i.prev.B", hivp_labs[2]))
+psave("i.prev.H", io_scatter("i.prev.H", hivp_labs[3]))
+psave("i.prev.O", io_scatter("i.prev.O", hivp_labs[4]))
+psave("i.prev.W", io_scatter("i.prev.W", hivp_labs[5]))
+
+## HIV diagnosis prevelance among infected
+psave("i.prev.dx.inf", io_scatter("i.prev.dx.inf",   hivd_labs[1]))
+psave("i.prev.dx.inf.B", io_scatter("i.prev.dx.inf.B", hivd_labs[2]))
+psave("i.prev.dx.inf.H", io_scatter("i.prev.dx.inf.H", hivd_labs[3]))
+psave("i.prev.dx.inf.O", io_scatter("i.prev.dx.inf.O", hivd_labs[4]))
+psave("i.prev.dx.inf.W", io_scatter("i.prev.dx.inf.W", hivd_labs[5]))
+
+## HIV incidence rate
+psave("ir100", io_scatter("ir100",   hivi_labs[1]))
+psave("ir100.B", io_scatter("ir100.B", hivi_labs[2]))
+psave("ir100.H", io_scatter("ir100.H", hivi_labs[3]))
+psave("ir100.O", io_scatter("ir100.O", hivi_labs[4]))
+psave("ir100.W", io_scatter("ir100.W", hivi_labs[5]))
+
+## HIV viral suppression among diagnosed
+psave("cc.vsupp", io_scatter("cc.vsupp",   hivv_labs[1]))
+psave("cc.vsupp.B", io_scatter("cc.vsupp.B", hivv_labs[2]))
+psave("cc.vsupp.H", io_scatter("cc.vsupp.H", hivv_labs[3]))
+psave("cc.vsupp.O", io_scatter("cc.vsupp.O", hivv_labs[4]))
+psave("cc.vsupp.W", io_scatter("cc.vsupp.W", hivv_labs[5]))
+
+## GC prevalence
+psave("prev.gc", io_scatter("prev.gc",  gcpr_labs[1]))
+psave("prev.rgc", io_scatter("prev.rgc", gcpr_labs[2]))
+psave("prev.ugc", io_scatter("prev.ugc", gcpr_labs[3]))
+psave("prev.pgc", io_scatter("prev.pgc", gcpr_labs[4]))
+
+## GC incidence rate, by anatomic site
+psave("ir100.gc", io_scatter("ir100.gc",  gcin_labs[1]))
+psave("ir100.rgc", io_scatter("ir100.rgc", gcin_labs[2]))
+psave("ir100.ugc", io_scatter("ir100.ugc", gcin_labs[3]))
+psave("ir100.pgc", io_scatter("ir100.pgc", gcin_labs[4]))
+
+## Proportion tested for GC in clinic, by anatomic site
+psave("prop.rect.tested", io_scatter("prop.rect.tested",  gcpt_labs[2]))
+psave("prop.ureth.tested", io_scatter("prop.ureth.tested", gcpt_labs[3]))
+psave("prop.phar.tested", io_scatter("prop.phar.tested",  gcpt_labs[4]))
+
+## Proportion GC-positive among tested in clinic, by anatomic site
+psave("prob.rGC.tested", io_scatter("prob.rGC.tested", gcpp_labs[2]))
+psave("prob.uGC.tested", io_scatter("prob.uGC.tested", gcpp_labs[3]))
+psave("prob.pGC.tested", io_scatter("prob.pGC.tested", gcpp_labs[4]))
+
   cols <- c("simid", output)
   d <- data[, ..cols]
   d[, absdiff := abs(get(output) - target)]
