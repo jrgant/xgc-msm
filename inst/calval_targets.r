@@ -138,13 +138,25 @@ ct_vls_pr_byage_dt
 ## Finlayson et al. Changes in HIV Preexposure Prophylaxis Awareness and Use
 ## among Men Who Have Sex with Men - 20 Urban Areas, 2014 and 2017. 2019;07:
 ## 597-603. Morbidity and Mortality Weekly Report.
+##
+## Values from Table 2 (year 2017)
+prep_n  <- c(222,  357,  137,  697)
+tot_n   <- c(846, 1191,  344, 1645)
+ct_prep <- prep_n / tot_n
 
-ct_prep <- c(0.262, 0.300, 0.398, 0.424)
+cl <- sapply(seq_len(4), function(.x) {
+  bt <- binom.test(prep_n[.x], tot_n[.x])
+  ll <- bt$conf.int[[1]]
+  ul <- bt$conf.int[[2]]
+  c(ll, ul)
+})
 
 ct_prep_dt <- data.table(
   target    = "ct_prep",
   value     = ct_prep,
-  subgroups = racelabs
+  subgroups = racelabs,
+  ll95      = cl[1,],
+  ul95      = cl[2,]
 )
 
 
