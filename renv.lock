@@ -33,10 +33,8 @@
     "EpiModelHIV": {
       "Package": "EpiModelHIV",
       "Version": "1.5.0",
-      "Source": "Local",
-      "RemoteType": "local",
-      "RemoteUrl": "/home/jrgant/R/x86_64-pc-linux-gnu-library/4.0/EpiModelHIV",
-      "Hash": "b531b7b129f17f385e0c7abd61d2b4e5"
+      "Source": "unknown",
+      "Hash": "240bdc91f1aac66c40eb0e7c9302c2ce"
     },
     "EpiModelHPC": {
       "Package": "EpiModelHPC",
@@ -108,6 +106,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "8772b10276b4b4a3dfaa5043f9ad94f8"
+    },
+    "Rttf2pt1": {
+      "Package": "Rttf2pt1",
+      "Version": "1.3.8",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "8c4137a9ab70de4787d57758f8190617"
     },
     "SparseM": {
       "Package": "SparseM",
@@ -297,6 +302,20 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "ec8ca05cffcc70569eaaad8469d2a3a7"
+    },
+    "extrafont": {
+      "Package": "extrafont",
+      "Version": "0.17",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "7f2f50e8f998a4bea4b04650fc4f2ca8"
+    },
+    "extrafontdb": {
+      "Package": "extrafontdb",
+      "Version": "1.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "a861555ddec7451c653b40e713166c6f"
     },
     "fansi": {
       "Package": "fansi",
@@ -528,6 +547,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "90c3bc497e7d5ec9dbb863621be15abb"
+    },
+    "lubridate": {
+      "Package": "lubridate",
+      "Version": "1.7.10",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "1ebfdc8a3cfe8fe19184f5481972b092"
     },
     "magrittr": {
       "Package": "magrittr",
