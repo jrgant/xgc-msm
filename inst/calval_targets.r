@@ -57,11 +57,35 @@ bp_hivdx <- rbind(
 
 setkeyv(bp_hivdx, c("race", "age.grp"))
 
-ct_hivdx_pr_byrace <- bp_hivdx[, sum(hiv_dx_N) / sum(hiv_prev_N), race][, V1]
-names(ct_hivdx_pr_byrace) <- racelabs
+## ... by race/ethnicity
+hivdx_byrace <- bp_hivdx[, .(
+  n       = sum(hiv_prev_N),
+  hivdx_n = sum(hiv_dx_N),
+  prop    = sum(hiv_dx_N) / sum(hiv_prev_N)
+), by = race]
 
-ct_hivdx_pr_byage  <- bp_hivdx[, sum(hiv_dx_N) / sum(hiv_prev_N), age.grp][, V1]
-names(ct_hivdx_pr_byage) <- paste0("age", 1:5)
+ct_hivdx_pr_byrace_dt <- data.table(
+  target    = "ct_hivdx_pr_byrace",
+  value     = hivdx_byrace[, prop],
+  subgroups = racelabs,
+  ll95      = NA,
+  ul95      = NA
+)
+
+## ... by age group
+hivdx_byage <- bp_hivdx[, .(
+  n       = sum(hiv_prev_N),
+  hivdx_n = sum(hiv_dx_N),
+  prop    = sum(hiv_dx_N) / sum(hiv_prev_N)
+), by = age.grp]
+
+ct_hivdx_pr_byage_dt <- data.table(
+  target    = "ct_hivdx_pr_byage",
+  value     = hivdx_byage[, prop],
+  subgroups = paste0("age", hivdx_byage[, age.grp]),
+  ll95      = NA,
+  ul95      = NA
+)
 
 
 # VIRAL SUPPRESSION TARGETS ----------------------------------------------------
