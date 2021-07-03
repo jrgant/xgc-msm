@@ -68,13 +68,18 @@ priors <- list(
   pvec(1, 1, "SCALAR_AI_ACT_RATE"), # ai.acts.scale
   pvec(1, 1, "SCALAR_OI_ACT_RATE"), # oi.acts.scale
   # HIV transmission prob. scalars
-  pvec(0.01, 5, "SCALAR_HIV_TRANS_PROB_BLACK"), # black
-  pvec(0.01, 5, "SCALAR_HIV_TRANS_PROB_HISP"), # hispanic
-  pvec(0.01, 5, "SCALAR_HIV_TRANS_PROB_OTHER"), # other
-  pvec(0.01, 5, "SCALAR_HIV_TRANS_PROB_WHITE"), # white
+  pvec(1, 1, "SCALAR_HIV_TRANS_PROB_BLACK"), # black
+  pvec(1, 1, "SCALAR_HIV_TRANS_PROB_HISP"), # hispanic
+  pvec(1, 1, "SCALAR_HIV_TRANS_PROB_OTHER"), # other
+  pvec(1, 1, "SCALAR_HIV_TRANS_PROB_WHITE"), # white
   # condom efficacy
   pvec(0.6, 1, "CONDOM_EFF_HIV"), # cond.eff (HIV), 1 - relative risk, condom use vs. no
-  pvec(0.7, 1, "CONDOM_EFF_GC")   # sti.cond.eff, relative risk, condom use vs. no
+  pvec(0.7, 1, "CONDOM_EFF_GC"),   # sti.cond.eff, relative risk, condom use vs. no
+  # PrEP discontinuation rates
+  pvec(0, 0.05, "PREP_DISCONT_RATE_BLACK"),
+  pvec(0, 0.05, "PREP_DISCONT_RATE_HISP"),
+  pvec(0, 0.05, "PREP_DISCONT_RATE_OTHER"),
+  pvec(0, 0.05, "PREP_DISCONT_RATE_WHITE")
 )
 
 

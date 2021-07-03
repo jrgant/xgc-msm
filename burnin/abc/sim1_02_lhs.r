@@ -154,7 +154,14 @@ param <- param_msm(
   cond.fail           = rep(0, 4),
   sti.cond.fail       = rep(0, 4),
   sti.cond.eff        = fmt_getenv("CONDOM_EFF_GC"),
-  circ.prob           = netstats$inputs$circ.probs
+  circ.prob           = netstats$inputs$circ.probs,
+  # PrEP parameters
+  prep.discont.rate   = c(
+    fmt_getenv("PREP_DISCONT_RATE_BLACK"),
+    fmt_getenv("PREP_DISCONT_RATE_HISP"),
+    fmt_getenv("PREP_DISCONT_RATE_OTHER"),
+    fmt_getenv("PREP_DISCONT_RATE_WHITE")
+  )
 )
 
 init <- init_msm(
