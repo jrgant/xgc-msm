@@ -192,12 +192,18 @@ ct_prep_dt <- data.table(
 # Medicine.
 
 ## Both parameters from Table 1 (year 2015)
-ct_hiv_incid_100k_dt <- data.table(
-  target    = "ct_hiv_incid_100k",
-  value     = 514, # per 100,000 MSM per year in 2015 (took most recent year)
+##
+## NOTE
+## HIV incidence translated from per 100,000 MSM per year to 100 MSM/year.
+## Note that the denominators used by Singh et al. were not solely "at-risk"
+## MSM but were based on MSM population size estimates first developed by
+## Lieb et al.
+ct_hiv_incid_100_dt <- data.table(
+  target    = "ct_hiv_incid_per100pop",
+  value     = 514 / 1000, # per 100,000 MSM/year in 2015 (took most recent year)
   subgroups = NA_character_,
-  ll95      = 444,
-  ul95      = 584
+  ll95      = 444 / 1000,
+  ul95      = 584 / 1000
 )
 
 # HIV PREVALENCE
