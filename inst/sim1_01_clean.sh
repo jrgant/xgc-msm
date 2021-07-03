@@ -2,7 +2,7 @@
 #SBATCH -J Sim1-CleanLHS
 #SBATCH--time=1:00:00
 #SBATCH -p batch
-#SBATCH--mem=250GB
+#SBATCH--mem=150GB
 #SBATCH -n 208
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jrgant@brown.edu
