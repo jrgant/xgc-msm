@@ -2,7 +2,6 @@
 
 pacman::p_load(
   xgcmsm,
-  EasyABC,
   methods,
   EpiModelHIV,
   data.table,
@@ -125,13 +124,13 @@ priorvals_ok <- sapply(priors, function(.x) {
   })
 }) %>% all
 
-abcdir <- here::here("burnin", "abc")
+caldir <- here::here("burnin", "cal")
 
 if (priornames_ok & priorvals_ok) {
-  if (!file.exists(file.path(abcdir, "sim1"))) {
-    dir.create(file.path(abcdir, "sim1"))
+  if (!file.exists(file.path(caldir, "sim1"))) {
+    dir.create(file.path(caldir, "sim1"))
   }
-  saveRDS(lhs_real, file = file.path(abcdir, "sim1", "lhs_sim1.rds"))
+  saveRDS(lhs_real, file = file.path(caldir, "sim1", "lhs_sim1.rds"))
 } else {
   stop("Check prior specification.")
 }
@@ -145,7 +144,7 @@ if (priornames_ok & priorvals_ok) {
 streams <- paste0("str", sprintf("%04d", seq_along(lhs_real)))
 .lec.CreateStream(streams)
 
-saveRDS(.lec.Random.seed.table, file.path(abcdir, "sim1", "seeds_sim1.rds"))
+saveRDS(.lec.Random.seed.table, file.path(caldir, "sim1", "seeds_sim1.rds"))
 
 
 # MAKE BATCH SCRIPTS -----------------------------------------------------------
@@ -187,11 +186,11 @@ make_batch_script <- function(jobname, walltime, partition, mem,
     paste(  sb, "--mail-user=jrgant@brown.edu"),
     "module load R/4.0.3",
     "cd ~/data/jgantenb/xgcmsm/",
-    "Rscript ./burnin/abc/sim1_02_lhs.r --vanilla",
+    "Rscript ./burnin/cal/sim1_02_lhs.r --vanilla",
     sep = "\n"
   )
 
-  sdir <- here::here("burnin", "abc", "sim1")
+  sdir <- here::here("burnin", "cal", "sim1")
   writeLines(
     text = specs,
     con = file.path(sdir, paste0("sim1_batch", batchid, ".sh"))

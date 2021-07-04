@@ -16,13 +16,6 @@
       "Repository": "CRAN",
       "Hash": "4fdd17df6c1b897cb59bdd9cf6621a43"
     },
-    "EasyABC": {
-      "Package": "EasyABC",
-      "Version": "1.5",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "d5936480794a48cc85c6ccb5351bf8d2"
-    },
     "EpiModel": {
       "Package": "EpiModel",
       "Version": "1.8.0",
@@ -34,7 +27,7 @@
       "Package": "EpiModelHIV",
       "Version": "1.5.0",
       "Source": "unknown",
-      "Hash": "240bdc91f1aac66c40eb0e7c9302c2ce"
+      "Hash": "57d0b75106685fbf6b950d4013f06ae7"
     },
     "EpiModelHPC": {
       "Package": "EpiModelHPC",
@@ -127,20 +120,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "84dffc44f23c419537c1c79cc46347a5"
-    },
-    "abc": {
-      "Package": "abc",
-      "Version": "2.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "9aaa411bc0fd5e33070ebb06c0c7ab3d"
-    },
-    "abc.data": {
-      "Package": "abc.data",
-      "Version": "1.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "70064372413cce7c551b8215fd8952d3"
     },
     "ape": {
       "Package": "ape",
@@ -345,27 +324,6 @@
       "Repository": "CRAN",
       "Hash": "74628ea7a3be5ee8a7b5bb0a8e84882e"
     },
-    "formatR": {
-      "Package": "formatR",
-      "Version": "1.8",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "3a5d6129643015003ab29e9aef8d6367"
-    },
-    "futile.logger": {
-      "Package": "futile.logger",
-      "Version": "1.4.3",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "99f0ace8c05ec7d3683d27083c4f1e7e"
-    },
-    "futile.options": {
-      "Package": "futile.options",
-      "Version": "1.0.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "0d9bf02413ddc2bbe8da9ce369dcdd2b"
-    },
     "generics": {
       "Package": "generics",
       "Version": "0.1.0",
@@ -492,13 +450,6 @@
       "Repository": "CRAN",
       "Hash": "3d5108641f47470611a32d0bdf357a72"
     },
-    "lambda.r": {
-      "Package": "lambda.r",
-      "Version": "1.2.4",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "b1e925c4b9ffeb901bacf812cbe9a6ad"
-    },
     "lattice": {
       "Package": "lattice",
       "Version": "0.20-41",
@@ -533,13 +484,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "3471fb65971f1a7b2d4ae7848cf2db8d"
-    },
-    "locfit": {
-      "Package": "locfit",
-      "Version": "1.5-9.4",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "760b5b542e8435237d1b3c253bfe18e7"
     },
     "lpSolve": {
       "Package": "lpSolve",
@@ -589,13 +533,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "26fa77e707223e1ce042b2b5d09993dc"
-    },
-    "mnormt": {
-      "Package": "mnormt",
-      "Version": "2.0.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "7e6ee68a01d6c87c69087d4a250ee763"
     },
     "multcomp": {
       "Package": "multcomp",
@@ -666,13 +603,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "01f28d4278f15c76cddbea05899c5d6f"
-    },
-    "pls": {
-      "Package": "pls",
-      "Version": "2.7-3",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "8d06e43ea092f3224bd2c20ccbcacc58"
     },
     "plyr": {
       "Package": "plyr",
@@ -849,13 +779,6 @@
       "Repository": "CRAN",
       "Hash": "6b7453cd9bb32b12577c78d54eeea56a"
     },
-    "tensorA": {
-      "Package": "tensorA",
-      "Version": "0.36.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "fd792ceac77f96b647fa8d6e1788969a"
-    },
     "tergm": {
       "Package": "tergm",
       "Version": "3.7.0",
@@ -884,26 +807,12 @@
       "Repository": "CRAN",
       "Hash": "6ea435c354e8448819627cf686f66e0a"
     },
-    "tmvnsim": {
-      "Package": "tmvnsim",
-      "Version": "1.0-2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "50470c7ed0cc8099cbc17b38f0ef621f"
-    },
     "trust": {
       "Package": "trust",
       "Version": "0.1-8",
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "f50614d2145ba1012b62ff75f2129d5b"
-    },
-    "tryCatchLog": {
-      "Package": "tryCatchLog",
-      "Version": "1.2.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "1b993c51bef196d2f9c5e689177e8c90"
     },
     "utf8": {
       "Package": "utf8",

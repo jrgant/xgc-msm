@@ -10,4 +10,4 @@
 module load R/4.0.3
 
 cd ~/data/jgantenb/xgcmsm/
-Rscript ./inst/sim1_01_clean.r --vanilla
+Rscript ./inst/cal/sim1_01_clean.r --vanilla

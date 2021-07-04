@@ -2,7 +2,7 @@
 
 pacman::p_load(
   xgcmsm,
-  EasyABC,
+  EasyCAL,
   methods,
   EpiModelHIV,
   data.table,
@@ -20,7 +20,7 @@ slurm_array_task_id <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))
 
 ## select seed for the current job and read it into the current environment
 .lec.Random.seed.table <- readRDS(
-  here::here("burnin", "abc", "sim1", "seeds_sim1.rds")
+  here::here("burnin", "cal", "sim1", "seeds_sim1.rds")
 )
 
 .lec.CurrentStream(
@@ -33,7 +33,7 @@ est         <- get_est("netest")
 epistats    <- get_est("epistats")
 
 lhs_real    <- readRDS(
-  here::here("burnin", "abc", "sim1", "lhs_sim1.rds")
+  here::here("burnin", "cal", "sim1", "lhs_sim1.rds")
 )
 
 # Set environment variables (parameter sets) based on list position

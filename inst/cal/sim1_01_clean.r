@@ -49,8 +49,8 @@ epi <- foreach(i = seq_along(cs), .combine = rbind) %dopar% {
 if (Sys.getenv("EPI_DEST") != "") {
   saveRDS(
     epi,
-    here::here("burnin", "abc", "sim1", paste0(Sys.getenv("EPI_DEST"), ".rds"))
+    here::here("burnin", "cal", "sim1", paste0(Sys.getenv("EPI_DEST"), ".rds"))
   )
 } else {
-  saveRDS(epi, here::here("burnin", "abc", "sim1", "sim1_epi.rds"))
+  saveRDS(epi, here::here("burnin", "cal", "sim1", "sim1_epi.rds"))
 }
