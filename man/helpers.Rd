@@ -24,7 +24,7 @@ get_est(string = c("epistats", "netest", "netstats"))
 param_sets(num_sets, priorlist)
 }
 \arguments{
-\item{priorlist}{A prior list generated for use in the EasyABC sequential algorithm.}
+\item{priorlist}{A prior list generated for use in calibration procedure.}
 
 \item{num_sets}{Number of parameter sets to generate.}
 }

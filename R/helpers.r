@@ -17,7 +17,7 @@ raceage_grid <- function() {
 
 
 #' @describeIn helpers Helper function to use as input into the xgc() function
-# defined in burnin/abc/sim.prep.r. Intended for quick tests.
+# defined in burnin/cal/sim.prep.r. Intended for quick tests.
 #' @export
 test_xgc <- function(seed = 123, priorlist = priors) {
   pl <- sapply(priorlist, function(x) {
@@ -105,7 +105,7 @@ get_est <- function(string = c("epistats", "netest", "netstats")) {
 #' @describeIn helpers Make parameter sets
 #' @export
 #' @param num_sets Number of parameter sets to generate.
-#' @param priorlist A prior list generated for use in the EasyABC sequential algorithm.
+#' @param priorlist A prior list generated for use in calibration procedure.
 #' @importFrom lhs randomLHS
 #' @export
 
