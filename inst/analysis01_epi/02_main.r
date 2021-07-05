@@ -50,7 +50,7 @@ lhs_real    <- readRDS(
 # corresponding to SLURM_ARRAY_TASK_ID.
 do.call(
   Sys.setenv,
-  as.list(lhs_real[[slurm_array_task_id]])
+  as.list(lhs_real[[paramset_id]])
 )
 
 # Check that manually set environment variables (set in sbatch)
