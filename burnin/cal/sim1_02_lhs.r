@@ -2,6 +2,10 @@
 
 pacman::p_load(
   xgcmsm,
+<<<<<<< HEAD:burnin/cal/sim1_02_lhs.r
+=======
+  EasyCAL,
+>>>>>>> origin/main:burnin/abc/sim1_02_lhs.r
   methods,
   EpiModelHIV,
   data.table,
