@@ -39,7 +39,7 @@ netstats    <- get_est("netstats")
 est         <- get_est("netest")
 epistats    <- get_est("epistats")
 
-paramset_sample <- readRDS(an01_path, "paramset_sampled.rds")
+paramset_sample <- readRDS(here::here(an01_path, "paramset_sampled.rds"))
 paramset_id <- paramset_sample[slurm_array_task_id]
 
 lhs_real    <- readRDS(
