@@ -176,6 +176,16 @@ epi[, (race.ir100.pop) := lapply(1:4, function(x) {
 })][]
 
 
+# ... demographics
+epi[, paste0("prop", rdxlabs[-1]) := lapply(1:4, function(x) {
+  get(paste0("num", rdxlabs[x + 1])) / num
+})][]
+
+epi[, paste0("prop.age.", 1:5) := lapply(1:5, function(x) {
+  get(paste0("num.age.", x)) / num
+})][]
+
+
 ################################################################################
 ## CLEAN UP OUTPUT AND CALCULATE LAST-YEAR AVERAGES ##
 ################################################################################
@@ -190,3 +200,14 @@ epi_noNA <- epi[, lapply(.SD, function(.x) fifelse(is.na(.x), 0, .x)),
 epi_mn <- epi_noNA[
   at >= 3068, lapply(.SD, mean),
   by = simid, .SDcols = sumcols]
+
+
+################################################################################
+## SELECT INITIAL SIMS BASED ON POP. SIZE ##
+################################################################################
+
+# Pick parameter sets that keep us within 5% of population size N = 20,000
+# (average over final burnin-in year)
+pop_N <- 20000
+epi_mn_selnum <- epi_mn[abs(pop_N - num) / pop_N <= 0.05]
+epi_mn_selnum[, .(N = .N, P = .N / 5000)]
