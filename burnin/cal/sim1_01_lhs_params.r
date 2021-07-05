@@ -159,7 +159,7 @@ arrays <- sapply(
   function(.x) paste0(.x, "-", .x + (length(lhs_real) / nbatches) - 1)
 )
 
-# This function writes a batch script to submti a job array.
+# This function writes a batch script to submit a job array.
 make_batch_script <- function(jobname, walltime, partition, mem,
                               ncores, array, log_fullpath, batchid,
                               nsims, nsteps, add_arrivals, simdir) {
