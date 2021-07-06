@@ -311,11 +311,8 @@ prop_tested_labs <- sprintf("prop.%s.tested", c("rect", "ureth", "phar"))
 
 caltargs <- c(
   "i.prev",
-  #c("cc.vsupp.B", "cc.vsupp.W"),
   paste0("prepCov.", c("B", "W")),
   paste0("i.prev.dx.inf.age", 1:2)
-  #"prepCov.W"
-  #prop_tested_labs
 )
 
 match_simids <- lapply(
