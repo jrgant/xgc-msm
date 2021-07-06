@@ -74,11 +74,13 @@ param <- param_msm(
   arrival.age       = 18,
   # tweak marginal mortality to account for AIDS and achieve an arrival rate
   # that keeps population size at N = 20,000 (in expectation)
-  a.rate            = netstats$demog$mortrate.marginal + fmt_getenv("ARRIVE_RATE_ADD_PER20K") / 20000,
-  u2rgc.tprob       = fmt_getenv("U2RGC_PROB"), # urethral-to-rectal transmission probability
-  u2pgc.tprob       = fmt_getenv("U2PGC_PROB"), # urethral-to-pharyngeal transmission probability
-  r2ugc.tprob       = fmt_getenv("R2UGC_PROB"), # rectal-to-urethral transmission probability
-  p2ugc.tprob       = fmt_getenv("P2UGC_PROB"), # pharyngeal-to-urethral transmission probability
+  a.rate            =
+    netstats$demog$mortrate.marginal +
+    fmt_getenv("ARRIVE_RATE_ADD_PER20K") / 20000,
+  u2rgc.tprob       = fmt_getenv("U2RGC_PROB"), # urethral-to-rectal trans prob
+  u2pgc.tprob       = fmt_getenv("U2PGC_PROB"), # urethral-to-phar trans prob
+  r2ugc.tprob       = fmt_getenv("R2UGC_PROB"), # rectal-to-urethral trans prob
+  p2ugc.tprob       = fmt_getenv("P2UGC_PROB"), # phary-to-urethral trans prob
   ## NOTE: Following tprobs used only if the kissing/rimming flags are active
   ## in control_msm.
   r2pgc.tprob       = 0, # rectal-to-pharyngeal transmission probability
@@ -91,9 +93,9 @@ param <- param_msm(
   rgc.tx.recov.pr   = c(1 - fmt_getenv("RECT_GC_RX_INFPR_WK1"), 0.5, 1),
   ugc.tx.recov.pr   = c(1 - fmt_getenv("URETH_GC_RX_INFPR_WK1"), 0.5, 1),
   pgc.tx.recov.pr   = c(1 - fmt_getenv("PHAR_GC_RX_INFPR_WK1"), 0.5, 1),
-  rgc.sympt.prob    = fmt_getenv("RECT_GC_SYMPT_PROB"), # rectal symptom probability
-  ugc.sympt.prob    = fmt_getenv("URETH_GC_SYMPT_PROB"), # urethral symptom probability
-  pgc.sympt.prob    = fmt_getenv("PHAR_GC_SYMPT_PROB"), # pharyngeal symptom probability
+  rgc.sympt.prob    = fmt_getenv("RECT_GC_SYMPT_PROB"), # rectal symptom prob
+  ugc.sympt.prob    = fmt_getenv("URETH_GC_SYMPT_PROB"), # urethral symptom prob
+  pgc.sympt.prob    = fmt_getenv("PHAR_GC_SYMPT_PROB"), # pharyngeal sympt prob
   # STI testing
   gc.sympt.seek.test.prob = fmt_getenv("STITEST_PROB_GC_SYMPT"),
   ## NOTE: Changed the treatment probs to be conditional on someone's seeking
