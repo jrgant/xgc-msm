@@ -322,7 +322,7 @@ match_simids <- lapply(
     if (.x == "i.prev") {
       tmp[output_within_5pts == 1, sort(simid)]
     } else {
-      tmp[output_within_10pts == 1, sort(simid)]
+      tmp[output_within_5pts == 1, sort(simid)]
     }
   })
 
@@ -358,7 +358,7 @@ out_vs_targ[simid %in% simid_sel] %>%
   theme_tufte(base_size = 20)
 
 ## Write selected simulation ids to file.
-saveRDS(simid_sel, here::here("inst", "cal", "simid_sel.rds"))
+saveRDS(simid_sel, here::here("inst", "cal", "sim1_simid_sel.rds"))
 
 
 ################################################################################
@@ -496,7 +496,10 @@ sel_lhs_d <- rbindlist(sel_lhs, idcol = "simid")
 sel_lhs_d[, simid := stringr::str_remove(simid, "simid_")]
 setnames(sel_lhs_d, c("V1", "V2"), c("param", "value"))
 
-sel_lhs_d[, .(min = min(value), max = max(value), n = .N), by = param][]
+sel_lhs_lims <-
+  sel_lhs_d[, .(min = min(value), max = max(value), n = .N), by = param][]
+
+saveRDS(sel_lhs_lims, here::here("inst", "cal", "sim1_sel_lhs_limits.rds"))
 
 ## Visualize correlations between input parameters among the selected model
 ## outputs.
