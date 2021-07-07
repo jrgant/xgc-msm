@@ -3,7 +3,8 @@
 ################################################################################
 
 ## Setup script used in subsequent sim analyses:
-##   sim1_03_analyze.r
+##   sim1_02_analyze.r
+##   sim2_02_analyze.r
 
 library(pacman)
 
@@ -24,16 +25,16 @@ extrafont::loadfonts()
 theme_set(theme_tufte(base_size = 22))
 
 ## Get date from system environment if set. Otherwise, find date of most recent
-## sim1_epi run.
+## simXX_epi run.
 sys_batch_date <- Sys.getenv("BATCH_DATE")
 
 if (!exists("picksim")) {
-  stop("Must specify picksim before sourcing sim1_02_setup.r")
+  stop("Must specify picksim before sourcing simXX_02_setup.r")
 }
 
 sim_epis <- list.files(
   here::here("burnin", "cal", picksim),
-  pattern = "sim1_epi",
+  pattern = paste0(picksim, "_epi"),
   full.names = TRUE
 )
 
@@ -193,8 +194,11 @@ epi[, paste0("prop.age.", 1:5) := lapply(1:5, function(x) {
 sumcols <- names(epi)[!names(epi) %like% "at|simid"]
 
 ## Mark NAs as 0
-epi_noNA <- epi[, lapply(.SD, function(.x) fifelse(is.na(.x), 0, .x)),
-                  .SDcols = c(sumcols, "at", "simid")]
+epi_noNA <-
+  epi[, (sumcols) := lapply(.SD, function(.x) fifelse(is.na(.x), 0, .x)),
+      .SDcols = sumcols]
+
+names(epi_noNA)
 
 ## Get output averages over the last 52 weeks
 epi_mn <- epi_noNA[

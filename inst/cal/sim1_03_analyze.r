@@ -3,7 +3,7 @@
 ################################################################################
 
 picksim <- "sim1"
-source(here::here("inst", "cal", "sim1_02_setup.r"))
+source(here::here("inst", "cal", "sim0_setup.r"))
 ls()
 
 
@@ -82,17 +82,6 @@ ps_ct_gcpos <- pbox(
   targets[target == "ct_prop_anatsite_pos", ll95],
   targets[target == "ct_prop_anatsite_pos", ul95],
   epi5k
-)
-
-lapply(
-  ls(pattern = "^ps_"),
-  function(x) {
-    psave(
-      f = sprintf("preselect_%s", stringr::str_extract(x, "(?<=ps_).*")),
-      p = get(x)
-    )
-    invisible()
-  }
 )
 
 
@@ -287,6 +276,7 @@ tlist
 ## Compare simulation outputs to calibration targets (summary).
 out_vs_targ <- rbindlist(tlist, idcol = "variable")
 out_vs_targ[, .(
+  N       = .N,
   min     = min(pct_diff),
   q25     = quantile(pct_diff, 0.25),
   median  = median(pct_diff),
@@ -322,7 +312,7 @@ match_simids <- lapply(
     if (.x == "i.prev") {
       tmp[output_within_5pts == 1, sort(simid)]
     } else {
-      tmp[output_within_5pts == 1, sort(simid)]
+      tmp[output_within_10pts == 1, sort(simid)]
     }
   })
 
@@ -356,9 +346,6 @@ out_vs_targ[simid %in% simid_sel] %>%
   scale_color_scico_d() +
   facet_wrap(variable ~ subgroup) +
   theme_tufte(base_size = 20)
-
-## Write selected simulation ids to file.
-saveRDS(simid_sel, here::here("inst", "cal", "sim1_simid_sel.rds"))
 
 
 ################################################################################
@@ -460,11 +447,6 @@ targ_ir100pop_insel <- plotepi(
     color = "red"
   )
 
-lapply(
-  ls(pattern = "insel$"),
-  function(x) psave(x, get(x))
-)
-
 
 ################################################################################
 ## AVERAGES OVER LAST YEAR ##
@@ -486,7 +468,7 @@ sel_simid <- episel_avg[, unique(simid)]
 lhs_groups <- readRDS(here::here("burnin/cal/", picksim, "lhs_sim1.rds"))
 
 sel_lhs <- lapply(
-  setNames(sel_simid, paste0("simid_", sel_simid)),
+  setNames(as.numeric(sel_simid), paste0("simid_", sel_simid)),
   function(.x) as.data.table(lhs_groups[[.x]], keep.rownames = TRUE)
 )
 
@@ -499,7 +481,6 @@ setnames(sel_lhs_d, c("V1", "V2"), c("param", "value"))
 sel_lhs_lims <-
   sel_lhs_d[, .(min = min(value), max = max(value), n = .N), by = param][]
 
-saveRDS(sel_lhs_lims, here::here("inst", "cal", "sim1_sel_lhs_limits.rds"))
 
 ## Visualize correlations between input parameters among the selected model
 ## outputs.
@@ -536,9 +517,40 @@ incorr <- ggcorrplot(
     plot.title          = element_text(face = "bold"),
     plot.caption        = element_text(face = "italic"),
     panel.grid.major.y  = element_blank(),
-    panel.grid.major.x  = element_line("gray60")
+    panel.grid.major.x  = element_line("gray90")
 )
 
 incorr
 
+
+
+################################################################################
+## WRITE OBJECTS TO FILEs ##
+################################################################################
+
+## Write selected simulation ids to file.
+saveRDS(simid_sel, here::here("inst", "cal", "sim1_simid_sel.rds"))
+
+## Write pre-selection boxplots to files
+lapply(
+  ls(pattern = "^ps_"),
+  function(x) {
+    psave(
+      f = sprintf("preselect_%s", stringr::str_extract(x, "(?<=ps_).*")),
+      p = get(x)
+    )
+    invisible()
+  }
+)
+
+## Write model output from selected simulations to files
+lapply(
+  ls(pattern = "insel$"),
+  function(x) psave(x, get(x))
+)
+
+## Write plot showing correlations between inputs in selected simulations.
 psave("incorr", incorr)
+
+## Write limits of input parameter values across selected simulations.
+saveRDS(sel_lhs_lims, here::here("inst", "cal", "sim1_sel_lhs_limits.rds"))
