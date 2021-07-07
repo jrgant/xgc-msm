@@ -37,11 +37,14 @@ ncores <- detectCores()
 registerDoParallel(ncores)
 
 epi <- foreach(i = seq_along(cs), .combine = rbind) %dopar% {
-  cd <- readRDS(cs[i])
+  file_fullpath <- cs[i]
+  cd <- readRDS(file_fullpath)
 
   # extract epi
   cde <- as.data.table(cd$epi)
-  cde[, simid := i]
+  cde[, simid :=
+          stringr::str_extract(file_fullpath, "(?<=sim_)[0-9]{4}")]
+
   cde[, at := 1:.N]
   cde[at >= 3016] # keep last 2 years of 60-year burnin
 }
