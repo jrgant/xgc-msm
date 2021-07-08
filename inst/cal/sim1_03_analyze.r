@@ -95,7 +95,8 @@ get_absdiff <- function(targname, output,
   cols <- c("simid", output)
   d <- data[, ..cols]
 
-  d[, abs_diff := abs(get(output) - target_dt[target == targname, value])]
+  d[, diff := get(output) - target_dt[target == targname, value]]
+  d[, abs_diff := abs(diff)]
 
   d[, pct_diff :=
         round(abs_diff / target_dt[target == targname, value] * 100, 2)]
@@ -285,6 +286,13 @@ out_vs_targ[, .(
   max     = max(pct_diff)
 ), by = c("variable", "subgroup")]
 
+out_vs_targ %>%
+  ggplot(aes(x = diff)) +
+  geom_histogram(color = "white") +
+  geom_vline(aes(xintercept = 0), color = "red") +
+  facet_wrap(~ variable, scales = "free_x") +
+  theme_base()
+
 targsum_limits <- out_vs_targ[, .(
   N_within_10pct  = sum(output_within_10pct),
   N_within_5pts   = sum(output_within_5pts),
@@ -301,7 +309,7 @@ prop_tested_labs <- sprintf("prop.%s.tested", c("rect", "ureth", "phar"))
 
 caltargs <- c(
   "i.prev",
-  paste0("prepCov.", c("B", "W")),
+  paste0("prepCov.", c("B", "O", "W")),
   paste0("i.prev.dx.inf.age", 1:2)
 )
 
@@ -334,7 +342,7 @@ out_vs_targ[simid %in% simid_sel, .(
 
 out_vs_targ[simid %in% simid_sel] %>%
   ggplot(aes(x = 0, y = output)) +
-  geom_point(aes(color = "Sim"), alpha = 0.3) +
+  geom_point(aes(color = "Sim"), alpha = 0.3, size = 5) +
   geom_pointrange(
     aes(x = 0, y = target_val,
         ymin = ll95, ymax = ul95,
@@ -370,7 +378,7 @@ plotepi <- function(var, target = NULL, type = "line",
       data,
       aes(x = at, y = value, color = get(varname))
     ) +
-      facet_wrap(~ get(varname))
+      facet_wrap(~ get(varname), nrow = 1)
   } else {
     p <- ggplot(data, aes(x = at, y = get(var))) + ylab(var)
   }
@@ -417,7 +425,7 @@ targ_hivprev_insel <- plotepi(
   data = episel
 )
 
-targ_hivdx_btyreth_insel <- plotepi(
+targ_hivdx_byreth_insel <- plotepi(
   c(paste0("i.prev.dx.inf.", rlabs)),
   varname = "hivdx_race",
   line_alpha = 0.4,
@@ -458,6 +466,53 @@ episel_avg <- melt(
 )[, .(mn_lastyr = mean(value)), .(simid, variable)][]
 
 episel_avg[, length(unique(simid))]
+
+pbox(
+  paste0("i.prev.dx.inf.age", 1:5),
+  targets[target %like% "hivdx.*age", value],
+  data = episel_avg
+)
+
+pbox(
+  paste0("i.prev"),
+  targets[target %like% "prev", value],
+  targets[target %like% "prev", ll95],
+  targets[target %like% "prev", ul95],
+  data = episel_avg
+)
+
+pbox(
+  paste0("ir100.pop"),
+  targets[target %like% "inc", value],
+  targets[target %like% "inc", ll95],
+  targets[target %like% "inc", ul95],
+  data = episel_avg
+)
+
+pbox(
+  paste0("prepCov", rdxlabs[-1]),
+  targets[target %like% "prep", value],
+  targets[target %like% "prep", ll95],
+  targets[target %like% "prep", ul95],
+  data = episel_avg
+)
+
+pbox(
+  paste0("cc.vsupp", rdxlabs[-1]),
+  targets[target %like% "vls" & subgroups %in% c("B", "H", "O", "W"), value],
+  targets[target %like% "vls" & subgroups %in% c("B", "H", "O", "W"), ll95],
+  targets[target %like% "vls" & subgroups %in% c("B", "H", "O", "W"), ul95],
+  data = episel_avg
+)
+
+pbox(
+  paste0("cc.vsupp.age", 1:5),
+  targets[target %like% "vls" & subgroups %like% "age", value],
+  targets[target %like% "vls" & subgroups %like% "age", ll95],
+  targets[target %like% "vls" & subgroups %like% "age", ul95],
+  data = episel_avg
+)
+
 
 
 ################################################################################
