@@ -531,21 +531,53 @@ length(sel_lhs) == length(sel_simid)
 
 sel_lhs_d <- rbindlist(sel_lhs, idcol = "simid")
 sel_lhs_d[, simid := stringr::str_remove(simid, "simid_")]
-setnames(sel_lhs_d, c("V1", "V2"), c("param", "value"))
+setnames(sel_lhs_d, c("V1", "V2"), c("input", "value"))
 
 sel_lhs_lims <-
-  sel_lhs_d[, .(min = min(value), max = max(value), n = .N), by = param][]
+  sel_lhs_d[, .(s2_ll = min(value), s2_ul = max(value), n = .N), by = input]
+
+sim1_priors <- readRDS(here::here("burnin", "cal", "sim1", "sim1_priors.rds"))
+
+## subsetting step here drops scalars or other inputs that were kept static
+s12_lims <- merge(sel_lhs_lims, sim1_priors, by = "input")[s1_ul - s1_ll > 0]
+s12_lims[input %like% "CONDOM", group := "CONDOM_EFF"][]
+s12_lims[input %like% "LATE", group := "HIV_LATE_TESTER"][]
+s12_lims[input %like% "HIV_RX_INIT", group := "HIV_RX_INIT"][]
+s12_lims[input %like% "HIV_RX_REINIT", group := "HIV_RX_REINIT"][]
+s12_lims[input %like% "2", group := "GC_TRANS_PROB"][]
+s12_lims[input %like% "DURAT_NOTX", group := "GC_DURAT_NOTX"][]
+s12_lims[input %like% "ASYMP_STITEST", group := "ASYMP_STITEST_PROB"][]
+s12_lims[input %like% "PREP", group := "PREP_DISCONT"][]
+s12_lims[input %like% "SYMPT_PROB", group := "GC_SYMPT_PROB"][]
+s12_lims[input %like% "INFPR", group := "GC_TX_CURE_1WK_PROB"][]
+s12_lims[input %like% "PROB_GC_SYMPT", group := "GC_SYMPT_STITEST_PROB"][]
+
+s12_lims %>%
+  ggplot(aes(x = 0, xend = 0)) +
+  geom_segment(
+    aes(y = s1_ll, yend = s1_ul, size = "sim1"),
+    width = 0.1
+  ) +
+  geom_segment(
+    aes(y = s2_ll, yend = s2_ul, size = "sim2"),
+    width = 0.1
+  ) +
+  facet_wrap(~ group + input, scales  = "free_y", as.table = TRUE) +
+  scale_size_manual(values = c(1, 5)) +
+#  scale_color_scico_d(direction = -1, end = 0.5, palette = "bilbao") +
+  xlim(c(-1, 1))
 
 
 ## Visualize correlations between input parameters among the selected model
 ## outputs.
-sel_lhs_wide <- dcast(sel_lhs_d, simid ~ param)
+sel_lhs_wide <- dcast(sel_lhs_d, simid ~ input)
 
 ### drop static parameters (no prior ranges submitted)
 keeplhs_vars <-
   names(sel_lhs_wide)[!(names(sel_lhs_wide) %like% "SCALAR|RX_HALT|simid")]
 
 lhs_cor <- cor(sel_lhs_wide[, ..keeplhs_vars], method = "spearman")
+pairs(lhs_cor)
 
 incorr <- ggcorrplot(
   lhs_cor,
