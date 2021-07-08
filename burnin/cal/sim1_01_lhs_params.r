@@ -81,6 +81,17 @@ priors <- list(
   pvec(0, 0.05, "PREP_DISCONT_RATE_WHITE")
 )
 
+## Write initial ranges to a data set.
+priors_dt <- as.data.table(Reduce(rbind, priors))[, 2:4]
+sapply(priors_dt, class)
+
+lim_labs <- c("s1_ll", "s1_ul")
+setnames(priors_dt, c("V2", "V3", "V4"), c(lim_labs, "input"))
+
+priors_dt[, (lim_labs) := lapply(.SD, as.numeric), .SDcols = lim_labs][]
+
+saveRDS(priors_dt, here::here("burnin", "cal", "sim1", "sim1_priors.rds"))
+
 
 # DRAW LATIN HYPERCUBE ---------------------------------------------------------
 
