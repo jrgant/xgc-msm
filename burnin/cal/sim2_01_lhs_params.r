@@ -20,8 +20,8 @@ lhs_new_limits <- readRDS(here::here("inst", "cal", "sim1_sel_lhs_limits.rds"))
 
 # convenience function to add a uniform prior to the prior list
 pvec2 <- function(name) {
-  tmp <- lhs_new_limits[param == name]
-  c("unif", tmp[, min], tmp[, max], name)
+  tmp <- lhs_new_limits[input == name]
+  c("unif", tmp[, s2_ll], tmp[, s2_ul], name)
 }
 
 priors <- list(
