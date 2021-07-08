@@ -84,7 +84,7 @@ anatlabs <- c("", ", Rectal", ", Urethral", ", Pharyngeal")
 ## data: longform dataset of simulated outputs; the value variable must be named
 ##       mn_lastyr
 pbox <- function(varnames, targets = NULL,
-                 targets_ll = NULL, targets_ul = NULL, data = epi_hivgc) {
+                 targets_ll = NULL, targets_ul = NULL, data = episel) {
 
   cdat <- data[variable %in% varnames]
   mdat <- cdat[, .(mean = mean(mn_lastyr)), by = variable]
@@ -92,6 +92,7 @@ pbox <- function(varnames, targets = NULL,
   basep <-
     ggplot(data = cdat, aes(variable, mn_lastyr)) +
     geom_boxplot(color = "gray", outlier.size = 0.5) +
+    geom_point(alpha = 0.3) +
     geom_point(
       data = mdat, aes(variable, mean, fill = "Simulated mean"),
       shape = 21, color = "black", size = 6
@@ -108,6 +109,11 @@ pbox <- function(varnames, targets = NULL,
       tdat[, ":=" (
         targval_ll = targets_ll,
         targval_ul = targets_ul
+      )]
+    } else {
+      tdat[, ":=" (
+        targval_ll = NA_real_,
+        targval_ul = NA_real_
       )]
     }
 
