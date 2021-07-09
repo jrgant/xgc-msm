@@ -5,7 +5,9 @@
 library(pacman)
 p_load(EpiModelHIV, rlecuyer)
 
-selected_paramsets <- readRDS(here::here("inst", "cal", "simid_sel.rds"))
+selected_paramsets <-
+  readRDS(here::here("inst", "cal", "analysis_param_sets.rds"))
+
 an01_path <- here::here("inst", "analysis01_epi")
 
 
@@ -16,7 +18,11 @@ an01_path <- here::here("inst", "analysis01_epi")
 nsim_spec <- 1000
 
 set.seed(1971)
-paramset_sampled <- sample(selected_paramsets, nsim_spec, replace = TRUE)
+paramset_sampled <- sample(
+  seq_len(length(selected_paramsets)),
+  nsim_spec,
+  replace = TRUE
+)
 
 saveRDS(
   paramset_sampled,

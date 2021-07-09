@@ -42,15 +42,15 @@ epistats    <- get_est("epistats")
 paramset_sample <- readRDS(here::here(an01_path, "paramset_sampled.rds"))
 paramset_id <- paramset_sample[slurm_array_task_id]
 
-lhs_real    <- readRDS(
-  here::here("burnin", "cal", "sim1", "lhs_sim1.rds")
+curr_param_set    <- readRDS(
+  here::here("inst", "cal", "analysis_param_sets.rds")
 )
 
 # Set environment variables (parameter sets) based on list position
 # corresponding to SLURM_ARRAY_TASK_ID.
 do.call(
   Sys.setenv,
-  as.list(lhs_real[[paramset_id]])
+  as.list(curr_param_set[[paramset_id]])
 )
 
 # Check that manually set environment variables (set in sbatch)
