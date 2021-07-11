@@ -30,9 +30,9 @@ priors <- list(
   pvec(1, 24, "URETH_GC_DURAT_NOTX"), # urethral
   pvec(3, 20, "PHAR_GC_DURAT_NOTX"), # pharyngeal
   # Probability of still being GC-infected after x weeks of treatment
-  pvec(0.01, 0.11, "RECT_GC_RX_INFPR_WK1"), # treated rectal gc, 1st week still infected prop.
-  pvec(0.01, 0.20, "URETH_GC_RX_INFPR_WK1"), # treated urethral gc, 1st week still infected prop.
-  pvec(0.06, 0.20, "PHAR_GC_RX_INFPR_WK1"), # treated pharyngeal gc, 1st week still infected prop.
+  pvec(0.01, 0.11, "RECT_GC_RX_INFPR_WK1"), # treated rectal gc, 1st wk
+  pvec(0.01, 0.20, "URETH_GC_RX_INFPR_WK1"), # treated urethral gc, 1st wk
+  pvec(0.06, 0.20, "PHAR_GC_RX_INFPR_WK1"), # treated pharyngeal gc, 1st wk
   # Symptom probability
   pvec(0.06, 0.46, "RECT_GC_SYMPT_PROB"), # rectal
   pvec(0.46, 0.99, "URETH_GC_SYMPT_PROB"), # urethral
@@ -72,8 +72,8 @@ priors <- list(
   pvec(1, 1, "SCALAR_HIV_TRANS_PROB_OTHER"), # other
   pvec(1, 1, "SCALAR_HIV_TRANS_PROB_WHITE"), # white
   # condom efficacy
-  pvec(0.6, 1, "CONDOM_EFF_HIV"), # cond.eff (HIV), 1 - relative risk, condom use vs. no
-  pvec(0.7, 1, "CONDOM_EFF_GC"),   # sti.cond.eff, relative risk, condom use vs. no
+  pvec(0.6, 1, "CONDOM_EFF_HIV"), # cond.eff (HIV), 1 - rel. risk, condom vs. no
+  pvec(0.7, 1, "CONDOM_EFF_GC"),   # sti.cond.eff, rel. risk, condom vs. no
   # PrEP discontinuation rates
   pvec(0, 0.05, "PREP_DISCONT_RATE_BLACK"),
   pvec(0, 0.05, "PREP_DISCONT_RATE_HISP"),
