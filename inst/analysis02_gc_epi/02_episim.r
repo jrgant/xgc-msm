@@ -45,7 +45,7 @@ param_set_sel    <- readRDS(
 # corresponding to SLURM_ARRAY_TASK_ID.
 do.call(
   Sys.setenv,
-  as.list(param_set_sel[[slurm_array_task_id]])
+  as.list(param_set_sel[[current_job$param_index[slurm_array_task_id]]])
 )
 
 # Check that manually set environment variables (set in sbatch)

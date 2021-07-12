@@ -102,7 +102,13 @@ num_analyses <- spec_table[, .N]
 ## Parameter indexes to retrieve input parameter sets.
 param_index <- lapply(
   seq_len(num_analyses),
-  function(.x) sample(seq_len(nsims_spec), size = nsims_spec, replace = TRUE)
+  function(.x) {
+    sample(
+      seq_len(length(anlys_param_sets)),
+      size = nsims_spec,
+      replace = TRUE
+    )
+  }
 )
 
 
