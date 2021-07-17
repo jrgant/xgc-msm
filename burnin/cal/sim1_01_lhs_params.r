@@ -59,10 +59,10 @@ priors <- list(
   pvec(1 - (1 - 0.366)^(1/52), 1 - (1 - 0.366)^(1/52), "HIV_RX_HALT_PROB_OTHER"),
   pvec(1 - (1 - 0.406)^(1/52), 1 - (1 - 0.406)^(1/52), "HIV_RX_HALT_PROB_WHITE"),
   # tx.reinit.part.prob
-  pvec(0.01, 0.20, "HIV_RX_REINIT_PROB_BLACK"),
-  pvec(0.01, 0.20, "HIV_RX_REINIT_PROB_HISP"),
-  pvec(0.01, 0.20, "HIV_RX_REINIT_PROB_OTHER"),
-  pvec(0.01, 0.20, "HIV_RX_REINIT_PROB_WHITE"),
+  pvec(1 / 520, 1 / 2, "HIV_RX_REINIT_PROB_BLACK"),
+  pvec(1 / 520, 1 / 2, "HIV_RX_REINIT_PROB_HISP"),
+  pvec(1 / 520, 1 / 2, "HIV_RX_REINIT_PROB_OTHER"),
+  pvec(1 / 520, 1 / 2, "HIV_RX_REINIT_PROB_WHITE"),
   # sex act scalars
   pvec(1, 1, "SCALAR_AI_ACT_RATE"), # ai.acts.scale
   pvec(1, 1, "SCALAR_OI_ACT_RATE"), # oi.acts.scale
