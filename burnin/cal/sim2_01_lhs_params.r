@@ -83,7 +83,10 @@ priors <- list(
   pvec2("PREP_DISCONT_RATE_BLACK"),
   pvec2("PREP_DISCONT_RATE_HISP"),
   pvec2("PREP_DISCONT_RATE_OTHER"),
-  pvec2("PREP_DISCONT_RATE_WHITE")
+  pvec2("PREP_DISCONT_RATE_WHITE"),
+  # probability that an agent is of the type to stop sexual activity
+  # while symptomatic or on treatment
+  pvec2("ACT_STOPPER_PROB")
 )
 
 

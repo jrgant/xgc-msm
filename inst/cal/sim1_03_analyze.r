@@ -628,6 +628,7 @@ narrowed <- rbindlist(
   list(narrow_rx_init, narrow_rx_reinit, narrow_prep_discont)
 )
 
+## Create a new set of priors for sim2
 sim1_priors <- readRDS(here::here("burnin", "cal", "sim1", "sim1_priors.rds"))
 
 new_priors <- merge(sim1_priors, narrowed, by = "input", all.x = TRUE)
@@ -635,6 +636,19 @@ new_priors <- new_priors[
   !is.na(q25) & !is.na(q75), ":="(s1_ll = q25, s1_ul = q75)][, -c("q25", "q75")]
 
 setnames(new_priors, c("s1_ll", "s1_ul"), c("s2_ll", "s2_ul"))
+
+## Add a prior for the act.stopper.prob parameter, which governs the proportion
+## of GC-symptomatic or -treated patients cease sexual activity while these
+## conditions hold. The limits are somewhat arbitrary, but the empirical
+## estimates from Beck/Kramer of 0.8 are from 1980 and applied only to GC
+## symptoms and reduction of sex.
+new_priors <- rbindlist(
+  list(
+    new_priors,
+    data.table(s2_ll = 0.2, s2_ul = 1, input = "ACT_STOPPER_PROB")
+  ),
+  use.name = TRUE
+)
 
 
 ################################################################################
