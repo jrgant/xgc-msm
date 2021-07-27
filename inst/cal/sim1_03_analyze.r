@@ -5,6 +5,7 @@
 picksim <- "sim1"
 source(here::here("inst", "cal", "sim0_setup.r"))
 ls()
+sim_epis[sim_epis %like% batch_date]
 
 
 ################################################################################
@@ -21,22 +22,26 @@ epi5k <- melt(
   value.name = "mn_lastyr"
 )
 
+precal_plot_title <- "Pre-calibration distribution"
+
 ## ... HIV prevalence
 ps_ct_hivprev <- pbox(
   "i.prev",
   targets[target == "ct_hiv_prev", value],
   targets[target == "ct_hiv_prev", ll95],
   targets[target == "ct_hiv_prev", ul95],
-  data = epi5k
+  data = epi5k,
+  plot_title = precal_plot_title
 )
 
 ## ... HIV incidence
 ps_ct_hivinc <- pbox(
   "ir100.pop",
   targets[target == "ct_hiv_incid_per100pop", value],
-  targets[target == "ct_hiv_incid_per100pop",  ll95],
-  targets[target == "ct_hiv_incid_per100pop",  ul95],
-  data = epi5k
+  targets[target == "ct_hiv_incid_per100pop", ll95],
+  targets[target == "ct_hiv_incid_per100pop", ul95],
+  data = epi5k,
+  plot_title = precal_plot_title
 )
 
 ## ... Viral suppression, by age group
@@ -45,7 +50,8 @@ ps_ct_vsupp_age <- pbox(
   targets[target == "ct_vls_pr_byage", value],
   targets[target == "ct_vls_pr_byage", ll95],
   targets[target == "ct_vls_pr_byage", ul95],
-  data = epi5k
+  data = epi5k,
+  plot_title = precal_plot_title
 )
 
 ## ... Viral suppression, by race/ethnicity
@@ -54,7 +60,8 @@ ps_ct_vsupp_race <- pbox(
   targets[target == "ct_vls_pr_byrace", value],
   targets[target == "ct_vls_pr_byrace", ll95],
   targets[target == "ct_vls_pr_byrace", ul95],
-  data = epi5k
+  data = epi5k,
+  plot_title = precal_plot_title
 )
 
 ## ... PrEP coverage
@@ -63,7 +70,8 @@ ps_ct_prep <- pbox(
   targets[target == "ct_prep", value],
   targets[target == "ct_prep", ll95],
   targets[target == "ct_prep", ul95],
-  data = epi5k
+  data = epi5k,
+  plot_title = precal_plot_title
 )
 
 ## ... Proportion anatomic sites tested for GC at STI clinic
@@ -72,7 +80,8 @@ ps_ct_gctested <- pbox(
   targets[target == "ct_prop_anatsite_tested", value],
   targets[target == "ct_prop_anatsite_tested", ll95],
   targets[target == "ct_prop_anatsite_tested", ul95],
-  epi5k
+  data = epi5k,
+  plot_title = precal_plot_title
 )
 
 ## ... GC test positivity among tested
@@ -81,7 +90,8 @@ ps_ct_gcpos <- pbox(
   targets[target == "ct_prop_anatsite_pos", value],
   targets[target == "ct_prop_anatsite_pos", ll95],
   targets[target == "ct_prop_anatsite_pos", ul95],
-  epi5k
+  data = epi5k,
+  plot_title = precal_plot_title
 )
 
 
@@ -89,429 +99,385 @@ ps_ct_gcpos <- pbox(
 ## ABSOLUTE DIFFERENCES BETWEEN MODEL OUTPUT AND TARGETS ##
 ################################################################################
 
-get_absdiff <- function(targname, output,
-                        target_dt = targets, data = epi_mn_selnum) {
-
-  cols <- c("simid", output)
-  d <- data[, ..cols]
-
-  d[, diff := get(output) - target_dt[target == targname, value]]
-  d[, abs_diff := abs(diff)]
-
-  d[, pct_diff :=
-        round(abs_diff / target_dt[target == targname, value] * 100, 2)]
-
-  targsub <- target_dt[target == targname]
-
-  d[, output_in_targcl := as.numeric(
-        between(
-          get(output),
-          targsub[target == targname, ll95],
-          targsub[target == targname, ul95],
-          NAbounds = NA
-        )
-      )]
-
-  d[, output_within_10pct := as.numeric(pct_diff <= 10)]
-
-  # NOTE
-  ## For HIV incidence per 100 pop/yr, we want the threshold to correspond to
-  ## the modeled scale. All other measures are expressed as probabilities and
-  ## can use the 5/10 percentage point threshold.
-  if (targname == "ct_hiv_incid_per100pop") {
-    d[, output_within_5pts  := as.numeric(abs_diff <= 0.5)]
-    d[, output_within_10pts := as.numeric(abs_diff <= 1)]
-  } else {
-    d[, output_within_5pts  := as.numeric(abs_diff <= 0.05)]
-    d[, output_within_10pts  := as.numeric(abs_diff <= 0.10)]
-  }
-
-  d[, ":=" (
-    target_val = targsub[, value],
-    ll95 = targsub[, ll95],
-    ul95 = targsub[, ul95],
-    subgroup = targsub[, subgroups]
-  )]
-  dout <- d[order(abs_diff)]
-  return(dout)
-}
-
 t_hiv_inc <- get_absdiff("ct_hiv_incid_per100pop", "ir100.pop")
 t_hiv_prv <- get_absdiff("ct_hiv_prev", "i.prev")
 
-# diagnosis prevalence among infected, by race
-t_hiv_dx_race <- lapply(
-  targets[target == "ct_hivdx_pr_byrace", subgroups],
-  function(.x) {
-    tmp <- targets[target == "ct_hivdx_pr_byrace" & subgroups == .x]
-    get_absdiff(
-      "ct_hivdx_pr_byrace",
-      target_dt = tmp,
-      paste0("i.prev.dx.inf.", .x)
-    )
-  }
+# HIV diagnosis prevalence among infected, by race/ethnicity
+t_hivdx_race <- get_absdiffv(
+  "ct_hivdx_pr_byrace",
+  rlabs,
+  "i.prev.dx.inf.%s"
 )
 
-# diagnosis prevalence among infected, by age
-t_hiv_dx_age <- lapply(
-  targets[target == "ct_hivdx_pr_byage", subgroups],
-  function(.x) {
-    tmp <- targets[target == "ct_hivdx_pr_byage" & subgroups == .x]
-    get_absdiff(
-      "ct_hivdx_pr_byage",
-      target_dt = tmp,
-      paste0("i.prev.dx.inf.", .x)
-    )
-  }
+# ratio of HIV diagnosis probability among infected, by race/ethnicity
+# (ref. White)
+t_hivdx_race_rel <- get_absdiffv(
+  "ct_hivdx_byrace_relative",
+  rlabs[1:3],
+  "i.prev.dx.inf.%s.rel.ref.W"
+)
+# HIV diagnosis prevalence among infected, by age
+t_hivdx_age <- get_absdiffv(
+  "ct_hivdx_pr_byage",
+  paste0("age", 1:5),
+  "i.prev.dx.inf.%s"
+)
+
+# ratio of HIV diagnosis probability among infected, by race/ethnicity
+# (ref. White)
+t_hivdx_age_rel <- get_absdiffv(
+  "ct_hivdx_byage_relative",
+  paste0("age", 1:4),
+  "i.prev.dx.inf.%s.rel.ref.age5"
+)
+
+# viral suppression among HIV-diagnosed, by race/ethnicity
+t_vls_race <- get_absdiffv(
+  "ct_vls_pr_byrace",
+  rlabs,
+  "cc.vsupp.%s"
+)
+
+# ratio of HIV viral suppression probability, by race/ethnicity
+t_vls_race_rel <- get_absdiffv(
+  "ct_vls_byrace_relative",
+  rlabs[1:3],
+  "cc.vsupp.%s.rel.ref.W"
 )
 
 # viral suppression among HIV-diagnosed, by age group
-t_vls_age <- lapply(
-  targets[target == "ct_vls_pr_byage", subgroups],
-  function(.x) {
-    tmp <- targets[target == "ct_vls_pr_byage" & subgroups == .x]
-    get_absdiff(
-      "ct_vls_pr_byage",
-      target_dt = tmp,
-      paste0("cc.vsupp.", .x)
-    )
-  }
+t_vls_age <- get_absdiffv(
+  "ct_vls_pr_byage",
+  paste0("age", 1:5),
+  "cc.vsupp.%s"
 )
 
-# viral suppression among HIV-diagnosed, by race
-t_vls_race <- lapply(
-  targets[target == "ct_vls_pr_byrace", subgroups],
-  function(.x) {
-    tmp <- targets[target == "ct_vls_pr_byrace" & subgroups == .x]
-    get_absdiff(
-      "ct_vls_pr_byrace",
-      target_dt = tmp,
-      paste0("cc.vsupp.", .x)
-    )
-  }
+# ratio of HIV viral suppression probability, by age group
+# (ref. age group 5)
+t_vls_age_rel <- get_absdiffv(
+  "ct_vls_byage_relative",
+  paste0("age", 1:4),
+  "cc.vsupp.%s.rel.ref.age5"
 )
 
 # PrEP coverage among indicated, by race/ethnicity
-t_prepcov <- lapply(
-  c("B", "H", "O", "W"),
-  function(.x) {
-    tmp <- targets[target == "ct_prep" & subgroups == .x]
-    get_absdiff("ct_prep", target_dt = tmp, paste0("prepCov.", .x))
-  }
-)
+t_prepcov <- get_absdiffv("ct_prep", rlabs, "prepCov.%s")
 
 # gonorrhea testing in clinic, by anatomic site
-t_gc_anat_test <- lapply(
-  targets[target == "ct_prop_anatsite_tested", subgroups],
-  function(.x) {
-    var <- sprintf("prop.%s.tested", .x)
-    tmp <- targets[target == "ct_prop_anatsite_tested" & subgroups == .x]
-    get_absdiff(
-      "ct_prop_anatsite_tested",
-      target_dt = tmp,
-      var
-    )
-   }
+t_gc_anat_test <- get_absdiffv(
+  "ct_prop_anatsite_tested",
+  c("rect", "ureth", "phar"),
+  "prop.%s.tested"
 )
 
 # gonorrhea positivity in clinic, among tested anatomic sites
-t_gc_pos <- lapply(
-  targets[target == "ct_prop_anatsite_pos", subgroups],
-  function(.x) {
-    tmp  <- targets[target == "ct_prop_anatsite_pos" & subgroups == .x]
-    lugc <- c("uGC" = "ureth", "rGC" = "rect", "pGC" = "phar")
-    slug <- names(match.arg(.x, lugc))
-    var  <- sprintf("prob.%s.tested", slug)
-    get_absdiff(
-      "ct_prop_anatsite_pos",
-      target_dt = tmp,
-      var
-    )
+t_gc_pos <- get_absdiffv(
+  "ct_prop_anatsite_pos",
+  c("rGC", "uGC", "pGC"),
+  "prob.%s.tested"
+)
+
+## Concatenate all t_ objects into a single list for input into
+## rbindlist. The for loop exists to unnest nested lists.
+tobjs <- ls(pattern = "^t_")
+
+tsum <- data.table(
+  obj = tobjs,
+  class = sapply(tobjs, function(.x) class(get(.x))[1]),
+  length = sapply(tobjs, function(.x) {
+    if (class(get(.x))[1] == "data.table") {
+      1
+    } else {
+      length(get(.x))
+    }
+  })
+)
+
+tmp_t <- list()
+slot <- 1
+
+for (i in seq_len(tsum[, .N])) {
+  tmp <- get(tobjs[i])
+  if (class(tmp)[1] == "data.table") {
+    vn <- names(tmp)[2]
+    names(tmp)[2] <- "output"
+    tmp_t[[slot]] <- tmp
+    names(tmp_t)[slot] <- vn
+    slot <- slot + 1
+  } else if (is.list(tmp)) {
+    for (j in seq_len(length(tmp))) {
+      vn <- names(tmp[[j]])[2]
+      names(tmp[[j]])[2] <- "output"
+      tmp_t[[slot]] <- tmp[[j]]
+      names(tmp_t)[slot] <- vn
+      slot <- slot + 1
+    }
+  } else {
+    stop("Burn it all down!")
   }
-)
-
-t_hiv_inc
-t_hiv_prv
-t_hiv_dx_race
-t_hiv_dx_age
-t_vls_race
-t_prepcov
-t_gc_anat_test
-t_gc_pos
-
-tlist <- list(
-  t_hiv_inc,
-  t_hiv_prv,
-  t_hiv_dx_race[[1]],
-  t_hiv_dx_race[[2]],
-  t_hiv_dx_race[[3]],
-  t_hiv_dx_race[[4]],
-  t_hiv_dx_age[[1]],
-  t_hiv_dx_age[[2]],
-  t_hiv_dx_age[[3]],
-  t_hiv_dx_age[[4]],
-  t_hiv_dx_age[[5]],
-  t_vls_race[[1]],
-  t_vls_race[[2]],
-  t_vls_race[[3]],
-  t_vls_race[[4]],
-  t_prepcov[[1]],
-  t_prepcov[[2]],
-  t_prepcov[[3]],
-  t_prepcov[[4]],
-  t_gc_anat_test[[1]],
-  t_gc_anat_test[[2]],
-  t_gc_anat_test[[3]],
-  t_gc_pos[[1]],
-  t_gc_pos[[2]],
-  t_gc_pos[[3]]
-)
-
-names(tlist) <- sapply(tlist, function(.x) names(.x)[2])
-for (i in seq_along(tlist)) {
-  names(tlist[[i]])[2] <- "output"
 }
 
-tlist
+length(tmp_t)
 
-## Compare simulation outputs to calibration targets (summary).
-out_vs_targ <- rbindlist(tlist, idcol = "variable")
+out_vs_targ_pre <- rbindlist(tmp_t, idcol = "variable")
+
+out_iqr <-
+  out_vs_targ_pre[,
+    .(
+      out_q25 = quantile(output, 0.25),
+      out_q75 = quantile(output, 0.75)
+    ),
+    by = variable
+  ]
+
+out_vs_targ <- merge(out_vs_targ_pre, out_iqr, by = "variable")
+out_vs_targ[, target_within_iqr :=
+  as.numeric(between(target_val, out_q25, out_q75))][]
+
+iqr_capture <- out_vs_targ[, .N, .(variable, target_within_iqr)]
+
 out_vs_targ[, .(
-  N       = .N,
-  min     = min(pct_diff),
-  q25     = quantile(pct_diff, 0.25),
-  median  = median(pct_diff),
-  mean    = mean(pct_diff),
-  q75     = quantile(pct_diff, 0.75),
-  max     = max(pct_diff)
+  N = .N,
+  min = min(pct_diff),
+  q25 = quantile(pct_diff, 0.25),
+  median = median(pct_diff),
+  mean = mean(pct_diff),
+  q75 = quantile(pct_diff, 0.75),
+  max = max(pct_diff)
 ), by = c("variable", "subgroup")]
 
 out_vs_targ %>%
   ggplot(aes(x = diff)) +
   geom_histogram(color = "white") +
   geom_vline(aes(xintercept = 0), color = "red") +
-  facet_wrap(~ variable, scales = "free_x") +
+  facet_wrap(~variable, scales = "free_x") +
   theme_base()
 
 targsum_limits <- out_vs_targ[, .(
-  N_within_10pct  = sum(output_within_10pct),
-  N_within_5pts   = sum(output_within_5pts),
-  N_within_10pts  = sum(output_within_10pts),
-  N_within_cl     = sum(output_in_targcl)
-  ),
-  by = .(variable, subgroup)]
+  N_within_10pct = sum(output_within_10pct),
+  N_within_5pts = sum(output_within_5pts),
+  N_within_10pts = sum(output_within_10pts),
+  N_within_cl = sum(output_in_targcl)
+),
+by = .(variable, subgroup)
+]
 
 targsum_limits
 
+sad <- function(pattern, showpairs = FALSE) {
+  tmp <- out_vs_targ[variable %like% pattern]
 
-## Specify explicit targets and select simulation IDs
-prop_tested_labs <- sprintf("prop.%s.tested", c("rect", "ureth", "phar"))
+  cat(
+    "Variables selected:",
+    paste(tmp[, unique(variable)], collapse = ", "),
+    "\n"
+  )
 
-caltargs <- c(
-  "i.prev",
-  paste0("prepCov.", c("B", "O", "W")),
-  paste0("i.prev.dx.inf.age", 1:2)
+  ## wide version of output data
+  wide <- dcast(
+    tmp[, .(simid, variable, output)],
+    simid ~ variable,
+    value.var = "output"
+  )
+
+  ## stratum-specific standardized differences (target vs. output)
+  strata_diffs <- dcast(
+    tmp[, .(simid, variable, abs_std_diff)],
+    simid ~ variable,
+    value.var = "abs_std_diff"
+  )
+
+  ## summaries of absolute standardized differences across all selected strata
+  ## (target vs. output)
+  sum_diffs <- tmp[strata, .(
+    sum_abs_stdiff = sum(abs_std_diff),
+    range_abs_stdiff = max(abs_std_diff) - min(abs_std_diff)
+  ), by = simid][order(sum_abs_stdiff)]
+
+  if (showpairs) {
+    varn <- length(wide)
+    pairs(as.data.frame(wide)[2:varn], upper.panel = NULL)
+  }
+
+  out <- list(sum_diffs = sum_diffs, strata_diffs = strata_diffs, wide = wide)
+}
+
+simid_sel_vls <- lapply(
+  setNames(rlabs, rlabs),
+  function(.x) {
+    out_vs_targ[variable == paste0("cc.vsupp.", .x) & output_within_5pts, simid]
+  }
 )
 
-match_simids <- lapply(
-  setNames(caltargs, caltargs),
+simid_sel_prep <- lapply(
+  setNames(rlabs, rlabs),
   function(.x) {
-    tmp <- out_vs_targ[variable == .x]
-    if (.x == "i.prev") {
-      tmp[output_within_5pts == 1, sort(simid)]
-    } else {
-      tmp[output_within_10pts == 1, sort(simid)]
-    }
-  })
+    out_vs_targ[variable == paste0("prepCov.", .x) & output_within_5pts, simid]
+  }
+)
 
+episel <- epi_noNA[simid %in% unlist(list(simid_sel_vls, simid_sel_prep))]
 
-names(match_simids)
-match_simids
-
-simid_sel <- Reduce(intersect, match_simids)
-simid_sel
-
-episel <- epi_noNA[simid %in% simid_sel]
-episel
-
-out_vs_targ[simid %in% simid_sel, .(
+out_vs_targ[simid %in% unlist(simid_sel_vls), .(
   min = min(output),
   max = max(output),
   target = mean(target_val)
 ), variable]
 
-out_vs_targ[simid %in% simid_sel] %>%
-  ggplot(aes(x = 0, y = output)) +
-  geom_point(aes(color = "Sim"), alpha = 0.3, size = 5) +
-  geom_pointrange(
-    aes(x = 0, y = target_val,
-        ymin = ll95, ymax = ul95,
-        fill = "Target"),
-    size  = 0.75,
-    shape = 21,
-    color = "red"
-  ) +
-  scale_color_scico_d() +
-  facet_wrap(variable ~ subgroup) +
-  theme_tufte(base_size = 20)
-
-
-################################################################################
-## Time Series Plots ##
-################################################################################
-
-plotepi <- function(var, target = NULL, type = "line",
-                    data = epi, varname = NULL, line_alpha = 1) {
-
-  keepv <- c("simid", "at", var)
-  data <- data[, ..keepv]
-
-  if (length(var) > 1) {
-    data <- melt(
-      data,
-      id.vars = c("simid", "at"),
-      measure.vars = var,
-      variable.name = varname
+quicktarget <- function(outcome_pattern, simid_list) {
+  tmp <- rbindlist(
+    lapply(
+      names(simid_list),
+      function(.x) {
+        out_vs_targ[
+          simid %in% simid_list[[.x]] &
+            variable == sprintf(outcome_pattern, .x)
+        ][, selection_group := .x][]
+      }
     )
+  )
 
-    p <- ggplot(
-      data,
-      aes(x = at, y = value, color = get(varname))
+  tmp %>%
+    ggplot(aes(x = variable, y = output)) +
+    geom_line(aes(group = simid), color = "gray70") +
+    geom_point(
+      aes(fill = selection_group),
+      color = "white", shape = 21,
+      position = position_jitter(width = 0.1)
     ) +
-      facet_wrap(~ get(varname), nrow = 1)
-  } else {
-    p <- ggplot(data, aes(x = at, y = get(var))) + ylab(var)
-  }
-
-  if (type == "line") p <- p + geom_line(aes(group = simid), alpha = line_alpha)
-  if (type == "boxplot") p <- p + geom_boxplot()
-
-  if (!is.null(target)) {
-    p <- p +
-      geom_hline(
-        aes(yintercept = target),
-        linetype = "dashed",
-        color = "salmon"
-      )
-  }
-
-  return(p)
+    geom_boxplot(alpha = 0.5) +
+    geom_point(
+      aes(y = target_val),
+      size = 7, shape = 21, color = "red"
+    ) +
+    scale_fill_scico_d() +
+    theme_minimal(base_size = 25) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0))
 }
 
-rlabs <- c("B", "H", "O", "W")
+quicktarget("cc.vsupp.%s", simid_sel_vls)
+quicktarget("prepCov.%s", simid_sel_prep)
 
-spec_demog_num_insel <- plotepi("num", 20000, data = episel)
 
-spec_demog_reth_insel <- plotepi(
-  c(paste0("prop.", rlabs)),
-  varname = "prop",
-  line_alpha = 0.4,
-  data = episel
-  ) +
-  geom_hline(
-    data =
-      data.table(
-        prop = paste0("prop.", rlabs),
-        targ = with(netstats$demog, c(num.B, num.H, num.O, num.W) / num)
-      ),
-    aes(yintercept = targ),
-    color = "black"
-  )
+## ################################################################################
+## ## Time Series Plots ##
+## ################################################################################
 
-targ_hivprev_insel <- plotepi(
-  c("i.prev", paste0("i.prev.", rlabs)),
-  varname = "HIV prevalence",
-  line_alpha = 0.4,
-  data = episel
-)
+## spec_demog_num_insel <- plotepi("num", 20000, data = episel)
 
-targ_hivdx_byreth_insel <- plotepi(
-  c(paste0("i.prev.dx.inf.", rlabs)),
-  varname = "hivdx_race",
-  line_alpha = 0.4,
-  data = episel
-)
+## spec_demog_reth_insel <- plotepi(
+##   c(paste0("prop.", rlabs)),
+##   varname = "prop",
+##   line_alpha = 0.4,
+##   data = episel
+## ) +
+##   geom_hline(
+##     data =
+##       data.table(
+##         prop = paste0("prop.", rlabs),
+##         targ = with(netstats$demog, c(num.B, num.H, num.O, num.W) / num)
+##       ),
+##     aes(yintercept = targ),
+##     color = "black"
+##   )
 
-targ_hivdx_byage_insel <- plotepi(
-  paste0("i.prev.dx.inf.age", 1:5),
-  varname = "hivdx_age",
-  line_alpha = 0.4,
-  data = episel
-  ) +
-  geom_hline(
-    data = data.table(
-      hivdx_age = c(paste0("i.prev.dx.inf.age", 1:5)),
-      value = targets[target == "ct_hivdx_pr_byage", value]
-    ), aes(yintercept = value)
-  )
+## targ_hivprev_insel <- plotepi(
+##   c("i.prev", paste0("i.prev.", rlabs)),
+##   varname = "HIV prevalence",
+##   line_alpha = 0.4,
+##   data = episel
+## )
 
-targ_ir100pop_insel <- plotepi(
-  "ir100.pop",
-  targets[target == "ct_hiv_incid_per100pop", value],
-  data = episel
-  ) +
-  geom_hline(
-    aes(yintercept = targets[target == "ct_hiv_incid_per100pop", value]),
-    color = "red"
-  )
+## targ_hivdx_byreth_insel <- plotepi(
+##   c(paste0("i.prev.dx.inf.", rlabs)),
+##   varname = "hivdx_race",
+##   line_alpha = 0.4,
+##   data = episel
+## )
+
+## targ_hivdx_byage_insel <- plotepi(
+##   paste0("i.prev.dx.inf.age", 1:5),
+##   varname = "hivdx_age",
+##   line_alpha = 0.4,
+##   data = episel
+## ) +
+##   geom_hline(
+##     data = data.table(
+##       hivdx_age = c(paste0("i.prev.dx.inf.age", 1:5)),
+##       value = targets[target == "ct_hivdx_pr_byage", value]
+##     ), aes(yintercept = value)
+##   )
+
+## targ_ir100pop_insel <- plotepi(
+##   "ir100.pop",
+##   targets[target == "ct_hiv_incid_per100pop", value],
+##   data = episel
+## ) +
+##   geom_hline(
+##     aes(yintercept = targets[target == "ct_hiv_incid_per100pop", value]),
+##     color = "red"
+##   )
 
 
 ################################################################################
 ## AVERAGES OVER LAST YEAR ##
 ################################################################################
 
-episel_avg <- melt(
-  episel,
-  id.vars = "simid"
-)[, .(mn_lastyr = mean(value)), .(simid, variable)][]
+## episel_avg <- melt(
+##   episel,
+##   id.vars = "simid"
+## )[, .(mn_lastyr = mean(value)), .(simid, variable)][]
 
-episel_avg[, length(unique(simid))]
+## episel_avg[, length(unique(simid))]
 
-pbox(
-  paste0("i.prev.dx.inf.age", 1:5),
-  targets[target %like% "hivdx.*age", value],
-  data = episel_avg
-)
+## pbox(
+##   paste0("i.prev.dx.inf.age", 1:5),
+##   targets[target %like% "hivdx.*age$", value],
+##   data = episel_avg
+## )
 
-pbox(
-  paste0("i.prev"),
-  targets[target %like% "prev", value],
-  targets[target %like% "prev", ll95],
-  targets[target %like% "prev", ul95],
-  data = episel_avg
-)
+## pbox(
+##   paste0("i.prev"),
+##   targets[target %like% "prev", value],
+##   targets[target %like% "prev", ll95],
+##   targets[target %like% "prev", ul95],
+##   data = episel_avg
+## )
 
-pbox(
-  paste0("ir100.pop"),
-  targets[target %like% "inc", value],
-  targets[target %like% "inc", ll95],
-  targets[target %like% "inc", ul95],
-  data = episel_avg
-)
+## pbox(
+##   paste0("ir100.pop"),
+##   targets[target %like% "inc", value],
+##   targets[target %like% "inc", ll95],
+##   targets[target %like% "inc", ul95],
+##   data = episel_avg
+## )
 
-pbox(
-  paste0("prepCov", rdxlabs[-1]),
-  targets[target %like% "prep", value],
-  targets[target %like% "prep", ll95],
-  targets[target %like% "prep", ul95],
-  data = episel_avg
-)
+## pbox(
+##   paste0("prepCov", rdxlabs[-1]),
+##   targets[target %like% "prep", value],
+##   targets[target %like% "prep", ll95],
+##   targets[target %like% "prep", ul95],
+##   data = episel_avg
+## )
 
-pbox(
-  paste0("cc.vsupp", rdxlabs[-1]),
-  targets[target %like% "vls" & subgroups %in% c("B", "H", "O", "W"), value],
-  targets[target %like% "vls" & subgroups %in% c("B", "H", "O", "W"), ll95],
-  targets[target %like% "vls" & subgroups %in% c("B", "H", "O", "W"), ul95],
-  data = episel_avg
-)
+## pbox(
+##   paste0("cc.vsupp", rdxlabs[-1]),
+##   targets[target %like% "vls.*race$" &
+##     subgroups %in% c("B", "H", "O", "W"), value],
+##   targets[target %like% "vls.*race$" &
+##     subgroups %in% c("B", "H", "O", "W"), ll95],
+##   targets[target %like% "vls.*race$" &
+##     subgroups %in% c("B", "H", "O", "W"), ul95],
+##   data = episel_avg
+## )
 
-pbox(
-  paste0("cc.vsupp.age", 1:5),
-  targets[target %like% "vls" & subgroups %like% "age", value],
-  targets[target %like% "vls" & subgroups %like% "age", ll95],
-  targets[target %like% "vls" & subgroups %like% "age", ul95],
-  data = episel_avg
-)
+## pbox(
+##   paste0("cc.vsupp.age", 1:5),
+##   targets[target %like% "vls.*age$" & subgroups %like% "age", value],
+##   targets[target %like% "vls.*age$" & subgroups %like% "age", ll95],
+##   targets[target %like% "vls.*age$" & subgroups %like% "age", ul95],
+##   data = episel_avg
+## )
 
 
 
@@ -519,104 +485,169 @@ pbox(
 ## GET PARAMETER SETS FROM SELECTED SIMULATIONS ##
 ################################################################################
 
-sel_simid <- episel_avg[, unique(simid)]
+# sel_simid <- episel_avg[, unique(simid)]
 lhs_groups <- readRDS(here::here("burnin/cal/", picksim, "lhs_sim1.rds"))
 
-sel_lhs <- lapply(
-  setNames(as.numeric(sel_simid), paste0("simid_", sel_simid)),
-  function(.x) as.data.table(lhs_groups[[.x]], keep.rownames = TRUE)
+## TODO Select input parameters for each VLS and PrEP target (including strata)
+##      again.
+##      separately to narrow those ranges. Resample the LHS and run the model
+pull_params <- function(simid_list, pattern) {
+  out <- rbindlist(
+    lapply(
+      simid_list,
+      function(.x) {
+        rbindlist(
+          lapply(
+            setNames(as.numeric(.x), .x),
+            function(.y) as.data.table(lhs_groups[[.y]], keep.rownames = TRUE)
+          ),
+          idcol = "simid"
+        )
+      }
+    ),
+    idcol = "selection_group"
+  )
+  setnames(out, c("V1", "V2"), c("input", "value"))
+  out
+}
+
+vls_sel_inputs <- pull_params(simid_sel_vls)[input %like% "RX_INIT|RX_REINIT"]
+vls_sel_inputs[, input_group := stringr::str_extract(input, "RX_[A-Z]+")][]
+
+vls_sel_inputs_w <- dcast(
+  vls_sel_inputs,
+  selection_group + simid ~ input,
+  value.var = "value"
 )
 
-length(sel_lhs) == length(sel_simid)
+prep_sel_inputs <- pull_params(simid_sel_prep)[input %like% "PREP"]
 
-sel_lhs_d <- rbindlist(sel_lhs, idcol = "simid")
-sel_lhs_d[, simid := stringr::str_remove(simid, "simid_")]
-setnames(sel_lhs_d, c("V1", "V2"), c("input", "value"))
+prep_sel_inputs_w <- dcast(
+  prep_sel_inputs,
+  selection_group + simid ~ input,
+  value.var = "value"
+)
 
-sel_lhs_lims <-
-  sel_lhs_d[, .(s2_ll = min(value), s2_ul = max(value), n = .N), by = input]
+# Function to check to make sure we've captured all selected simids.
+check_input_simids <- function(x, simid_list, simid_inputs) {
+  data.table(
+    captured = sort(simid_inputs[selection_group == x, unique(simid)]),
+    sel = sort(simid_list[[x]])
+  )[, .N, .(captured, sel)][, all(N) == 1]
+}
+
+# check selected VLS inputeter sets
+sapply(
+  rlabs,
+  check_input_simids,
+  simid_list = simid_sel_vls,
+  simid_inputs = vls_sel_inputs
+)
+
+# check selected PrEP inputeter sets
+sapply(
+  rlabs,
+  check_input_simids,
+  simid_list = simid_sel_prep,
+  simid_inputs = prep_sel_inputs
+)
+
+## View distributions of RX_INIT and RX_REINIT for each selection group,
+## meaning simid sets chosen for matching race/ethnicity-specific viral
+## suppression. We're interested in seeing the how the corresponding
+## input parameter distribution (e.g., HIV_RX_INIT_PROB_BLACK) within
+## the B selection group. Here, the REINIT parameters are much stronger
+## drivers of VLS.
+ggplot(vls_sel_inputs, aes(input, value)) +
+  geom_boxplot() +
+  facet_grid(selection_group ~ input_group, scale = "free_x") +
+  theme_base(base_size = 10) +
+  theme(axis.text.x = element_text(angle = 90))
+
+corplots_vls <- lapply(rlabs, function(.x) {
+  tmp <- vls_sel_inputs_w[selection_group == .x, 3:ncol(vls_sel_inputs_w)]
+  ggcorrplot(
+    cor(tmp, method = "spearman"),
+    type = "lower",
+    lab = TRUE,
+    title = sprintf("Selection Group: %s", .x),
+    p.mat = cor_pmat(tmp, method = "spearman"),
+    sig.level = 0.05
+  )
+})
+
+gridExtra::grid.arrange(
+  corplots_vls[[1]],
+  corplots_vls[[2]],
+  corplots_vls[[3]],
+  corplots_vls[[4]]
+)
+
+corplots_prep <- lapply(rlabs, function(.x) {
+  tmp <- prep_sel_inputs_w[selection_group == .x, 3:ncol(prep_sel_inputs_w)]
+  ggcorrplot(
+    cor(tmp, method = "spearman"),
+    type = "lower",
+    lab = TRUE,
+    title = sprintf("Selection Group: %s", .x),
+    p.mat = cor_pmat(tmp, method = "spearman"),
+    sig.level = 0.05
+  )
+})
+
+gridExtra::grid.arrange(
+  corplots_prep[[1]],
+  corplots_prep[[2]],
+  corplots_prep[[3]],
+  corplots_prep[[4]]
+)
+
+## Function that takes the long version of inputeter subsets from
+## simid selections and extracts the 25% and 75% quantiles for use as prior
+## limits in the next round of calibration.
+input_quantiles <- function(data, inputstring, ql = 0.25, qu = 0.75) {
+  inputsub <- data[
+    input %like% inputstring,
+    .(
+      q25 = quantile(value, ql),
+      q75 = quantile(value, qu)
+    ),
+    .(selection_group, input)
+    ## this step matches the race/eth selection group to the corresponding
+    ## input inputeter
+  ][selection_group == substring(str_extract(input, "(?<=_)[A-Z]+$"), 1, 1)]
+
+  inputsub[, -c("selection_group")]
+}
+
+narrow_rx_init <-   input_quantiles(vls_sel_inputs, "RX_INIT")
+narrow_rx_reinit <- input_quantiles(vls_sel_inputs, "RX_REINIT")
+narrow_prep_discont <- input_quantiles(prep_sel_inputs, "DISCONT")
+
+narrowed <- rbindlist(
+  list(narrow_rx_init, narrow_rx_reinit, narrow_prep_discont)
+)
 
 sim1_priors <- readRDS(here::here("burnin", "cal", "sim1", "sim1_priors.rds"))
 
-## subsetting step here drops scalars or other inputs that were kept static
-s12_lims <- merge(sel_lhs_lims, sim1_priors, by = "input")[s1_ul - s1_ll > 0]
-s12_lims[input %like% "CONDOM", group := "CONDOM_EFF"][]
-s12_lims[input %like% "LATE", group := "HIV_LATE_TESTER"][]
-s12_lims[input %like% "HIV_RX_INIT", group := "HIV_RX_INIT"][]
-s12_lims[input %like% "HIV_RX_REINIT", group := "HIV_RX_REINIT"][]
-s12_lims[input %like% "2", group := "GC_TRANS_PROB"][]
-s12_lims[input %like% "DURAT_NOTX", group := "GC_DURAT_NOTX"][]
-s12_lims[input %like% "ASYMP_STITEST", group := "ASYMP_STITEST_PROB"][]
-s12_lims[input %like% "PREP", group := "PREP_DISCONT"][]
-s12_lims[input %like% "SYMPT_PROB", group := "GC_SYMPT_PROB"][]
-s12_lims[input %like% "INFPR", group := "GC_TX_CURE_1WK_PROB"][]
-s12_lims[input %like% "PROB_GC_SYMPT", group := "GC_SYMPT_STITEST_PROB"][]
+new_priors <- merge(sim1_priors, narrowed, by = "input", all.x = TRUE)
+new_priors <- new_priors[
+  !is.na(q25) & !is.na(q75), ":="(s1_ll = q25, s1_ul = q75)][, -c("q25", "q75")]
 
-s12_lims %>%
-  ggplot(aes(x = 0, xend = 0)) +
-  geom_segment(
-    aes(y = s1_ll, yend = s1_ul, size = "sim1"),
-    width = 0.1
-  ) +
-  geom_segment(
-    aes(y = s2_ll, yend = s2_ul, size = "sim2"),
-    width = 0.1
-  ) +
-  facet_wrap(~ group + input, scales  = "free_y", as.table = TRUE) +
-  scale_size_manual(values = c(1, 5)) +
-#  scale_color_scico_d(direction = -1, end = 0.5, palette = "bilbao") +
-  xlim(c(-1, 1))
-
-
-## Visualize correlations between input parameters among the selected model
-## outputs.
-sel_lhs_wide <- dcast(sel_lhs_d, simid ~ input)
-
-### drop static parameters (no prior ranges submitted)
-keeplhs_vars <-
-  names(sel_lhs_wide)[!(names(sel_lhs_wide) %like% "SCALAR|RX_HALT|simid")]
-
-lhs_cor <- cor(sel_lhs_wide[, ..keeplhs_vars], method = "spearman")
-pairs(lhs_cor)
-
-incorr <- ggcorrplot(
-  lhs_cor,
-  type = "upper",
-  outline.color = "black"
-  ) +
-  scale_fill_scico(
-    name = "Spearman\ncorrelation\n",
-    limits = c(-1, 1),
-    palette = "vik"
-  ) +
-  labs(
-    caption = sprintf(
-      "\nCorrelations between input values among %s parameter sets selected.",
-      sel_lhs_d[, format(length(unique(simid)), big.mark = ",")]
-    )
-  ) +
-  theme(
-    text                = element_text(size = 18, family = "sans"),
-    axis.text.x         = element_text(size = 12),
-    axis.text.y         = element_text(size = 12),
-    legend.key.height   = unit(1, "in"),
-    legend.title        = element_text(face = "bold"),
-    plot.title          = element_text(face = "bold"),
-    plot.caption        = element_text(face = "italic"),
-    panel.grid.major.y  = element_blank(),
-    panel.grid.major.x  = element_line("gray90")
-)
-
-incorr
-
-
+new_priors
 
 ################################################################################
 ## WRITE OBJECTS TO FILEs ##
 ################################################################################
 
 ## Write selected simulation ids to file.
-saveRDS(simid_sel, here::here("inst", "cal", "sim1_simid_sel.rds"))
+saveRDS(
+  list(
+    vls = simid_sel_vls,
+    prep = simid_sel_prep
+  ),
+  here::here("inst", "cal", "sim1_simid_sel.rds")
+)
 
 ## Write pre-selection boxplots to files
 lapply(
@@ -630,14 +661,5 @@ lapply(
   }
 )
 
-## Write model output from selected simulations to files
-lapply(
-  ls(pattern = "insel$"),
-  function(x) psave(x, get(x))
-)
-
-## Write plot showing correlations between inputs in selected simulations.
-psave("incorr", incorr)
-
 ## Write limits of input parameter values across selected simulations.
-saveRDS(sel_lhs_lims, here::here("inst", "cal", "sim1_sel_lhs_limits.rds"))
+saveRDS(new_priors, here::here("inst", "cal", "sim1_sel_lhs_limits.rds"))

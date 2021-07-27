@@ -12,7 +12,7 @@ ls()
 ################################################################################
 
  sel_regex <- paste(
-  c("i.prev$", "i.prev.dx.inf.*[A-Z]{1}$", "cc.vsupp$", "prepCov.*",
+  c("i.prev$", "i.prev.dx.inf\\.[A-Z]{1}$", "cc.vsupp$", "prepCov\\.[A-Z]{1}$",
     "cc.vsupp.[A-Z]{1}$", "prob.*GC", "prop.*tested", "ir100.pop"),
   collapse = "|"
 )
@@ -32,10 +32,10 @@ outcorr <-
   ) +
 #  labs(caption = "\nSpearman correlations between selected model outputs") +
   theme(
-    text              = element_text(size = 32, family = "sans"),
+    text              = element_text(size = 20, family = "sans"),
     axis.text.x       = element_text(size = 20),
     axis.text.y       = element_text(size = 20),
-    legend.key.height = unit(1, "in"),
+    legend.key.height = unit(1, "cm"),
     legend.title      = element_text(face = "bold"),
     plot.title        = element_text(face = "bold"),
     plot.caption      = element_text(face = "italic")
@@ -52,6 +52,7 @@ psave("outcorr", outcorr)
 ################################################################################
 
 sel_popn <- epi_mn[simid %in% epi_mn_selnum[, simid], simid]
+lhs_groups <- readRDS(here::here("burnin/cal/", picksim, "lhs_sim1.rds"))
 
 lhs_inputs <- rbindlist(
   lapply(
@@ -60,16 +61,19 @@ lhs_inputs <- rbindlist(
       as.data.table(.x, keep.rownames = TRUE)
     }),
   idcol = "simid"
-)[simid %in% sel_popn]
+)[, simid := sprintf("%04d", simid)][simid %in% sel_popn]
 
 setnames(lhs_inputs, c("rn", ".x"), c("param", "inval"))
+
+## check to make sure all sel_popn simids included properly
+all(lhs_inputs[, simid] %in% sel_popn & sel_popn %in% lhs_inputs[, simid])
 
 io_join <- epi_mn[lhs_inputs, on = "simid"]
 
 drop_static <- c(
+  ## "SCALAR_AI_ACT_RATE",
+  ## "SCALAR_OI_ACT_RATE",
   paste0("HIV_RX_HALT_PROB_", c("BLACK", "HISP", "OTHER", "WHITE")),
-  "SCALAR_AI_ACT_RATE",
-  "SCALAR_OI_ACT_RATE",
   paste0("SCALAR_HIV_TRANS_PROB_", c("BLACK", "HISP", "OTHER", "WHITE"))
 )
 
@@ -103,14 +107,14 @@ io_scatter <- function(outcome, ylab = NULL, data = io_joinfil) {
       aes(inval, get(outcome), color = corr)
     ) +
       geom_point(size = 0.5) +
-      geom_smooth(se = FALSE, color = "black") +
+      geom_smooth(se = FALSE, color = "black", size = 0.5) +
       geom_text(
         data = corl[label_locs, on = "param"],
         aes(xloc, yloc, label = format(round(corr, 3), digit = 3)),
         color = "black",
-        size = 6
+        size = 2
       ) +
-      facet_wrap(~param, scales = "free_x") +
+      facet_wrap(~param, scales = "free_x", ncol = 6) +
       scale_color_scico(
         name = "Spearman correlation",
         limits = c(-1, 1),
@@ -126,13 +130,13 @@ io_scatter <- function(outcome, ylab = NULL, data = io_joinfil) {
           format(data[, length(unique(simid))], big.mark = ",")
         )
       ) +
-    theme_base(base_size = 18) +
+    theme_base(base_size = 7) +
     theme(
-      axis.title = element_text(size = 28),
-      plot.caption = element_text(size = 18, hjust = 0, face = "italic"),
+      axis.title = element_text(size = 9),
+      plot.caption = element_text(size = 7, hjust = 0, face = "italic"),
       legend.position = "top",
       legend.spacing.x = unit(1, "cm"),
-      legend.key.width = unit(1, "in"),
+      legend.key.width = unit(1, "cm"),
       legend.title = element_text(face = "bold", vjust = 1)
     )
 
@@ -156,13 +160,13 @@ gcpp_labs <- paste0(
 )
 
 ## HIV prevalence
-psave("ouptut_i.prev", io_scatter("i.prev",   hivp_labs[1]))
+psave("ouptut_i.prev", io_scatter("i.prev", hivp_labs[1]))
 psave("ouptut_i.prev.B", io_scatter("i.prev.B", hivp_labs[2]))
 psave("ouptut_i.prev.H", io_scatter("i.prev.H", hivp_labs[3]))
 psave("ouptut_i.prev.O", io_scatter("i.prev.O", hivp_labs[4]))
 psave("ouptut_i.prev.W", io_scatter("i.prev.W", hivp_labs[5]))
 
-## HIV diagnosis prevelance among infected
+## HIV diagnosis prevalence among infected
 psave("output_i.prev.dx.inf", io_scatter("i.prev.dx.inf",   hivd_labs[1]))
 psave("output_i.prev.dx.inf.B", io_scatter("i.prev.dx.inf.B", hivd_labs[2]))
 psave("output_i.prev.dx.inf.H", io_scatter("i.prev.dx.inf.H", hivd_labs[3]))
