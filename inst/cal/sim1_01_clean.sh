@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -J Sim1-CleanLHS
-#SBATCH--time=1:00:00
+#SBATCH--time=3:00:00
 #SBATCH -p batch
 #SBATCH--mem=150GB
 #SBATCH -n 208
