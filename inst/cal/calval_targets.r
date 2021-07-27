@@ -5,6 +5,8 @@ pacman::p_load(xgcmsm, data.table)
 
 racelabs <- c("B", "H", "O", "W")
 anatlabs <- c("rect", "ureth", "phar")
+gclabs   <- c("rGC", "uGC", "pGC")
+
 
 ################################################################################
 ## CALIBRATION TARGETS ##
@@ -309,12 +311,12 @@ ct_prop_anatsite_tested_dt <- data.table(
 ## 95% CLs: [10.4, 13.2], [5.7, 9.3], [7.9, 10.3]
 ## Weighted prevalence across SSuN sites (see Abara et al.)
 ct_prop_anatsite_pos <- c(0.118, 0.075, 0.091)
-names(ct_prop_anatsite_pos) <- anatlabs
+names(ct_prop_anatsite_pos) <- gclabs
 
 ct_prop_anatsite_pos_dt <- data.table(
   target    = "ct_prop_anatsite_pos",
   value     = ct_prop_anatsite_pos,
-  subgroups = anatlabs,
+  subgroups = gclabs,
   ll95      = c(0.104, 0.057, 0.079),
   ul95      = c(0.132, 0.093, 0.103)
 )
