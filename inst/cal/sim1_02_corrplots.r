@@ -3,7 +3,7 @@
 ################################################################################
 
 picksim <- "sim1"
-source(here::here("inst", "cal", "sim0_setup.r"))
+source(here::here("inst", "cal", "sim0.0_setup.r"))
 ls()
 
 

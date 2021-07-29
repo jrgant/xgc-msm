@@ -3,7 +3,7 @@
 ################################################################################
 
 picksim <- "sim1"
-source(here::here("inst", "cal", "sim0_setup.r"))
+source(here::here("inst", "cal", "sim0.0_setup.r"))
 ls()
 sim_epis[sim_epis %like% batch_date]
 
@@ -324,192 +324,15 @@ out_vs_targ[simid %in% unlist(simid_sel_vls), .(
   target = mean(target_val)
 ), variable]
 
-quicktarget <- function(outcome_pattern, simid_list) {
-  tmp <- rbindlist(
-    lapply(
-      names(simid_list),
-      function(.x) {
-        out_vs_targ[
-          simid %in% simid_list[[.x]] &
-            variable == sprintf(outcome_pattern, .x)
-        ][, selection_group := .x][]
-      }
-    )
-  )
-
-  tmp %>%
-    ggplot(aes(x = variable, y = output)) +
-    geom_line(aes(group = simid), color = "gray70") +
-    geom_point(
-      aes(fill = selection_group),
-      color = "white", shape = 21,
-      position = position_jitter(width = 0.1)
-    ) +
-    geom_boxplot(alpha = 0.5) +
-    geom_point(
-      aes(y = target_val),
-      size = 7, shape = 21, color = "red"
-    ) +
-    scale_fill_scico_d() +
-    theme_minimal(base_size = 25) +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0))
-}
-
 quicktarget("cc.vsupp.%s", simid_sel_vls)
 quicktarget("prepCov.%s", simid_sel_prep)
-
-
-## ################################################################################
-## ## Time Series Plots ##
-## ################################################################################
-
-## spec_demog_num_insel <- plotepi("num", 20000, data = episel)
-
-## spec_demog_reth_insel <- plotepi(
-##   c(paste0("prop.", rlabs)),
-##   varname = "prop",
-##   line_alpha = 0.4,
-##   data = episel
-## ) +
-##   geom_hline(
-##     data =
-##       data.table(
-##         prop = paste0("prop.", rlabs),
-##         targ = with(netstats$demog, c(num.B, num.H, num.O, num.W) / num)
-##       ),
-##     aes(yintercept = targ),
-##     color = "black"
-##   )
-
-## targ_hivprev_insel <- plotepi(
-##   c("i.prev", paste0("i.prev.", rlabs)),
-##   varname = "HIV prevalence",
-##   line_alpha = 0.4,
-##   data = episel
-## )
-
-## targ_hivdx_byreth_insel <- plotepi(
-##   c(paste0("i.prev.dx.inf.", rlabs)),
-##   varname = "hivdx_race",
-##   line_alpha = 0.4,
-##   data = episel
-## )
-
-## targ_hivdx_byage_insel <- plotepi(
-##   paste0("i.prev.dx.inf.age", 1:5),
-##   varname = "hivdx_age",
-##   line_alpha = 0.4,
-##   data = episel
-## ) +
-##   geom_hline(
-##     data = data.table(
-##       hivdx_age = c(paste0("i.prev.dx.inf.age", 1:5)),
-##       value = targets[target == "ct_hivdx_pr_byage", value]
-##     ), aes(yintercept = value)
-##   )
-
-## targ_ir100pop_insel <- plotepi(
-##   "ir100.pop",
-##   targets[target == "ct_hiv_incid_per100pop", value],
-##   data = episel
-## ) +
-##   geom_hline(
-##     aes(yintercept = targets[target == "ct_hiv_incid_per100pop", value]),
-##     color = "red"
-##   )
-
-
-################################################################################
-## AVERAGES OVER LAST YEAR ##
-################################################################################
-
-## episel_avg <- melt(
-##   episel,
-##   id.vars = "simid"
-## )[, .(mn_lastyr = mean(value)), .(simid, variable)][]
-
-## episel_avg[, length(unique(simid))]
-
-## pbox(
-##   paste0("i.prev.dx.inf.age", 1:5),
-##   targets[target %like% "hivdx.*age$", value],
-##   data = episel_avg
-## )
-
-## pbox(
-##   paste0("i.prev"),
-##   targets[target %like% "prev", value],
-##   targets[target %like% "prev", ll95],
-##   targets[target %like% "prev", ul95],
-##   data = episel_avg
-## )
-
-## pbox(
-##   paste0("ir100.pop"),
-##   targets[target %like% "inc", value],
-##   targets[target %like% "inc", ll95],
-##   targets[target %like% "inc", ul95],
-##   data = episel_avg
-## )
-
-## pbox(
-##   paste0("prepCov", rdxlabs[-1]),
-##   targets[target %like% "prep", value],
-##   targets[target %like% "prep", ll95],
-##   targets[target %like% "prep", ul95],
-##   data = episel_avg
-## )
-
-## pbox(
-##   paste0("cc.vsupp", rdxlabs[-1]),
-##   targets[target %like% "vls.*race$" &
-##     subgroups %in% c("B", "H", "O", "W"), value],
-##   targets[target %like% "vls.*race$" &
-##     subgroups %in% c("B", "H", "O", "W"), ll95],
-##   targets[target %like% "vls.*race$" &
-##     subgroups %in% c("B", "H", "O", "W"), ul95],
-##   data = episel_avg
-## )
-
-## pbox(
-##   paste0("cc.vsupp.age", 1:5),
-##   targets[target %like% "vls.*age$" & subgroups %like% "age", value],
-##   targets[target %like% "vls.*age$" & subgroups %like% "age", ll95],
-##   targets[target %like% "vls.*age$" & subgroups %like% "age", ul95],
-##   data = episel_avg
-## )
-
 
 
 ################################################################################
 ## GET PARAMETER SETS FROM SELECTED SIMULATIONS ##
 ################################################################################
 
-# sel_simid <- episel_avg[, unique(simid)]
 lhs_groups <- readRDS(here::here("burnin/cal/", picksim, "lhs_sim1.rds"))
-
-## TODO Select input parameters for each VLS and PrEP target (including strata)
-##      again.
-##      separately to narrow those ranges. Resample the LHS and run the model
-pull_params <- function(simid_list, pattern) {
-  out <- rbindlist(
-    lapply(
-      simid_list,
-      function(.x) {
-        rbindlist(
-          lapply(
-            setNames(as.numeric(.x), .x),
-            function(.y) as.data.table(lhs_groups[[.y]], keep.rownames = TRUE)
-          ),
-          idcol = "simid"
-        )
-      }
-    ),
-    idcol = "selection_group"
-  )
-  setnames(out, c("V1", "V2"), c("input", "value"))
-  out
-}
 
 vls_sel_inputs <- pull_params(simid_sel_vls)[input %like% "RX_INIT|RX_REINIT"]
 vls_sel_inputs[, input_group := stringr::str_extract(input, "RX_[A-Z]+")][]

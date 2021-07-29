@@ -416,3 +416,69 @@ plotepi <- function(var, target = NULL, type = "line",
 
   return(p)
 }
+
+
+################################################################################
+## FUNCTION TO QUICKLY VISUALIZE TARGET DISTRIBUTIONS AMONG SIMID SETS ##
+################################################################################
+
+quicktarget <- function(outcome_pattern, simid_list,
+                        custom_jitter = list(w = 0.1, h = 0)) {
+  tmp <- rbindlist(
+    lapply(
+      names(simid_list),
+      function(.x) {
+        out_vs_targ[
+          simid %in% simid_list[[.x]] &
+            variable == sprintf(outcome_pattern, .x)
+        ][, selection_group := .x][]
+      }
+    )
+  )
+
+  tmp %>%
+    ggplot(aes(x = variable, y = output)) +
+    geom_line(aes(group = simid), color = "gray70") +
+    geom_point(
+      aes(fill = selection_group),
+      color = "white", shape = 21,
+      position = position_jitter(
+        width = custom_jitter$w,
+        height = custom_jitter$h
+      )
+    ) +
+    geom_boxplot(alpha = 0.5) +
+    geom_point(
+      aes(y = target_val),
+      size = 7, shape = 21, color = "red"
+    ) +
+    scale_fill_scico_d() +
+    theme_minimal(base_size = 25) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0))
+}
+
+
+################################################################################
+## FUNCTION TO RETRIEVE THE INPUT PARAMETERS SETS ASSOCIATED ##
+## WITH PARTICULAR LISTS OF SIMIDS                           ##
+################################################################################
+
+pull_params <- function(simid_list, pattern) {
+  out <- rbindlist(
+    lapply(
+      simid_list,
+      function(.x) {
+        rbindlist(
+          lapply(
+            setNames(as.numeric(.x), .x),
+            function(.y) as.data.table(lhs_groups[[.y]], keep.rownames = TRUE)
+          ),
+          idcol = "simid"
+        )
+      }
+    ),
+    idcol = "selection_group"
+  )
+  setnames(out, c("V1", "V2"), c("input", "value"))
+  out
+}
