@@ -160,7 +160,9 @@ param <- param_msm(
     fmt_getenv("PREP_DISCONT_RATE_HISP"),
     fmt_getenv("PREP_DISCONT_RATE_OTHER"),
     fmt_getenv("PREP_DISCONT_RATE_WHITE")
-  )
+  ),
+  # act stopper prob
+  act.stopper.prob = fmt_getenv("ACT_STOPPER_PROB")
 )
 
 init <- init_msm(

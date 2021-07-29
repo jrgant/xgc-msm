@@ -83,13 +83,14 @@ priors <- list(
   pvec2("PREP_DISCONT_RATE_BLACK"),
   pvec2("PREP_DISCONT_RATE_HISP"),
   pvec2("PREP_DISCONT_RATE_OTHER"),
-  pvec2("PREP_DISCONT_RATE_WHITE")
+  pvec2("PREP_DISCONT_RATE_WHITE"),
+  pvec2("ACT_STOPPER_PROB")
 )
 
 
 # DRAW LATIN HYPERCUBE ---------------------------------------------------------
 
-set.seed(1044)
+set.seed(9087)
 lhs_unif <- randomLHS(1000, length(priors))
 
 draw_param <- function(lhscol, lhsrow) {
@@ -210,7 +211,7 @@ make_batch_script(
   mem = "3GB",
   ncores = 1,
   array = "1-1000",
-  log_fullpath = "LHS-Sim2_ARRAY-%A_JOB-%J_SIMNO-%4a.log",
+  log_fullpath = "LHS-Sim3_ARRAY-%A_JOB-%J_SIMNO-%4a.log",
   batchid = 1,
   nsims = 1,
   nsteps = 3120,
