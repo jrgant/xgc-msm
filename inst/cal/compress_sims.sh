@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -J Compress-Sims
-#SBATCH --time=1:00:00
+#SBATCH --time=3:00:00
 #SBATCH -p batch
 #SBATCH --mem=50GB
 #SBATCH -n 64
