@@ -10,79 +10,8 @@ ls()
 ################################################################################
 ## VISUALIZE DISTRIBUTIONS OF TARGETS ACROSS ALL SIMS ##
 ################################################################################
-
-## Prior to any selection of simulations (except for those chosen based on
-## overall population size), see whether there is overlap with calibration
-## targets.
-
-epi5k <- melt(
-  epi_mn_selnum,
-  id.vars = "simid",
-  value.name = "mn_lastyr"
-)
-
-## ... HIV prevalence
-ps_ct_hivprev <- pbox(
-  "i.prev",
-  targets[target == "ct_hiv_prev", value],
-  targets[target == "ct_hiv_prev", ll95],
-  targets[target == "ct_hiv_prev", ul95],
-  data = epi5k
-)
-
-## ... HIV incidence
-ps_ct_hivinc <- pbox(
-  "ir100.pop",
-  targets[target == "ct_hiv_incid_per100pop", value],
-  targets[target == "ct_hiv_incid_per100pop",  ll95],
-  targets[target == "ct_hiv_incid_per100pop",  ul95],
-  data = epi5k
-)
-
-## ... Viral suppression, by age group
-ps_ct_vsupp_age <- pbox(
-  paste0("cc.vsupp.age", 1:5),
-  targets[target == "ct_vls_pr_byage", value],
-  targets[target == "ct_vls_pr_byage", ll95],
-  targets[target == "ct_vls_pr_byage", ul95],
-  data = epi5k
-)
-
-## ... Viral suppression, by race/ethnicity
-ps_ct_vsupp_race <- pbox(
-  paste0("cc.vsupp.", c("B", "H", "O", "W")),
-  targets[target == "ct_vls_pr_byrace", value],
-  targets[target == "ct_vls_pr_byrace", ll95],
-  targets[target == "ct_vls_pr_byrace", ul95],
-  data = epi5k
-)
-
-## ... PrEP coverage
-ps_ct_prep <- pbox(
-  race.prep.cov[-1],
-  targets[target == "ct_prep", value],
-  targets[target == "ct_prep", ll95],
-  targets[target == "ct_prep", ul95],
-  data = epi5k
-)
-
-## ... Proportion anatomic sites tested for GC at STI clinic
-ps_ct_gctested <- pbox(
-  sprintf("prop.%s.tested", c("rect", "ureth", "phar")),
-  targets[target == "ct_prop_anatsite_tested", value],
-  targets[target == "ct_prop_anatsite_tested", ll95],
-  targets[target == "ct_prop_anatsite_tested", ul95],
-  epi5k
-)
-
-## ... GC test positivity among tested
-ps_ct_gcpos <- pbox(
-  sprintf("prob.%s.tested", c("rGC", "uGC", "pGC")),
-  targets[target == "ct_prop_anatsite_pos", value],
-  targets[target == "ct_prop_anatsite_pos", ll95],
-  targets[target == "ct_prop_anatsite_pos", ul95],
-  epi5k
-)
+source(here::here(ic_dir, "sim0.1_fmt_targetdat.r"))
+ls()
 
 
 ################################################################################
