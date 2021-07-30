@@ -19,7 +19,7 @@ slurm_array_task_id <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))
 
 ## select seed for the current job and read it into the current environment
 .lec.Random.seed.table <- readRDS(
-  here::here("burnin", "cal", "sim2", "seeds_sim2.rds")
+  here::here("burnin", "cal", "sim3", "seeds_sim3.rds")
 )
 
 .lec.CurrentStream(
@@ -32,7 +32,7 @@ est         <- get_est("netest")
 epistats    <- get_est("epistats")
 
 lhs_real    <- readRDS(
-  here::here("burnin", "cal", "sim2", "lhs_sim2.rds")
+  here::here("burnin", "cal", "sim3", "lhs_sim3.rds")
 )
 
 # Set environment variables (parameter sets) based on list position
@@ -44,7 +44,7 @@ do.call(
 
 # Check that manually set environment variables (set in sbatch)
 if (Sys.getenv("SIMDIR") == "") {
-  outpath <- "~/scratch/sim2"
+  outpath <- "~/scratch/sim3"
 } else {
   outpath <- Sys.getenv("SIMDIR")
 }
