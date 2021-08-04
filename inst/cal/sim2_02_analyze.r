@@ -36,14 +36,6 @@ simid_sel_hivpr <-
 ## quicktargets() is a helper function and particular about its inputs,
 ## so we make some lists to get several targets one plot
 set_jitter <- list(w = 0.1, h = 0)
-coerced_simid_gcpos <- list(
-  "rGC" = simid_sel_hivpr,
-  "uGC" = simid_sel_hivpr,
-  "pGC" = simid_sel_hivpr
-)
-
-cs_gctest <- coerced_simid_gcpos
-names(cs_gctest) <- c("rect", "ureth", "phar")
 
 cs_vsupp_reth <- lapply(1:4, function(x) simid_sel_hivpr)
 names(cs_vsupp_reth) <- rlabs
@@ -51,8 +43,6 @@ names(cs_vsupp_reth) <- rlabs
 quicktarget("i.prev", list(hiv = simid_sel_hivpr), set_jitter)
 quicktarget("ir100.pop", list(hiv = simid_sel_hivpr), set_jitter)
 quicktarget("cc.vsupp.%s", cs_vsupp_reth, set_jitter)
-quicktarget("prop.%s.tested", cs_gctest, set_jitter)
-quicktarget("prob.%s.tested", coerced_simid_gcpos, set_jitter)
 
 
 ################################################################################
@@ -66,13 +56,13 @@ hivpr_sel_inputs <- pull_params(list(simid_sel_hivpr))[, -c("selection_group")]
 all(
   all(simid_sel_hivpr %in% hivpr_sel_inputs[, simid]),
   all(hivpr_sel_inputs[, simid] %in% simid_sel_hivpr)
-) == TRUE
+)
 
 ## Since only a handful of simids were selected, get the min/max for each
 ## input parameter to use as the new sampling ranges in sim3.
 new_priors <- hivpr_sel_inputs[, .(
-  s3_ll = min(value),
-  s3_ul = max(value)
+  s3_ll = quantile(value, 0.25),
+  s3_ul = quantile(value, 0.75)
 ), input]
 
 sim2_priors <- readRDS(here::here(ic_dir, "sim1_sel_lhs_limits.rds"))
