@@ -104,7 +104,11 @@ pbox <- function(varnames, targets = NULL, targets_ll = NULL, targets_ul = NULL,
     ggplot(data = cdat, aes(variable, mn_lastyr)) +
     geom_boxplot(outlier.size = 0, outlier.stroke = 0) +
     geom_line(aes(group = simid), alpha = 0.1) +
-    geom_point(alpha = 0.3, position = position_jitter(0.2)) +
+    geom_point(
+      alpha = 0.3,
+      size = 3,
+      position = position_jitter(width = 0.2, height = 0)
+    ) +
     geom_point(
       data = mdat, aes(variable, mean, fill = "Simulated mean"),
       shape = 21, color = "black", size = 6
@@ -309,7 +313,7 @@ epi_mn <- epi_noNA[
 # (average over final burnin-in year)
 pop_N <- 20000
 epi_mn_selnum <- epi_mn[abs(pop_N - num) / pop_N <= 0.05]
-epi_mn_selnum[, .(N = .N, P = .N / 5000)]
+epi_mn_selnum[, .(N = .N, P = .N / length(unique(epi$simid)))]
 
 
 ################################################################################
