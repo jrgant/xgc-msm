@@ -25,16 +25,21 @@ ls()
 simid_sel_vls <- lapply(
   setNames(rlabs, rlabs),
   function(.x) {
-    out_vs_targ[variable == paste0("cc.vsupp.", .x) & output_within_5pts, simid]
+    out_vs_targ[
+      variable == paste0("cc.vsupp.", .x) & output_within_5pts == 1, simid]
   }
 )
 
 simid_sel_prep <- lapply(
   setNames(rlabs, rlabs),
   function(.x) {
-    out_vs_targ[variable == paste0("prepCov.", .x) & output_within_5pts, simid]
+    out_vs_targ[
+      variable == paste0("prepCov.", .x) & output_within_5pts == 1, simid]
   }
 )
+
+simid_sel_hivpr <- out_vs_targ[
+  variable == "i.prev" & output_within_5pts == 1, simid]
 
 episel <- epi_noNA[simid %in% unlist(list(simid_sel_vls, simid_sel_prep))]
 
@@ -79,7 +84,7 @@ check_input_simids <- function(x, simid_list, simid_inputs) {
   )[, .N, .(captured, sel)][, all(N) == 1]
 }
 
-# check selected VLS inputeter sets
+# check selected VLS input parameter sets
 sapply(
   rlabs,
   check_input_simids,
@@ -87,7 +92,7 @@ sapply(
   simid_inputs = vls_sel_inputs
 )
 
-# check selected PrEP inputeter sets
+# check selected PrEP input parameter sets
 sapply(
   rlabs,
   check_input_simids,
@@ -145,7 +150,7 @@ gridExtra::grid.arrange(
   corplots_prep[[4]]
 )
 
-## Function that takes the long version of inputeter subsets from
+## Function that takes the long version of input parameter subsets from
 ## simid selections and extracts the 25% and 75% quantiles for use as prior
 ## limits in the next round of calibration.
 input_quantiles <- function(data, inputstring, ql = 0.25, qu = 0.75) {
@@ -157,7 +162,7 @@ input_quantiles <- function(data, inputstring, ql = 0.25, qu = 0.75) {
     ),
     .(selection_group, input)
     ## this step matches the race/eth selection group to the corresponding
-    ## input inputeter
+    ## input input parameter
   ][selection_group == substring(str_extract(input, "(?<=_)[A-Z]+$"), 1, 1)]
 
   inputsub[, -c("selection_group")]
@@ -175,8 +180,10 @@ narrowed <- rbindlist(
 sim1_priors <- readRDS(here::here("burnin", "cal", "sim1", "sim1_priors.rds"))
 
 new_priors <- merge(sim1_priors, narrowed, by = "input", all.x = TRUE)
+
 new_priors <- new_priors[
-  !is.na(q25) & !is.na(q75), ":="(s1_ll = q25, s1_ul = q75)][, -c("q25", "q75")]
+  !is.na(q25) & !is.na(q75),
+  ":=" (s1_ll = q25, s1_ul = q75)][, -c("q25", "q75")]
 
 setnames(new_priors, c("s1_ll", "s1_ul"), c("s2_ll", "s2_ul"))
 
