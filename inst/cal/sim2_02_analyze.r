@@ -11,7 +11,7 @@ picksim <- "sim2"
 #      random Latin hypercube sample for sim3. Based on looking at 2021-07-27
 #      it seems like we should get parameter sets that result in HIV
 #      equilibrium and non-extinction of GC.
-Sys.setenv("BATCH_DATE" = "2021-07-26")
+# Sys.setenv("BATCH_DATE" = "2021-07-26")
 
 ic_dir <- here::here("inst", "cal")
 source(here::here(ic_dir, "sim0.0_setup.r"))
@@ -32,28 +32,27 @@ ls()
 simid_sel_hivpr <-
   out_vs_targ[variable == "i.prev" & output_within_5pts == 1, simid]
 
-epi5k[simid %in% simid_sel_hivpr][variable %like% "cc\\.vsupp\\.[A-Z]$"] %>%
-  ggplot(aes(x = variable, y = mn_lastyr, shape = simid)) +
-  geom_line(aes(group = simid), color = "gray90") +
-  geom_point(size = 4)
-
 ## NOTE
 ## quicktargets() is a helper function and particular about its inputs,
-## so we make a list to get several targets one plot
+## so we make some lists to get several targets one plot
 set_jitter <- list(w = 0.1, h = 0)
-coerced_simid <- list(
+coerced_simid_gcpos <- list(
   "rGC" = simid_sel_hivpr,
   "uGC" = simid_sel_hivpr,
   "pGC" = simid_sel_hivpr
 )
 
-cs2 <- coerced_simid
-names(cs2) <- c("rect", "ureth", "phar")
+cs_gctest <- coerced_simid_gcpos
+names(cs_gctest) <- c("rect", "ureth", "phar")
+
+cs_vsupp_reth <- lapply(1:4, function(x) simid_sel_hivpr)
+names(cs_vsupp_reth) <- rlabs
 
 quicktarget("i.prev", list(hiv = simid_sel_hivpr), set_jitter)
 quicktarget("ir100.pop", list(hiv = simid_sel_hivpr), set_jitter)
-quicktarget("prop.%s.tested", cs2, set_jitter)
-quicktarget("prob.%s.tested", coerced_simid, set_jitter)
+quicktarget("cc.vsupp.%s", cs_vsupp_reth, set_jitter)
+quicktarget("prop.%s.tested", cs_gctest, set_jitter)
+quicktarget("prob.%s.tested", coerced_simid_gcpos, set_jitter)
 
 
 ################################################################################
@@ -69,7 +68,7 @@ all(
   all(hivpr_sel_inputs[, simid] %in% simid_sel_hivpr)
 ) == TRUE
 
-## Since only three simulation IDs were selected, get the min/max for each
+## Since only a handful of simids were selected, get the min/max for each
 ## input parameter to use as the new sampling ranges in sim3.
 new_priors <- hivpr_sel_inputs[, .(
   s3_ll = min(value),
@@ -117,6 +116,7 @@ geom_polyside <- function(xvals, lt, ...) {
 }
 
 # TODO Consider a figure that shows the whole history of the calibration
+#      Would probably want to move into its own file
 ggplot(pcoord_fin, aes(x = x, y = y, fill = batch, color = batch)) +
   geom_rect(
     data = dcast(
@@ -126,7 +126,7 @@ ggplot(pcoord_fin, aes(x = x, y = y, fill = batch, color = batch)) +
       x = NULL, y = NULL, color = NULL, fill = NULL,
       xmin = 1, xmax = 2, ymin = `3`, ymax = `1`
     ),
-    fill = "gray80",
+    fill = "gray90",
     color = "white"
   ) +
   geom_polygon(fill = "white", color = "white") +
@@ -140,10 +140,10 @@ ggplot(pcoord_fin, aes(x = x, y = y, fill = batch, color = batch)) +
   ## geom_polyside(1:2, "dotted", color = "black") +
   geom_polyside(c(2, 4), "solid", color = "black") +
   geom_polyside(c(1, 3), "solid", color = "black") +
-  geom_point(aes(fill = batch), size = 5, shape = 21, color = "white") +
+  geom_point(aes(fill = batch), size = 5, shape = 21, color = "black") +
   facet_wrap(~ input, scales = "free_y") +
   scale_fill_scico_d(
-    name = "Prior set", palette = "berlin", begin = 0.25, end = 0.75
+    name = "Prior set", palette = "berlin", begin = 0.1, end = 0.2
   ) +
   scale_color_scico_d(
     name = "Prior set", palette = "berlin", begin = 0.75, end = 0.75
