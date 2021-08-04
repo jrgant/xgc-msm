@@ -78,7 +78,8 @@ priors <- list(
   pvec(0, 0.05, "PREP_DISCONT_RATE_BLACK"),
   pvec(0, 0.05, "PREP_DISCONT_RATE_HISP"),
   pvec(0, 0.05, "PREP_DISCONT_RATE_OTHER"),
-  pvec(0, 0.05, "PREP_DISCONT_RATE_WHITE")
+  pvec(0, 0.05, "PREP_DISCONT_RATE_WHITE"),
+  pvec(0.2, 1, "ACT_STOPPER_PROB")
 )
 
 ## Write initial ranges to a data set.

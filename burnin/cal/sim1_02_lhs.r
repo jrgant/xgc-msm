@@ -105,9 +105,9 @@ param <- param_msm(
     fmt_getenv("HIV_LATE_TESTER_PROB_WHITE")
   ),
   # HIV treatment parameters
-  tt.part.supp        = rep(0, 4), # Partial VLS class, post ART
+  tt.part.supp        = rep(0, 4), # Partial VLS class, turned off
   tt.full.supp        = rep(1, 4), # Full VLS class, post ART
-  tt.dur.supp         = rep(0, 4), # Durable VLS post ART
+  tt.dur.supp         = rep(0, 4), # Durable VLS post ART, turned off
   tx.init.prob        = c(
     fmt_getenv("HIV_RX_INIT_PROB_BLACK"),
     fmt_getenv("HIV_RX_INIT_PROB_HISP"),
@@ -160,13 +160,15 @@ param <- param_msm(
     fmt_getenv("PREP_DISCONT_RATE_HISP"),
     fmt_getenv("PREP_DISCONT_RATE_OTHER"),
     fmt_getenv("PREP_DISCONT_RATE_WHITE")
-  )
+  ),
+  # Sexual activity reduction due to GC symptoms/treatment
+  act.stopper.prob = fmt_getenv("ACT_STOPPER_PROB")
 )
 
 init <- init_msm(
-  prev.ugc = 0.01,
-  prev.rgc = 0.01,
-  prev.pgc = 0.01
+  prev.ugc = 0.05,
+  prev.rgc = 0.05,
+  prev.pgc = 0.05
 )
 
 ## Spec summary
