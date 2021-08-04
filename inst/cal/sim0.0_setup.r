@@ -29,7 +29,7 @@ theme_set(theme_tufte(base_size = 22))
 sys_batch_date <- Sys.getenv("BATCH_DATE")
 
 if (!exists("picksim")) {
-  stop("Must specify picksim before sourcing simXX_02_setup.r")
+  stop("Must specify picksim before sourcing sim0.0_setup.r")
 }
 
 sim_epis <- list.files(
@@ -41,7 +41,18 @@ sim_epis <- list.files(
 if (sys_batch_date != "") {
   batch_date <- sys_batch_date
 } else {
-  batch_date <- max(ymd(str_extract(sim_epis, "[0-9]{4}-[0-9]{2}-[0-9]{2}")))
+
+  # Standard dates will show as missing after switch to Unix date-time
+  # labeling of files. To retrieve an older run labeled with standard
+  # YYYY-MM-DD, set BATCH_DATE environment variable or sys_batch_date.
+  batch_date <- max(
+    as.numeric(str_extract(sim_epis, "(?<=_)[0-9]+(?=\\.)")),
+    na.rm = TRUE
+  )
+
+  # save a human readable version of the batch date-time
+  # January 1, 1970 is Unix time origin
+  pretty_batch_date <- as.POSIXct(batch_date, origin = "1970-01-01")
 }
 
 ## Load calibration targets, netstats, and formatted simulated output.
