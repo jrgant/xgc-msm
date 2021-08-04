@@ -166,9 +166,9 @@ param <- param_msm(
 )
 
 init <- init_msm(
-  prev.ugc = 0.01,
-  prev.rgc = 0.01,
-  prev.pgc = 0.01
+  prev.ugc = 0.05,
+  prev.rgc = 0.05,
+  prev.pgc = 0.05
 )
 
 ## Spec summary
