@@ -42,6 +42,9 @@ vignettes/*.pdf
 *.log
 *.out
 
+# environment dumps created during debugging
+dump*.rda
+
 # ignore graveyard directories
 .graveyard
 .logs
