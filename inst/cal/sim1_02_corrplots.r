@@ -73,8 +73,8 @@ io_join <- epi_mn[lhs_inputs, on = "simid"]
 drop_static <- c(
   ## "SCALAR_AI_ACT_RATE",
   ## "SCALAR_OI_ACT_RATE",
-  paste0("HIV_RX_HALT_PROB_", c("BLACK", "HISP", "OTHER", "WHITE")),
-  paste0("SCALAR_HIV_TRANS_PROB_", c("BLACK", "HISP", "OTHER", "WHITE"))
+  paste0("HIV_RX_HALT_PROB_", c("BLACK", "HISP", "OTHER", "WHITE"))
+  #paste0("SCALAR_HIV_TRANS_PROB_", c("BLACK", "HISP", "OTHER", "WHITE"))
 )
 
 io_joinfil <- io_join[!param %in% drop_static]
@@ -144,16 +144,19 @@ io_scatter <- function(outcome, ylab = NULL, data = io_joinfil) {
 }
 
 hivp_labs <- paste0("Simulated HIV prevalence", racelabs)
+
 hivd_labs <- paste0(
   "Simulated HIV diagnosis prevalence among infected",
   racelabs
 )
+
 hivi_labs <- paste0("Simulated HIV incidence (per 100 person-years)", racelabs)
 hivv_labs <- paste0("Simulated HIV viral suppression among diagnosed", racelabs)
 prep_labs <- paste0("PrEP coverage among eligible MSM", racelabs)
 gcpr_labs <- paste0("Simulated GC prevalence", anatlabs)
 gcin_labs <- paste0("Simulated GC incidence", anatlabs)
 gcpt_labs <- paste0("Simulated proportion tested for GC in clinic", anatlabs)
+
 gcpp_labs <- paste0(
   "Simulated proportion positive for GC in clinic among tested",
   anatlabs
@@ -174,11 +177,11 @@ psave("output_i.prev.dx.inf.O", io_scatter("i.prev.dx.inf.O", hivd_labs[4]))
 psave("output_i.prev.dx.inf.W", io_scatter("i.prev.dx.inf.W", hivd_labs[5]))
 
 ## HIV incidence rate
-psave("output_ir100", io_scatter("ir100",   hivi_labs[1]))
-psave("output_ir100.B", io_scatter("ir100.B", hivi_labs[2]))
-psave("output_ir100.H", io_scatter("ir100.H", hivi_labs[3]))
-psave("output_ir100.O", io_scatter("ir100.O", hivi_labs[4]))
-psave("output_ir100.W", io_scatter("ir100.W", hivi_labs[5]))
+psave("output_ir100.pop", io_scatter("ir100.pop",   hivi_labs[1]))
+psave("output_ir100.pop.B", io_scatter("ir100.pop.B", hivi_labs[2]))
+psave("output_ir100.pop.H", io_scatter("ir100.pop.H", hivi_labs[3]))
+psave("output_ir100.pop.O", io_scatter("ir100.pop.O", hivi_labs[4]))
+psave("output_ir100.pop.W", io_scatter("ir100.pop.W", hivi_labs[5]))
 
 ## HIV viral suppression among diagnosed
 psave("output_cc.vsupp", io_scatter("cc.vsupp",   hivv_labs[1]))
@@ -187,17 +190,17 @@ psave("output_cc.vsupp.H", io_scatter("cc.vsupp.H", hivv_labs[3]))
 psave("output_cc.vsupp.O", io_scatter("cc.vsupp.O", hivv_labs[4]))
 psave("output_cc.vsupp.W", io_scatter("cc.vsupp.W", hivv_labs[5]))
 
-## GC prevalence
-psave("output_prev.gc", io_scatter("prev.gc",  gcpr_labs[1]))
-psave("output_prev.rgc", io_scatter("prev.rgc", gcpr_labs[2]))
-psave("output_prev.ugc", io_scatter("prev.ugc", gcpr_labs[3]))
-psave("output_prev.pgc", io_scatter("prev.pgc", gcpr_labs[4]))
+## ## GC prevalence
+## psave("output_prev.gc", io_scatter("prev.gc",  gcpr_labs[1]))
+## psave("output_prev.rgc", io_scatter("prev.rgc", gcpr_labs[2]))
+## psave("output_prev.ugc", io_scatter("prev.ugc", gcpr_labs[3]))
+## psave("output_prev.pgc", io_scatter("prev.pgc", gcpr_labs[4]))
 
-## GC incidence rate, by anatomic site
-psave("output_ir100.gc", io_scatter("ir100.gc",  gcin_labs[1]))
-psave("output_ir100.rgc", io_scatter("ir100.rgc", gcin_labs[2]))
-psave("output_ir100.ugc", io_scatter("ir100.ugc", gcin_labs[3]))
-psave("output_ir100.pgc", io_scatter("ir100.pgc", gcin_labs[4]))
+## ## GC incidence rate, by anatomic site
+## psave("output_ir100.gc", io_scatter("ir100.gc",  gcin_labs[1]))
+## psave("output_ir100.rgc", io_scatter("ir100.rgc", gcin_labs[2]))
+## psave("output_ir100.ugc", io_scatter("ir100.ugc", gcin_labs[3]))
+## psave("output_ir100.pgc", io_scatter("ir100.pgc", gcin_labs[4]))
 
 ## Proportion tested for GC in clinic, by anatomic site
 psave("output_prop.rect.tested", io_scatter("prop.rect.tested",  gcpt_labs[2]))
