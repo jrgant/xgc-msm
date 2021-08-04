@@ -29,7 +29,7 @@ theme_set(theme_tufte(base_size = 22))
 sys_batch_date <- Sys.getenv("BATCH_DATE")
 
 if (!exists("picksim")) {
-  stop("Must specify picksim before sourcing simXX_02_setup.r")
+  stop("Must specify picksim before sourcing sim0.0_setup.r")
 }
 
 sim_epis <- list.files(
@@ -41,7 +41,18 @@ sim_epis <- list.files(
 if (sys_batch_date != "") {
   batch_date <- sys_batch_date
 } else {
-  batch_date <- max(ymd(str_extract(sim_epis, "[0-9]{4}-[0-9]{2}-[0-9]{2}")))
+
+  # Standard dates will show as missing after switch to Unix date-time
+  # labeling of files. To retrieve an older run labeled with standard
+  # YYYY-MM-DD, set BATCH_DATE environment variable or sys_batch_date.
+  batch_date <- max(
+    as.numeric(str_extract(sim_epis, "(?<=_)[0-9]+(?=\\.)")),
+    na.rm = TRUE
+  )
+
+  # save a human readable version of the batch date-time
+  # January 1, 1970 is Unix time origin
+  pretty_batch_date <- as.POSIXct(batch_date, origin = "1970-01-01")
 }
 
 ## Load calibration targets, netstats, and formatted simulated output.
@@ -93,7 +104,11 @@ pbox <- function(varnames, targets = NULL, targets_ll = NULL, targets_ul = NULL,
     ggplot(data = cdat, aes(variable, mn_lastyr)) +
     geom_boxplot(outlier.size = 0, outlier.stroke = 0) +
     geom_line(aes(group = simid), alpha = 0.1) +
-    geom_point(alpha = 0.3, position = position_jitter(0.2)) +
+    geom_point(
+      alpha = 0.3,
+      size = 3,
+      position = position_jitter(width = 0.2, height = 0)
+    ) +
     geom_point(
       data = mdat, aes(variable, mean, fill = "Simulated mean"),
       shape = 21, color = "black", size = 6
@@ -298,7 +313,7 @@ epi_mn <- epi_noNA[
 # (average over final burnin-in year)
 pop_N <- 20000
 epi_mn_selnum <- epi_mn[abs(pop_N - num) / pop_N <= 0.05]
-epi_mn_selnum[, .(N = .N, P = .N / 5000)]
+epi_mn_selnum[, .(N = .N, P = .N / length(unique(epi$simid)))]
 
 
 ################################################################################
