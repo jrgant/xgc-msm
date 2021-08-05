@@ -58,89 +58,28 @@ all(
   all(hivpr_sel_inputs[, simid] %in% simid_sel_hivpr)
 )
 
+
 ## Since only a handful of simids were selected, get the min/max for each
 ## input parameter to use as the new sampling ranges in sim3.
-new_priors <- hivpr_sel_inputs[, .(
-  s3_ll = quantile(value, 0.25),
-  s3_ul = quantile(value, 0.75)
-), input]
+narrowed_hiv_priors <- hivpr_sel_inputs[, .(
+  q25 = quantile(value, 0.25),
+  q75 = quantile(value, 0.75)
+), input][input %like% "HIV"]
 
 sim2_priors <- readRDS(here::here(ic_dir, "sim1_sel_lhs_limits.rds"))
 
-prior_bind <- rbindlist(
-  list(new_priors[, batch := "s3"][], sim2_priors[, batch := "s2"][]),
-  use.names = FALSE
+new_priors <- merge(
+  sim2_priors,
+  narrowed_hiv_priors,
+  by = "input",
+  all.x = TRUE
 )
 
-setnames(prior_bind, c("s3_ll", "s3_ul"), c("ll", "ul"))
+new_priors <- new_priors[
+  !is.na(q25) & !is.na(q75),
+  ":=" (s2_ll = q25, s2_ul = q75)][, -c("q25", "q75")]
 
-ulcoord <- dcast(prior_bind, input ~ batch, value.var = c("batch", "ul"))
-llcoord <- dcast(prior_bind, input ~ batch, value.var = c("batch", "ll"))
-
-pcoord <- rbindlist(
-  list(
-    ulcoord[, .(input, x = batch.1_s2, y = ul_s2)],
-    ulcoord[, .(input, x = batch.1_s3, y = ul_s3)],
-    llcoord[, .(input, x = batch.1_s2, y = ll_s2)],
-    llcoord[, .(input, x = batch.1_s3, y = ll_s3)]
-  )
-)[order(input)]
-
-pcoord[, x := fcase(x == "s2", 1, x == "s3", 2)]
-pcoord[, rowid := rowid(input)][]
-
-sort_ref <- pcoord[, -c("x", "y", "rowid")]
-sort_ref[, rowid := c(3, 4, 2, 1), by = input] # put rowids in the order I want
-merge(sort_ref, pcoord, by = c("input", "rowid"))
-
-pcoord_fin <- pcoord[sort_ref, on = c("input", "rowid")][!(input %like% "HALT")]
-pcoord_fin[, batch := fifelse(x == 1, "s2", "s3")]
-
-geom_polyside <- function(xvals, lt, ...) {
-  geom_line(
-    data = pcoord_fin[rowid %in% xvals],
-    aes(x = x, y = y),
-    linetype = lt,
-    ...
-  )
-}
-
-# TODO Consider a figure that shows the whole history of the calibration
-#      Would probably want to move into its own file
-ggplot(pcoord_fin, aes(x = x, y = y, fill = batch, color = batch)) +
-  geom_rect(
-    data = dcast(
-      pcoord_fin[x == 1], input ~ rowid, value.var = "y"
-    )[, batch := "s2"][],
-    aes(
-      x = NULL, y = NULL, color = NULL, fill = NULL,
-      xmin = 1, xmax = 2, ymin = `3`, ymax = `1`
-    ),
-    fill = "gray90",
-    color = "white"
-  ) +
-  geom_polygon(fill = "white", color = "white") +
-  geom_segment(
-    data = pcoord_fin[x == 2][, batch := "s3"][],
-    aes(x = 1, xend = 2, y = y, yend = y),
-    linetype = "dashed", color = "black"
-  ) +
-  xlim(c(1, 2)) +
-  ## geom_polyside(3:4, "dotted", color = "black") +
-  ## geom_polyside(1:2, "dotted", color = "black") +
-  geom_polyside(c(2, 4), "solid", color = "black") +
-  geom_polyside(c(1, 3), "solid", color = "black") +
-  geom_point(aes(fill = batch), size = 5, shape = 21, color = "black") +
-  facet_wrap(~ input, scales = "free_y") +
-  scale_fill_scico_d(
-    name = "Prior set", palette = "berlin", begin = 0.1, end = 0.2
-  ) +
-  scale_color_scico_d(
-    name = "Prior set", palette = "berlin", begin = 0.75, end = 0.75
-  ) +
-  scale_x_continuous(breaks = c(1, 2), labels = c("s2", "s3")) +
-  guides(color = FALSE) +
-  theme_tufte(base_size = 8)
+setnames(new_priors, c("s2_ll", "s2_ul"), c("s3_ll", "s3_ul"))
 
 
 ################################################################################
