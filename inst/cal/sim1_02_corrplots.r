@@ -163,11 +163,11 @@ gcpp_labs <- paste0(
 )
 
 ## HIV prevalence
-psave("ouptut_i.prev", io_scatter("i.prev", hivp_labs[1]))
-psave("ouptut_i.prev.B", io_scatter("i.prev.B", hivp_labs[2]))
-psave("ouptut_i.prev.H", io_scatter("i.prev.H", hivp_labs[3]))
-psave("ouptut_i.prev.O", io_scatter("i.prev.O", hivp_labs[4]))
-psave("ouptut_i.prev.W", io_scatter("i.prev.W", hivp_labs[5]))
+psave("output_i.prev", io_scatter("i.prev", hivp_labs[1]))
+psave("output_i.prev.B", io_scatter("i.prev.B", hivp_labs[2]))
+psave("output_i.prev.H", io_scatter("i.prev.H", hivp_labs[3]))
+psave("output_i.prev.O", io_scatter("i.prev.O", hivp_labs[4]))
+psave("output_i.prev.W", io_scatter("i.prev.W", hivp_labs[5]))
 
 ## HIV diagnosis prevalence among infected
 psave("output_i.prev.dx.inf", io_scatter("i.prev.dx.inf",   hivd_labs[1]))
