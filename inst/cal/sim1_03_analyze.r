@@ -38,19 +38,23 @@ simid_sel_prep <- lapply(
   }
 )
 
+simid_sel_gcpos <- lapply(
+  setNames(gcpos_slugs, gcpos_slugs),
+  function(.x) {
+    out_vs_targ[
+      variable == sprintf("prob.%s.tested", .x) & output_within_5pts, simid]
+  }
+)
+
+## NOTE Only 1 simulation selected within 5 points of HIV prevalence target.
+##      Do not select yet on HIV prevalence.
 simid_sel_hivpr <- out_vs_targ[
-  variable == "i.prev" & output_within_5pts == 1, simid]
+  variable == "i.prev" & output > 0.05, simid]
 
-episel <- epi_noNA[simid %in% unlist(list(simid_sel_vls, simid_sel_prep))]
-
-out_vs_targ[simid %in% unlist(simid_sel_vls), .(
-  min = min(output),
-  max = max(output),
-  target = mean(target_val)
-), variable]
-
+quicktarget("i.prev", list(hiv = simid_sel_hivpr))
 quicktarget("cc.vsupp.%s", simid_sel_vls)
 quicktarget("prepCov.%s", simid_sel_prep)
+quicktarget("prob.%s.tested", simid_sel_gcpos)
 
 
 ################################################################################
@@ -72,6 +76,31 @@ prep_sel_inputs <- pull_params(simid_sel_prep)[input %like% "PREP"]
 
 prep_sel_inputs_w <- dcast(
   prep_sel_inputs,
+  selection_group + simid ~ input,
+  value.var = "value"
+)
+
+hivpr_sel_inputs <-
+  pull_params(
+    simid_sel_hivpr
+  )[input %like% "EFF_HIV|AI_ACT"][, -c("selection_group")]
+
+hivpr_sel_inputs_w <- dcast(
+  hivpr_sel_inputs,
+  selection_group + simid ~ input,
+  value.var = "value"
+)
+
+gcpos_sel_inputs <-
+  pull_params(
+    simid_sel_gcpos
+  )[input %like% "DURAT_NOTX|RX_INFPR|SYMPT_PROB|ASYMP"]
+
+gcpos_sel_inputs[,
+  input_group := stringr::str_extract(input, "(?<=_)[A-Z0-9]+_[A-Z0-9]+$")]
+
+gcpos_sel_inputs_w <- dcast(
+  gcpos_sel_inputs,
   selection_group + simid ~ input,
   value.var = "value"
 )
@@ -98,6 +127,20 @@ sapply(
   check_input_simids,
   simid_list = simid_sel_prep,
   simid_inputs = prep_sel_inputs
+)
+
+# check select HIV input parameter sets
+data.table(
+  capture = sort(hivpr_sel_inputs[, unique(simid)]),
+  sel = sort(simid_sel_hivpr)
+)[, all(capture %in% sel) & all(sel %in% capture)]
+
+# check selected GC input parameter sets
+sapply(
+  gcpos_slugs,
+  check_input_simids,
+  simid_list = simid_sel_gcpos,
+  simid_inputs = gcpos_sel_inputs
 )
 
 ## View distributions of RX_INIT and RX_REINIT for each selection group,
@@ -153,7 +196,10 @@ gridExtra::grid.arrange(
 ## Function that takes the long version of input parameter subsets from
 ## simid selections and extracts the 25% and 75% quantiles for use as prior
 ## limits in the next round of calibration.
-input_quantiles <- function(data, inputstring, ql = 0.25, qu = 0.75) {
+## Default pattern extracts the race/ethnicity slug
+input_quantiles <- function(data, inputstring,
+                            extract_pat = "(?<=_)[A-Z]+$",
+                            ql = 0.25, qu = 0.75) {
   inputsub <- data[
     input %like% inputstring,
     .(
@@ -161,24 +207,71 @@ input_quantiles <- function(data, inputstring, ql = 0.25, qu = 0.75) {
       q75 = quantile(value, qu)
     ),
     .(selection_group, input)
-    ## this step matches the race/eth selection group to the corresponding
+    ## this step matches the selection group to the corresponding
     ## input input parameter
-  ][selection_group == substring(str_extract(input, "(?<=_)[A-Z]+$"), 1, 1)]
+  ][selection_group == substring(str_extract(input, extract_pat), 1, 1)]
 
   inputsub[, -c("selection_group")]
 }
 
-narrow_rx_init <-   input_quantiles(vls_sel_inputs, "RX_INIT")
+narrow_rx_init <- input_quantiles(vls_sel_inputs, "RX_INIT")
 narrow_rx_reinit <- input_quantiles(vls_sel_inputs, "RX_REINIT")
 narrow_prep_discont <- input_quantiles(prep_sel_inputs, "DISCONT")
 
+gcpos_sel_inputs_labeled <- copy(gcpos_sel_inputs)
+
+gcpos_sel_inputs_labeled[, selection_group := fcase(
+                             selection_group == "rGC", "R",
+                             selection_group == "uGC", "U",
+                             selection_group == "pGC", "P"
+                           )]
+
+anatsite_pat <- "^[A-Z]+(?=_)"
+
+narrow_aiscale_hivcond <- hivpr_sel_inputs[,
+  .(min = min(value), max = max(value)),
+  input]
+
+narrow_gc_durat <- input_quantiles(
+  gcpos_sel_inputs_labeled,
+  "DURAT_NOTX",
+  anatsite_pat
+)
+
+narrow_gc_rxinf <- input_quantiles(
+  gcpos_sel_inputs_labeled,
+  "RX_INFPR",
+  anatsite_pat
+)
+
+narrow_gc_sympt <- input_quantiles(
+  gcpos_sel_inputs_labeled,
+  "SYMPT_PROB",
+  anatsite_pat
+)
+
+narrow_gc_asymp_test <- input_quantiles(
+  gcpos_sel_inputs_labeled,
+  "ASYMP",
+  anatsite_pat
+)
+
 narrowed <- rbindlist(
-  list(narrow_rx_init, narrow_rx_reinit, narrow_prep_discont)
+  list(
+    narrow_rx_init,
+    narrow_rx_reinit,
+    narrow_prep_discont,
+    narrow_aiscale_hivcond,
+    narrow_gc_durat,
+    narrow_gc_rxinf,
+    narrow_gc_sympt,
+    narrow_gc_asymp_test
+  ),
+  use.name = FALSE
 )
 
 ## Create a new set of priors for sim2
 sim1_priors <- readRDS(here::here("burnin", "cal", "sim1", "sim1_priors.rds"))
-
 new_priors <- merge(sim1_priors, narrowed, by = "input", all.x = TRUE)
 
 new_priors <- new_priors[
@@ -209,7 +302,9 @@ new_priors <- rbindlist(
 saveRDS(
   list(
     vls = simid_sel_vls,
-    prep = simid_sel_prep
+    prep = simid_sel_prep,
+    hiv = simid_sel_hivpr,
+    gcpos = simid_sel_gcpos
   ),
   here::here("inst", "cal", "sim1_simid_sel.rds")
 )
