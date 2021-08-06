@@ -87,7 +87,9 @@ psave <- function(f, p, w = 10, h = 11.5, caldir = figpath) {
 ## Label sets.
 racelabs <- c("", ", Black", ", Hispanic", ", Other", ", White")
 anatlabs <- c("", ", Rectal", ", Urethral", ", Pharyngeal")
-rlabs <- c("B", "H", "O", "W")
+rslugs <- c("B", "H", "O", "W")
+anatslugs <- c("rect", "ureth", "phar")
+gcpos_slugs <- c("rGC", "uGC", "pGC")
 
 ## This function produces boxplots of selected variables.
 ## varnames: varnames output by the episims
@@ -170,15 +172,15 @@ calc_relative_target <- function(targ_pattern, targ_vec,
   )
 }
 
-trel_vls_byrace <- calc_relative_target("ct_vls", rlabs[1:3], "W", "byrace")
+trel_vls_byrace <- calc_relative_target("ct_vls", rslugs[1:3], "W", "byrace")
 trel_vls_byage <-
   calc_relative_target("ct_vls", paste0("age", 1:4), "age5", "byage")
 
-trel_hivdx_byrace <- calc_relative_target("ct_hivdx", rlabs[1:3], "W", "byrace")
+trel_hivdx_byrace <- calc_relative_target("ct_hivdx", rslugs[1:3], "W", "byrace")
 trel_hivdx_byage <-
   calc_relative_target("ct_hivdx", paste0("age", 1:4), "age5", "byage")
 
-trel_prep_byrace <- calc_relative_target("ct_prep", rlabs[1:3], "W", "byrace")
+trel_prep_byrace <- calc_relative_target("ct_prep", rslugs[1:3], "W", "byrace")
 
 targets <- rbindlist(
   list(

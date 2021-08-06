@@ -23,7 +23,7 @@ ls()
 ################################################################################
 
 simid_sel_vls <- lapply(
-  setNames(rlabs, rlabs),
+  setNames(rslugs, rslugs),
   function(.x) {
     out_vs_targ[
       variable == paste0("cc.vsupp.", .x) & output_within_5pts == 1, simid]
@@ -31,7 +31,7 @@ simid_sel_vls <- lapply(
 )
 
 simid_sel_prep <- lapply(
-  setNames(rlabs, rlabs),
+  setNames(rslugs, rslugs),
   function(.x) {
     out_vs_targ[
       variable == paste0("prepCov.", .x) & output_within_5pts == 1, simid]
@@ -86,7 +86,7 @@ check_input_simids <- function(x, simid_list, simid_inputs) {
 
 # check selected VLS input parameter sets
 sapply(
-  rlabs,
+  rslugs,
   check_input_simids,
   simid_list = simid_sel_vls,
   simid_inputs = vls_sel_inputs
@@ -94,7 +94,7 @@ sapply(
 
 # check selected PrEP input parameter sets
 sapply(
-  rlabs,
+  rslugs,
   check_input_simids,
   simid_list = simid_sel_prep,
   simid_inputs = prep_sel_inputs
@@ -112,7 +112,7 @@ ggplot(vls_sel_inputs, aes(input, value)) +
   theme_base(base_size = 10) +
   theme(axis.text.x = element_text(angle = 90))
 
-corplots_vls <- lapply(rlabs, function(.x) {
+corplots_vls <- lapply(rslugs, function(.x) {
   tmp <- vls_sel_inputs_w[selection_group == .x, 3:ncol(vls_sel_inputs_w)]
   ggcorrplot(
     cor(tmp, method = "spearman"),
@@ -131,7 +131,7 @@ gridExtra::grid.arrange(
   corplots_vls[[4]]
 )
 
-corplots_prep <- lapply(rlabs, function(.x) {
+corplots_prep <- lapply(rslugs, function(.x) {
   tmp <- prep_sel_inputs_w[selection_group == .x, 3:ncol(prep_sel_inputs_w)]
   ggcorrplot(
     cor(tmp, method = "spearman"),

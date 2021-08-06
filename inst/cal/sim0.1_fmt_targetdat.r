@@ -95,7 +95,7 @@ t_hiv_prv <- get_absdiff("ct_hiv_prev", "i.prev")
 # HIV diagnosis prevalence among infected, by race/ethnicity
 t_hivdx_race <- get_absdiffv(
   "ct_hivdx_pr_byrace",
-  rlabs,
+  rslugs,
   "i.prev.dx.inf.%s"
 )
 
@@ -103,7 +103,7 @@ t_hivdx_race <- get_absdiffv(
 # (ref. White)
 t_hivdx_race_rel <- get_absdiffv(
   "ct_hivdx_byrace_relative",
-  rlabs[1:3],
+  rslugs[1:3],
   "i.prev.dx.inf.%s.rel.ref.W"
 )
 # HIV diagnosis prevalence among infected, by age
@@ -124,14 +124,14 @@ t_hivdx_age_rel <- get_absdiffv(
 # viral suppression among HIV-diagnosed, by race/ethnicity
 t_vls_race <- get_absdiffv(
   "ct_vls_pr_byrace",
-  rlabs,
+  rslugs,
   "cc.vsupp.%s"
 )
 
 # ratio of HIV viral suppression probability, by race/ethnicity
 t_vls_race_rel <- get_absdiffv(
   "ct_vls_byrace_relative",
-  rlabs[1:3],
+  rslugs[1:3],
   "cc.vsupp.%s.rel.ref.W"
 )
 
@@ -151,7 +151,7 @@ t_vls_age_rel <- get_absdiffv(
 )
 
 # PrEP coverage among indicated, by race/ethnicity
-t_prepcov <- get_absdiffv("ct_prep", rlabs, "prepCov.%s")
+t_prepcov <- get_absdiffv("ct_prep", rslugs, "prepCov.%s")
 
 # gonorrhea testing in clinic, by anatomic site
 t_gc_anat_test <- get_absdiffv(
