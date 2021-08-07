@@ -29,20 +29,53 @@ ls()
 ################################################################################
 ## SELECT SIMULATIONS ##
 ################################################################################
-simid_sel_hivpr <-
-  out_vs_targ[variable == "i.prev" & output_within_5pts == 1, simid]
+
+simid_sel_vls <-
+  lapply(
+    setNames(rslugs, rslugs),
+    function(.x) {
+      out_vs_targ[
+        variable == sprintf("cc.vsupp.%s", .x) & output_within_5pts == 1, simid]
+    }
+  )
+
+simid_sel_prep <-
+  lapply(
+    setNames(rslugs, rslugs),
+    function(.x) {
+      out_vs_targ[
+        variable == sprintf("prepCov.%s", .x) & output_within_5pts == 1, simid]
+    }
+  )
+
+simid_sel_gcpos <-
+  lapply(
+    setNames(gcpos_slugs, gcpos_slugs),
+    function(.x) {
+      out_vs_targ[variable == sprintf("prob.%s.tested", .x)
+                  ][output > 0 & output_within_5pts == 1, simid]
+    }
+  )
+out_vs_targ[variable == "i.prev" & output_within_5pts == 1]
+simid_sel_gcpos
 
 ## NOTE
 ## quicktargets() is a helper function and particular about its inputs,
 ## so we make some lists to get several targets one plot
 set_jitter <- list(w = 0.1, h = 0)
 
-cs_vsupp_reth <- lapply(1:4, function(x) simid_sel_hivpr)
-names(cs_vsupp_reth) <- rlabs
+cs_vsupp_reth <- lapply(1:4, function(x) simid_sel_gcpos)
+names(cs_vsupp_reth) <- rslugs
 
-quicktarget("i.prev", list(hiv = simid_sel_hivpr), set_jitter)
-quicktarget("ir100.pop", list(hiv = simid_sel_hivpr), set_jitter)
-quicktarget("cc.vsupp.%s", cs_vsupp_reth, set_jitter)
+quicktarget("cc.vsupp.%s", simid_sel_vls, set_jitter)
+
+quicktarget("cc.vsupp.%s", simid_sel_vls, list(w = 0, h = 0))
+
+quicktarget(
+  "prob.%s.tested",
+  simid_sel_gcpos,
+  set_jitter
+)
 
 
 ################################################################################
@@ -51,29 +84,44 @@ quicktarget("cc.vsupp.%s", cs_vsupp_reth, set_jitter)
 
 lhs_groups <- readRDS(here::here("burnin/cal/", picksim, "lhs_sim2.rds"))
 
-hivpr_sel_inputs <- pull_params(list(simid_sel_hivpr))[, -c("selection_group")]
+vls_sel_inputs <- pull_params(simid_sel_vls)
 
-all(
-  all(simid_sel_hivpr %in% hivpr_sel_inputs[, simid]),
-  all(hivpr_sel_inputs[, simid] %in% simid_sel_hivpr)
-)
+prep_sel_inputs <- pull_params(simid_sel_prep)[input %like% "PREP"]
 
+gcpos_sel_inputs <-
+  pull_params(
+    simid_sel_gcpos
+  )[input %like% "DURAT_NOTX|RX_INFPR|SYMPT_PROB|ASYMP"]
 
-## Since only a handful of simids were selected, get the min/max for each
-## input parameter to use as the new sampling ranges in sim3.
-narrowed_hiv_priors <- hivpr_sel_inputs[, .(
+gcpos_sel_oiscale_inputs <-
+  pull_params(list(pGC = simid_sel_gcpos$pGC))[input %like% "OI_ACT"]
+
+narrowed_vls_priors <- input_quantiles(vls_sel_inputs, "RX_|TESTER")
+
+narrowed_prep_inputs <- input_quantiles(prep_sel_inputs, "DISCONT")
+
+narrowed_gc_priors <- gcpos_sel_inputs[, .(
   q25 = quantile(value, 0.25),
   q75 = quantile(value, 0.75)
-), input][input %like% "HIV"]
+  ), .(selection_group, input)
+  ][substring(input, 1, 1) == toupper(substring(selection_group, 1, 1))
+  ][, -c("selection_group")]
 
 sim2_priors <- readRDS(here::here(ic_dir, "sim1_sel_lhs_limits.rds"))
 
 new_priors <- merge(
   sim2_priors,
-  narrowed_hiv_priors,
+  rbind(
+    narrowed_prep_inputs,
+    narrowed_vls_priors,
+    narrowed_gc_priors
+  ),
   by = "input",
   all.x = TRUE
 )
+
+new_priors[!is.na(q25), all(q25 >= s2_ll)]
+new_priors[!is.na(q75), all(q75 <= s2_ul)]
 
 new_priors <- new_priors[
   !is.na(q25) & !is.na(q75),
@@ -81,13 +129,22 @@ new_priors <- new_priors[
 
 setnames(new_priors, c("s2_ll", "s2_ul"), c("s3_ll", "s3_ul"))
 
+## widen HIV transmission prob. scalar ranges for sim3
+new_priors[input %like% "SCALAR_HIV", ":=" (s3_ll = 0.5, s3_ul = 3)][]
+
+## reset HIV condom efficacy prior
+new_priors[input %like% "CONDOM_EFF_HIV", ":=" (s3_ll = 0.6, s3_ul = 1)][]
+
 
 ################################################################################
 ## WRITE OBJECTS TO FILEs ##
 ################################################################################
 
 ## Write selected simulation ids to file.
-saveRDS(simid_sel_hivpr, here::here("inst", "cal", "sim2_simid_sel.rds"))
+saveRDS(
+  list(simid_sel_prep, simid_sel_vls, simid_sel_gcpos),
+  here::here("inst", "cal", "sim2_simid_sel.rds")
+)
 
 ## Write pre-selection boxplots to files
 lapply(
