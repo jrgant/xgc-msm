@@ -458,13 +458,13 @@ quicktarget <- function(outcome_pattern, simid_list,
     geom_line(aes(group = simid), color = "gray70") +
     geom_point(
       aes(fill = selection_group),
-      color = "white", shape = 21,
+      color = "white", shape = 21, size = 3,
       position = position_jitter(
         width = custom_jitter$w,
         height = custom_jitter$h
       )
     ) +
-    geom_boxplot(alpha = 0.5) +
+    geom_boxplot(alpha = 0.5, outlier.size = 0) +
     geom_point(
       aes(y = target_val),
       size = 7, shape = 21, color = "red"
