@@ -499,3 +499,29 @@ pull_params <- function(simid_list, pattern) {
   setnames(out, c("V1", "V2"), c("input", "value"))
   out
 }
+
+
+################################################################################
+## GET QUANTILES FOR PRIORS ##
+################################################################################
+
+## Function that takes the long version of input parameter subsets from
+## simid selections and extracts the 25% and 75% quantiles for use as prior
+## limits in the next round of calibration.
+## Default pattern extracts the race/ethnicity slug
+input_quantiles <- function(data, inputstring,
+                            extract_pat = "(?<=_)[A-Z]+$",
+                            ql = 0.25, qu = 0.75) {
+  inputsub <- data[
+    input %like% inputstring,
+    .(
+      q25 = quantile(value, ql),
+      q75 = quantile(value, qu)
+    ),
+    .(selection_group, input)
+    ## this step matches the selection group to the corresponding
+    ## input input parameter
+  ][selection_group == substring(str_extract(input, extract_pat), 1, 1)]
+
+  inputsub[, -c("selection_group")]
+}
