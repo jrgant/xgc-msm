@@ -64,13 +64,13 @@ priors <- list(
   pvec(0.001, 0.99, "HIV_RX_REINIT_PROB_OTHER"),
   pvec(0.001, 0.99, "HIV_RX_REINIT_PROB_WHITE"),
   # sex act scalars
-  pvec(0.75, 1.25, "SCALAR_AI_ACT_RATE"), # ai.acts.scale
-  pvec(0.75, 1.25, "SCALAR_OI_ACT_RATE"), # oi.acts.scale
+  pvec(0.75, 3, "SCALAR_AI_ACT_RATE"), # ai.acts.scale
+  pvec(0.75, 3, "SCALAR_OI_ACT_RATE"), # oi.acts.scale
   # HIV transmission prob. scalars
-  pvec(0.75, 1.25, "SCALAR_HIV_TRANS_PROB_BLACK"), # black
-  pvec(0.75, 1.25, "SCALAR_HIV_TRANS_PROB_HISP"), # hispanic
-  pvec(0.75, 1.25, "SCALAR_HIV_TRANS_PROB_OTHER"), # other
-  pvec(0.75, 1.25, "SCALAR_HIV_TRANS_PROB_WHITE"), # white
+  pvec(0.75, 3, "SCALAR_HIV_TRANS_PROB_BLACK"), # black
+  pvec(0.75, 3, "SCALAR_HIV_TRANS_PROB_HISP"), # hispanic
+  pvec(0.75, 3, "SCALAR_HIV_TRANS_PROB_OTHER"), # other
+  pvec(0.75, 3, "SCALAR_HIV_TRANS_PROB_WHITE"), # white
   # condom efficacy
   pvec(0.6, 1, "CONDOM_EFF_HIV"), # cond.eff (HIV), 1 - rel. risk, condom vs. no
   pvec(0.7, 1, "CONDOM_EFF_GC"),   # sti.cond.eff, rel. risk, condom vs. no
@@ -79,7 +79,9 @@ priors <- list(
   pvec(0, 0.05, "PREP_DISCONT_RATE_HISP"),
   pvec(0, 0.05, "PREP_DISCONT_RATE_OTHER"),
   pvec(0, 0.05, "PREP_DISCONT_RATE_WHITE"),
-  pvec(0.2, 1, "ACT_STOPPER_PROB")
+  pvec(0.2, 1, "ACT_STOPPER_PROB"),
+  pvec(1.2, 6.4, "HIV_TRANS_RR_RGC"), # Vaughan et al.
+  pvec(1, 3, "HIV_TRANS_RR_UGC") # Sam's STI incidence paper
 )
 
 ## Write initial ranges to a data set.

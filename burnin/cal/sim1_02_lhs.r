@@ -162,7 +162,10 @@ param <- param_msm(
     fmt_getenv("PREP_DISCONT_RATE_WHITE")
   ),
   # Sexual activity reduction due to GC symptoms/treatment
-  act.stopper.prob = fmt_getenv("ACT_STOPPER_PROB")
+  act.stopper.prob = fmt_getenv("ACT_STOPPER_PROB"),
+  # HIV risk ratio due to GC
+  hiv.rgc.rr = fmt_getenv("HIV_TRANS_RR_RGC"),
+  hiv.ugc.rr = fmt_getenv("HIV_TRANS_RR_UGC")
 )
 
 init <- init_msm(
