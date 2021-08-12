@@ -158,13 +158,15 @@ out_vs_targ[simid %in% simid_sel_vdp_intersect
 ################################################################################
 
 lhs_groups <- readRDS(here::here("burnin/cal/", picksim, "lhs_sim2.rds"))
+sim2_priors <- readRDS(here::here("inst/cal", "sim1_sel_lhs_limits.rds"))
 
 sel_inputs <- pull_params(simid_sel_vdp_intersect)[, -c("selection_group")]
 
-new_priors <- sel_inputs[, .(
+
+narrowed_vrp_priors <- sel_inputs[, .(
   q25 = quantile(value, 0.25),
   q75 = quantile(value, 0.75)
-), by = input]
+), by = input][!(input %like% "U2|P2|R2|STOPPER")]
 
 ## narrowed_vls_priors <- input_quantiles(vls_sel_inputs, "RX_|TESTER")
 
@@ -192,6 +194,15 @@ new_priors <- sel_inputs[, .(
 
 ## new_priors[!is.na(q25), all(q25 >= s2_ll)]
 ## new_priors[!is.na(q75), all(q75 <= s2_ul)]
+
+new_priors <- merge(
+  sim2_priors,
+  narrowed_vrp_priors,
+  by = "input",
+  all.x = TRUE
+)
+
+new_priors[!is.na(q25) & !is.na(q75), ":=" (s2_ll = q25, s2_ul = q75)]
 
 new_priors <- new_priors[
   !is.na(q25) & !is.na(q75),
