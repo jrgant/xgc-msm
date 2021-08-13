@@ -166,7 +166,7 @@ sel_inputs <- pull_params(simid_sel_vdp_intersect)[, -c("selection_group")]
 narrowed_vrp_priors <- sel_inputs[, .(
   q25 = quantile(value, 0.25),
   q75 = quantile(value, 0.75)
-), by = input][!(input %like% "U2|P2|R2|STOPPER")]
+), by = input]
 
 ## narrowed_vls_priors <- input_quantiles(vls_sel_inputs, "RX_|TESTER")
 
@@ -197,7 +197,7 @@ narrowed_vrp_priors <- sel_inputs[, .(
 
 new_priors <- merge(
   sim2_priors,
-  narrowed_vrp_priors,
+  narrowed_vrp_priors[!(input %like% "U2|P2|R2|STOPPER")],
   by = "input",
   all.x = TRUE
 )
