@@ -86,7 +86,9 @@ priors <- list(
   pvec2("PREP_DISCONT_RATE_WHITE"),
   # probability that an agent is of the type to stop sexual activity
   # while symptomatic or on treatment
-  pvec2("ACT_STOPPER_PROB")
+  pvec2("ACT_STOPPER_PROB"),
+  pvec2("HIV_TRANS_RR_RGC"),
+  pvec2("HIV_TRANS_RR_UGC")
 )
 
 
