@@ -162,7 +162,9 @@ param <- param_msm(
     fmt_getenv("PREP_DISCONT_RATE_WHITE")
   ),
   # act stopper prob
-  act.stopper.prob = fmt_getenv("ACT_STOPPER_PROB")
+  act.stopper.prob = fmt_getenv("ACT_STOPPER_PROB"),
+  hiv.rgc.rr = fmt_getenv("HIV_TRANS_RR_RGC"),
+  hiv.ugc.rr = fmt_getenv("HIV_TRANS_RR_UGC")
 )
 
 init <- init_msm(
