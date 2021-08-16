@@ -71,10 +71,7 @@ all(lhs_inputs[, simid] %in% sel_popn & sel_popn %in% lhs_inputs[, simid])
 io_join <- epi_mn[lhs_inputs, on = "simid"]
 
 drop_static <- c(
-  ## "SCALAR_AI_ACT_RATE",
-  ## "SCALAR_OI_ACT_RATE",
   paste0("HIV_RX_HALT_PROB_", c("BLACK", "HISP", "OTHER", "WHITE"))
-  #paste0("SCALAR_HIV_TRANS_PROB_", c("BLACK", "HISP", "OTHER", "WHITE"))
 )
 
 io_joinfil <- io_join[!param %in% drop_static]
@@ -114,26 +111,27 @@ io_scatter <- function(outcome, ylab = NULL, data = io_joinfil) {
         color = "black",
         size = 2
       ) +
-      facet_wrap(~param, scales = "free_x", ncol = 6) +
+      facet_wrap(~param, scales = "free_x", ncol = 4) +
       scale_color_scico(
         name = "Spearman correlation",
         limits = c(-1, 1),
         palette = "vik"
       ) +
       labs(
-        y = yl, x = "Input parameter value",
+        y = paste0(yl, "\n"), x = "\nInput parameter value",
         caption = sprintf(
           paste(
-            "\n Among %s simulations that produced overall population sizes",
+            "\nAmong %s simulations that produced overall population sizes",
             "within 5 percent of the target (N = 20,000)"
           ),
           format(data[, length(unique(simid))], big.mark = ",")
         )
       ) +
-    theme_base(base_size = 7) +
+    theme_base(base_size = 11) +
     theme(
-      axis.title = element_text(size = 9),
-      plot.caption = element_text(size = 7, hjust = 0, face = "italic"),
+      axis.title = element_text(size = 15, face = "bold"),
+      plot.caption = element_text(size = 12, hjust = 0, face = "italic"),
+      plot.margin = margin(1, 1, 1, 1, "cm"),
       legend.position = "top",
       legend.spacing.x = unit(1, "cm"),
       legend.key.width = unit(1, "cm"),
