@@ -84,7 +84,9 @@ priors <- list(
   pvec2("PREP_DISCONT_RATE_HISP"),
   pvec2("PREP_DISCONT_RATE_OTHER"),
   pvec2("PREP_DISCONT_RATE_WHITE"),
-  pvec2("ACT_STOPPER_PROB")
+  pvec2("ACT_STOPPER_PROB"),
+  pvec2("HIV_TRANS_RR_RGC"),
+  pvec2("HIV_TRANS_RR_UGC")
 )
 
 
