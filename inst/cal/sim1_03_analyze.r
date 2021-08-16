@@ -144,7 +144,7 @@ cbind(
 hivprinc_sel_inputs <-
   pull_params(
     simid_sel_hivprinc
-  )[input %like% "EFF_HIV|AI_ACT"][, -c("selection_group")]
+  )[input %like% "EFF_HIV"][, -c("selection_group")]
 
 hivprinc_sel_inputs_w <- dcast(
   hivprinc_sel_inputs,
