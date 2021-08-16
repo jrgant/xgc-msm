@@ -71,7 +71,7 @@ cat("Figures are being saved to:\n", figpath, "\n")
 
 ## Helper function to save plots.
 ## Just a thin wrapper around ggsave() with some dimension presets
-psave <- function(f, p, w = 10, h = 11.5, caldir = figpath) {
+psave <- function(f, p, w = 12, h = 25, caldir = figpath) {
   # f = filename (no extension)
   # p = plot object
   # w = width
@@ -88,6 +88,7 @@ psave <- function(f, p, w = 10, h = 11.5, caldir = figpath) {
 racelabs <- c("", ", Black", ", Hispanic", ", Other", ", White")
 anatlabs <- c("", ", Rectal", ", Urethral", ", Pharyngeal")
 rslugs <- c("B", "H", "O", "W")
+ageslugs <- paste0("age", 1:5)
 anatslugs <- c("rect", "ureth", "phar")
 gcpos_slugs <- c("rGC", "uGC", "pGC")
 
