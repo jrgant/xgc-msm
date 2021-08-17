@@ -181,12 +181,19 @@ psave("output_ir100.pop.H", io_scatter("ir100.pop.H", hivi_labs[3]))
 psave("output_ir100.pop.O", io_scatter("ir100.pop.O", hivi_labs[4]))
 psave("output_ir100.pop.W", io_scatter("ir100.pop.W", hivi_labs[5]))
 
-## HIV viral suppression among diagnosed
+## HIV viral suppression among diagnosed (by race/ethnicity)
 psave("output_cc.vsupp", io_scatter("cc.vsupp",   hivv_labs[1]))
 psave("output_cc.vsupp.B", io_scatter("cc.vsupp.B", hivv_labs[2]))
 psave("output_cc.vsupp.H", io_scatter("cc.vsupp.H", hivv_labs[3]))
 psave("output_cc.vsupp.O", io_scatter("cc.vsupp.O", hivv_labs[4]))
 psave("output_cc.vsupp.W", io_scatter("cc.vsupp.W", hivv_labs[5]))
+
+## HIV viral suppression among diagnosed (by age group)
+psave("output_cc.vsupp.age1", io_scatter("cc.vsupp", "VLS, Age 1"))
+psave("output_cc.vsupp.age2", io_scatter("cc.vsupp", "VLS, Age 2"))
+psave("output_cc.vsupp.age3", io_scatter("cc.vsupp", "VLS, Age 3"))
+psave("output_cc.vsupp.age4", io_scatter("cc.vsupp", "VLS, Age 4"))
+psave("output_cc.vsupp.age5", io_scatter("cc.vsupp", "VLS, Age 5"))
 
 ## ## GC prevalence
 ## psave("output_prev.gc", io_scatter("prev.gc",  gcpr_labs[1]))
