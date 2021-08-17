@@ -20,6 +20,7 @@ ls()
 sim_epis[sim_epis %like% batch_date]
 pretty_batch_date
 
+
 ################################################################################
 ## VISUALIZE DISTRIBUTIONS OF TARGETS ACROSS ALL SIMS ##
 ################################################################################
@@ -34,6 +35,7 @@ ps_ct_prep
 ps_ct_gctested
 ps_ct_gcpos
 
+
 ################################################################################
 ## SELECT SIMULATIONS ##
 ################################################################################
@@ -46,6 +48,32 @@ simid_sel_hivinc <- out_vs_targ[
 
 simid_sel_hivprinc <- intersect(simid_sel_hivpr, simid_sel_hivinc)
 length(simid_sel_hivprinc)
+
+simid_sel_vls_race <- lapply(
+  setNames(rslugs, rslugs),
+  function(.x) {
+    out_vs_targ[
+      variable == sprintf("cc.vsupp.%s", .x) & output_within_5pts == 1,
+      sort(simid)
+    ]
+  }
+)
+
+sapply(simid_sel_vls_race, length)
+simid_sel_vls_race_intersect <- Reduce(intersect, simid_sel_vls_race)
+
+simid_sel_dx_race <- lapply(
+  setNames(rslugs, rslugs),
+  function(.x) {
+    out_vs_targ[
+      variable == sprintf("i.prev.dx.inf.%s", .x) & output_within_5pts == 1,
+      sort(simid)
+    ]
+  }
+)
+
+sapply(simid_sel_dx_race, length)
+simid_sel_dx_race_intersect <- Reduce(intersect, simid_sel_dx_race)
 
 simid_sel_dx_race_rel <- lapply(
   setNames(rslugs[1:3], rslugs[1:3]),
@@ -63,6 +91,33 @@ simid_sel_dx_race_rel_intersect <- Reduce(intersect, simid_sel_dx_race_rel)
 length(simid_sel_dx_race_rel_intersect)
 
 ageslugs <- paste0("age", 1:5)
+
+simid_sel_vls_age <- lapply(
+  setNames(ageslugs, ageslugs),
+  function(.x) {
+    out_vs_targ[
+      variable == sprintf("cc.vsupp.%s", .x) & output_within_5pts == 1,
+      sort(simid)
+    ]
+  }
+)
+
+sapply(simid_sel_vls_age, length)
+simid_sel_vls_age_intersect <- Reduce(intersect, simid_sel_vls_age)
+
+simid_sel_dx_age <- lapply(
+  setNames(ageslugs, ageslugs),
+  function(.x) {
+    out_vs_targ[
+      variable == sprintf("i.prev.dx.inf.%s", .x) & output_within_5pts == 1,
+      sort(simid)
+    ]
+  }
+)
+
+simid_sel_dx_age_intersect <- Reduce(intersect, simid_sel_dx_age)
+length(simid_sel_dx_age_intersect)
+
 simid_sel_dx_age_rel <- lapply(
   setNames(age.rel.dx, age.rel.dx),
   function(.x) {
@@ -76,17 +131,29 @@ simid_sel_dx_age_rel <- lapply(
 simid_sel_dx_age_rel_intersect <- Reduce(intersect, simid_sel_dx_age_rel)
 length(simid_sel_dx_age_rel_intersect)
 
+simid_sel_gcpos <- lapply(
+  setNames(gcpos_slugs, gcpos_slugs),
+  function(.x) {
+    out_vs_targ[
+      variable == sprintf("prob.%s.tested", .x) &
+        between(output, 0.03, 0.2),
+      sort(simid)
+    ]
+  }
+)
+
+sapply(simid_sel_gcpos, length)
+
+## simid_sel_gcpos_intersect <- Reduce(intersect, simid_sel_gcpos)
+## length(simid_sel_gcpos_intersect)
+
 simid_sel_dp_intersect <- Reduce(
   intersect,
   list(
     simid_sel_hivprinc,
-    simid_sel_dx_race_rel_intersect,
-    simid_sel_dx_age_rel_intersect
+    simid_sel_vls_age_intersect
   )
 )
-
-length(simid_sel_dp_intersect)
-
 
 out_vs_targ[simid %in% simid_sel_dp_intersect] %>%
   ggplot(aes(x = variable, y = output)) +
@@ -94,9 +161,9 @@ out_vs_targ[simid %in% simid_sel_dp_intersect] %>%
   geom_point(
     aes(y = target_val, color = "target"),
     shape = 21,
-    size = 7,
+    size = 4,
     stroke = 2,
-    fill = "white"
+    fill = NA
   ) +
   theme_minimal(base_size = 25) +
   theme(
@@ -112,14 +179,36 @@ out_vs_targ[simid %in% simid_sel_dp_intersect] %>%
 lhs_groups <- readRDS(here::here("burnin/cal/", picksim, "lhs_sim2.rds"))
 sim2_priors <- readRDS(here::here("inst/cal", "sim1_sel_lhs_limits.rds"))
 
-sel_inputs <- pull_params(simid_sel_dp_intersect)[, -c("selection_group")]
+sel_hiv_inputs <-
+  pull_params(simid_sel_dp_intersect)[, -c("selection_group")]
 
-new_priors <- sel_inputs[, .(
+sel_hiv_inputs_w <- dcast(
+  sel_hiv_inputs[!(input %like% "RX_HALT")],
+  simid ~ input,
+  value.var = "value"
+)
+
+ggcorrplot(cor(sel_hiv_inputs_w[, -c(1:2)]), type = "upper")
+
+narrowed_priors <- sel_hiv_inputs[, .(
   ll = min(value),
   ul = max(value)
-), by = input]
+), input][!(input %like% "GC|ASYMP|STOPPER|OI_ACT")]
 
-setnames(new_priors, c("ll", "ul"), c("s3_ll", "s3_ul"))
+new_priors <- merge(sim2_priors, narrowed_priors, by = "input", all.x = TRUE)
+
+new_priors[
+  !is.na(ll) & !is.na(ul),
+  ":=" (
+    s2_ll = ll,
+    s2_ul = ul
+  )][]
+
+new_priors[, ":=" (ll = NULL, ul = NULL)][]
+
+setnames(new_priors, c("s2_ll", "s2_ul"), c("s3_ll", "s3_ul"))
+
+
 
 
 ################################################################################
