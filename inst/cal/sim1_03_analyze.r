@@ -357,7 +357,16 @@ new_priors <- new_priors[
 
 setnames(new_priors, c("s1_ll", "s1_ul"), c("s2_ll", "s2_ul"))
 
-new_priors
+new_priors <- rbind(
+  new_priors,
+  data.table(
+    input = paste0(c("PHAR", "URETH", "RECT"), "_SYMP_STITEST_PROB"),
+    s2_ll = rep(0.5, 3),
+    s2_ul = rep(1, 3)
+  )
+)[]
+
+
 
 ################################################################################
 ## WRITE OBJECTS TO FILEs ##
