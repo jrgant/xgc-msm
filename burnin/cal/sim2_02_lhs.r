@@ -89,12 +89,16 @@ param <- param_msm(
   ##       STI treatment. Repeat 3 times, one for each anatomic site.
   ##       Tune asymptomatic treatment probability to achieve the overall
   ##       probability of receiving an STI test.
-  gc.sympt.prob.test  = rep(1, 3),
   ## NOTE: Order of probs: rectal, urethral, pharyngeal
   gc.asympt.prob.test = c(
     fmt_getenv("RECT_ASYMP_STITEST_PROB"),
     fmt_getenv("URETH_ASYMP_STITEST_PROB"),
     fmt_getenv("PHAR_ASYMP_STITEST_PROB")
+  ),
+  gc.sympt.prob.test  = c(
+    fmt_getenv("RECT_SYMP_STITEST_PROB"),
+    fmt_getenv("URETH_SYMP_STITEST_PROB"),
+    fmt_getenv("PHAR_SYMP_STITEST_PROB")
   ),
   # HIV testing
   # @ORIG, prop. of MSM testing only at late-stage (AIDS)
