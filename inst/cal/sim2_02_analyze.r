@@ -44,7 +44,7 @@ simid_sel_hivpr <-
   out_vs_targ[variable == "i.prev" & output_within_5pts == 1, sort(simid)]
 
 simid_sel_hivinc <- out_vs_targ[
-  variable == "ir100.pop" & between(output, 0.4, 0.6), sort(simid)]
+  variable == "ir100.pop" & between(output, 0.444, 0.584), sort(simid)]
 
 simid_sel_hivprinc <- intersect(simid_sel_hivpr, simid_sel_hivinc)
 length(simid_sel_hivprinc)
@@ -131,12 +131,24 @@ simid_sel_dx_age_rel <- lapply(
 simid_sel_dx_age_rel_intersect <- Reduce(intersect, simid_sel_dx_age_rel)
 length(simid_sel_dx_age_rel_intersect)
 
+simid_sel_gctest <- lapply(
+  setNames(anatslugs, anatslugs),
+  function(.x) {
+    out_vs_targ[
+      variable == sprintf("prop.%s.tested", .x) & output_within_5pts == 1,
+      sort(simid)
+    ]
+  }
+)
+
+sapply(simid_sel_gctest, length)
+simid_sel_gctest_intersect <- Reduce(intersect, simid_sel_gctest)
+
 simid_sel_gcpos <- lapply(
   setNames(gcpos_slugs, gcpos_slugs),
   function(.x) {
     out_vs_targ[
-      variable == sprintf("prob.%s.tested", .x) &
-        between(output, 0.03, 0.2),
+      variable == sprintf("prob.%s.tested", .x) & output_within_5pts == 1,
       sort(simid)
     ]
   }
@@ -144,32 +156,40 @@ simid_sel_gcpos <- lapply(
 
 sapply(simid_sel_gcpos, length)
 
-## simid_sel_gcpos_intersect <- Reduce(intersect, simid_sel_gcpos)
-## length(simid_sel_gcpos_intersect)
+simid_sel_gcpos_intersect <- Reduce(intersect, simid_sel_gcpos)
+length(simid_sel_gcpos_intersect)
 
 simid_sel_dp_intersect <- Reduce(
   intersect,
   list(
     simid_sel_hivprinc,
-    simid_sel_vls_age_intersect
+    simid_sel_vls_race_intersect,
+    simid_sel_dx_age_intersect,
+    simid_sel_dx_age_rel_intersect
   )
 )
 
-out_vs_targ[simid %in% simid_sel_dp_intersect] %>%
-  ggplot(aes(x = variable, y = output)) +
-  geom_point(position = position_jitter(width = 0.1)) +
-  geom_point(
-    aes(y = target_val, color = "target"),
-    shape = 21,
-    size = 4,
-    stroke = 2,
-    fill = NA
-  ) +
-  theme_minimal(base_size = 25) +
-  theme(
-    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
-    panel.grid.major.x = element_line(color = "gray80")
-  )
+length(simid_sel_dp_intersect)
+
+plot_targets <- function(simids) {
+  out_vs_targ[simid %in% simids] %>%
+    ggplot(aes(x = variable, y = output)) +
+    geom_point(position = position_jitter(width = 0.1)) +
+    geom_point(
+      aes(y = target_val, color = "target"),
+      shape = 21,
+      size = 4,
+      stroke = 2,
+      fill = NA
+    ) +
+    theme_minimal(base_size = 20) +
+    theme(
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+      panel.grid.major.x = element_line(color = "gray80")
+    )
+}
+
+plot_targets(simid_sel_dp_intersect)
 
 
 ################################################################################
@@ -177,10 +197,35 @@ out_vs_targ[simid %in% simid_sel_dp_intersect] %>%
 ################################################################################
 
 lhs_groups <- readRDS(here::here("burnin/cal/", picksim, "lhs_sim2.rds"))
+
+lhsdt <- rbindlist(
+  lapply(lhs_groups, as.data.table, keep.rownames = TRUE),
+  idcol = "simid"
+)
+
+lhsdt[, simid := sprintf("%04d", simid)][]
+setnames(lhsdt, c("V1", "V2"), c("input", "value"))
+
+lhsdt[simid %in% simid_sel_dp_intersect] %>%
+  ggplot(aes(x = input, y = value, group = simid)) +
+  geom_line() +
+  theme(
+    axis.text.x = element_text(
+      angle = 90,
+      vjust = 0.5,
+      hjust = 1
+    )
+  )
+
 sim2_priors <- readRDS(here::here("inst/cal", "sim1_sel_lhs_limits.rds"))
 
 sel_hiv_inputs <-
   pull_params(simid_sel_dp_intersect)[, -c("selection_group")]
+
+sel_hiv_inputs[!(input %like% "RX_HALT")] %>%
+  ggplot(aes(x = value)) +
+  geom_histogram() +
+  facet_wrap(~ input, scales = "free_x")
 
 sel_hiv_inputs_w <- dcast(
   sel_hiv_inputs[!(input %like% "RX_HALT")],
@@ -193,9 +238,24 @@ ggcorrplot(cor(sel_hiv_inputs_w[, -c(1:2)]), type = "upper")
 narrowed_priors <- sel_hiv_inputs[, .(
   ll = min(value),
   ul = max(value)
-), input][!(input %like% "GC|ASYMP|STOPPER|OI_ACT")]
+), input]
+##[!(input %like% "_GC|GC_|ASYMP|SYMP|OI_ACT")]
 
-new_priors <- merge(sim2_priors, narrowed_priors, by = "input", all.x = TRUE)
+## plot_targets(intersect(simid_sel_gcpos$rGC, simid_sel_hivpr))
+## plot_targets(intersect(simid_sel_gcpos$uGC, simid_sel_hivprinc))
+## plot_targets(intersect(simid_sel_gcpos$pGC, simid_sel_hivprinc))
+
+## lhsdt[simid %in% simid_sel_gcpos$pGC & !(input %like% "RX_HALT")] %>%
+##   ggplot(aes(x = value)) +
+##   geom_histogram() +
+##   facet_wrap(~ input, scale = "free_x")
+
+new_priors <- merge(
+  sim2_priors,
+  narrowed_priors,
+  by = "input",
+  all.x = TRUE
+)
 
 new_priors[
   !is.na(ll) & !is.na(ul),
@@ -207,8 +267,6 @@ new_priors[
 new_priors[, ":=" (ll = NULL, ul = NULL)][]
 
 setnames(new_priors, c("s2_ll", "s2_ul"), c("s3_ll", "s3_ul"))
-
-
 
 
 ################################################################################
