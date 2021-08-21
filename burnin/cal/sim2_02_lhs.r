@@ -84,7 +84,9 @@ param <- param_msm(
   ugc.sympt.prob    = fmt_getenv("URETH_GC_SYMPT_PROB"), # urethral symptom probability
   pgc.sympt.prob    = fmt_getenv("PHAR_GC_SYMPT_PROB"), # pharyngeal symptom probability
   # STI testing
-  gc.sympt.seek.test.prob = fmt_getenv("STITEST_PROB_GC_SYMPT"),
+  ugc.sympt.seek.test.prob = fmt_getenv("STITEST_PROB_UGC_SYMPT"),
+  rgc.sympt.seek.test.rr = fmt_getenv("STITEST_RGC_RR_SYMPT"),
+  pgc.sympt.seek.test.rr = fmt_getenv("STITEST_PGC_RR_SYMPT"),
   ## NOTE: Changed the treatment probs to be conditional on someone's seeking
   ##       STI treatment. Repeat 3 times, one for each anatomic site.
   ##       Tune asymptomatic treatment probability to achieve the overall

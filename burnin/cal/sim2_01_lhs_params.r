@@ -43,7 +43,9 @@ priors <- list(
   pvec2("URETH_GC_SYMPT_PROB"), # urethral
   pvec2("PHAR_GC_SYMPT_PROB"), # pharyngeal
   # GC symptomatic, weekly probability of testing
-  pvec2("STITEST_PROB_GC_SYMPT"),
+  pvec2("STITEST_PROB_UGC_SYMPT"),
+  pvec2("STITEST_RGC_RR_SYMPT"),
+  pvec2("STITEST_PGC_RR_SYMPT"),
   # Probability of testing at asymptomatic sites in clinic
   pvec2("RECT_ASYMP_STITEST_PROB"),  # rectal
   pvec2("URETH_ASYMP_STITEST_PROB"),  # urethral
