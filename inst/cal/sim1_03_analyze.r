@@ -17,6 +17,14 @@ pretty_batch_date
 source(here::here(ic_dir, "sim0.1_fmt_targetdat.r"))
 ls()
 
+ps_ct_hivprev
+ps_ct_hivinc
+ps_ct_prep
+ps_ct_vsupp_race
+ps_ct_vsupp_age
+ps_ct_gctested
+ps_ct_gcpos
+
 
 ################################################################################
 ## SELECT SIMULATIONS ##
@@ -26,8 +34,19 @@ simid_sel_vls <- lapply(
   setNames(rslugs, rslugs),
   function(.x) {
     out_vs_targ[
-      variable == paste0("cc.vsupp.", .x) &
-      output_within_5pts == 1, sort(simid)]
+      variable == paste0("cc.vsupp.", .x) & output_within_5pts == 1,
+      sort(simid)
+    ]
+  }
+)
+
+simid_sel_dx <- lapply(
+  setNames(rslugs, rslugs),
+  function(.x) {
+    out_vs_targ[
+      variable == paste0("i.prev.dx.inf.", .x) & output_within_5pts == 1,
+      sort(simid)
+    ]
   }
 )
 
@@ -35,8 +54,9 @@ simid_sel_prep <- lapply(
   setNames(rslugs, rslugs),
   function(.x) {
     out_vs_targ[
-      variable == paste0("prepCov.", .x) &
-      output_within_5pts == 1, sort(simid)]
+      variable == paste0("prepCov.", .x) & output_within_5pts == 1,
+      sort(simid)
+    ]
   }
 )
 
@@ -44,8 +64,9 @@ simid_sel_gcpos <- lapply(
   setNames(gcpos_slugs, gcpos_slugs),
   function(.x) {
     out_vs_targ[
-      variable == sprintf("prob.%s.tested", .x) &
-      output_within_5pts, sort(simid)]
+      variable == sprintf("prob.%s.tested", .x) & output_within_5pts,
+      sort(simid)
+    ]
   }
 )
 
@@ -117,14 +138,20 @@ vls_sel_inputs_w <- dcast(
   vls_sel_inputs,
   selection_group + simid ~ input,
   value.var = "value"
-)
-
-#[simid %in% simid_sel_hivprinc][]
+)[simid %in% simid_sel_hivprinc][]
 
 cbind(
   vls_sel_inputs_w[, .(N_input_pull = .N), selection_group],
   N_simid_list = sapply(simid_sel_vls, length)
 )
+
+dx_sel_inputs <- pull_params(simid_sel_dx)[input %like% "LATE_TESTER"]
+
+dx_sel_inputs_w <- dcast(
+  dx_sel_inputs,
+  selection_group + simid ~ input,
+  value.var = "value"
+)[simid %in% simid_sel_hivprinc]
 
 prep_sel_inputs <- pull_params(simid_sel_prep)[input %like% "PREP"]
 
@@ -132,9 +159,7 @@ prep_sel_inputs_w <- dcast(
   prep_sel_inputs,
   selection_group + simid ~ input,
   value.var = "value"
-)
-
-#[simid %in% simid_sel_hivprinc]
+)[simid %in% simid_sel_hivprinc]
 
 cbind(
   prep_sel_inputs_w[, .(N_input_pull = .N), selection_group],
@@ -144,31 +169,30 @@ cbind(
 hivprinc_sel_inputs <-
   pull_params(
     simid_sel_hivprinc
-  )[input %like% "EFF_HIV"][, -c("selection_group")]
+  )[input %like% "EFF_HIV|STOPPER|SCALAR_AI|TRANS_RR|^SCALAR"
+    ][, -c("selection_group")]
 
 hivprinc_sel_inputs_w <- dcast(
   hivprinc_sel_inputs,
   simid ~ input,
   value.var = "value"
-)
+)[simid %in% simid_sel_hivprinc]
 
-#[simid %in% simid_sel_hivprinc]
+gcpos_sel_inputs <-
+  pull_params(
+    simid_sel_gcpos
+  )[input %like% "DURAT_NOTX|RX_INFPR|SYMPT_PROB|ASYMP|SYMP|SCALAR_AI"]
 
-## gcpos_sel_inputs <-
-##   pull_params(
-##     simid_sel_gcpos
-##   )[input %like% "DURAT_NOTX|RX_INFPR|SYMPT_PROB|ASYMP"]
+gcpos_sel_inputs[,
+  input_group := stringr::str_extract(input, "(?<=_)[A-Z0-9]+_[A-Z0-9]+$")]
 
-## gcpos_sel_inputs[,
-##   input_group := stringr::str_extract(input, "(?<=_)[A-Z0-9]+_[A-Z0-9]+$")]
+gcpos_sel_inputs_w <- dcast(
+  gcpos_sel_inputs,
+  selection_group + simid ~ input,
+  value.var = "value"
+)[simid %in% simid_sel_hivprinc]
 
-## gcpos_sel_inputs_w <- dcast(
-##   gcpos_sel_inputs,
-##   selection_group + simid ~ input,
-##   value.var = "value"
-## )[simid %in% simid_sel_hivprinc]
-
-## gcpos_sel_inputs_w[, .N, selection_group]
+gcpos_sel_inputs_w[, .N, selection_group]
 
 # Function to check to make sure we've captured all selected simids.
 check_input_simids <- function(x, simid_list, simid_inputs) {
@@ -201,12 +225,12 @@ data.table(
 )[, all(capture %in% sel) & all(sel %in% capture)]
 
 # check selected GC input parameter sets
-## sapply(
-##   gcpos_slugs,
-##   check_input_simids,
-##   simid_list = simid_sel_gcpos,
-##   simid_inputs = gcpos_sel_inputs
-## )
+sapply(
+  gcpos_slugs,
+  check_input_simids,
+  simid_list = simid_sel_gcpos,
+  simid_inputs = gcpos_sel_inputs
+)
 
 ## View distributions of RX_INIT and RX_REINIT for each selection group,
 ## meaning simid sets chosen for matching race/ethnicity-specific viral
@@ -220,115 +244,93 @@ ggplot(vls_sel_inputs, aes(input, value)) +
   theme_base(base_size = 10) +
   theme(axis.text.x = element_text(angle = 90))
 
-## corplots_vls <- lapply(rslugs, function(.x) {
-##   tmp <- vls_sel_inputs_w[selection_group == .x, 3:ncol(vls_sel_inputs_w)]
-##   ggcorrplot(
-##     cor(tmp, method = "spearman"),
-##     type = "lower",
-##     lab = TRUE,
-##     title = sprintf("Selection Group: %s", .x),
-##     p.mat = cor_pmat(tmp, method = "spearman"),
-##     sig.level = 0.05
-##   )
-## })
-
-## gridExtra::grid.arrange(
-##   corplots_vls[[1]],
-##   corplots_vls[[2]],
-##   corplots_vls[[3]],
-##   corplots_vls[[4]]
-## )
-
-## corplots_prep <- lapply(rslugs, function(.x) {
-##   tmp <- prep_sel_inputs_w[selection_group == .x, 3:ncol(prep_sel_inputs_w)]
-##   ggcorrplot(
-##     cor(tmp, method = "spearman"),
-##     type = "lower",
-##     lab = TRUE,
-##     title = sprintf("Selection Group: %s", .x),
-##     p.mat = cor_pmat(tmp, method = "spearman"),
-##     sig.level = 0.05
-##   )
-## })
-
-## gridExtra::grid.arrange(
-##   corplots_prep[[1]],
-##   corplots_prep[[2]],
-##   corplots_prep[[3]],
-##   corplots_prep[[4]]
-## )
-
 narrow_rx_init      <- input_quantiles(vls_sel_inputs, "RX_INIT")
 narrow_rx_reinit    <- input_quantiles(vls_sel_inputs, "RX_REINIT")
-narrow_late_tester  <- input_quantiles(vls_sel_inputs, "LATE_TESTER")
 narrow_trans_prob   <- input_quantiles(vls_sel_inputs, "TRANS")
 
+narrow_late_tester  <- input_quantiles(dx_sel_inputs, "LATE_TESTER")
 narrow_prep_discont <- input_quantiles(prep_sel_inputs, "DISCONT")
 
-
-narrow_aiscale_hivcond <- hivprinc_sel_inputs[,
+narrow_hivcond <- hivprinc_sel_inputs[,
   .(q25 = quantile(value, 0.25), q75 = quantile(value, 0.75)),
   input
 ]
 
-## gcpos_sel_inputs_labeled <- copy(gcpos_sel_inputs)
+gcpos_sel_inputs_labeled <- copy(gcpos_sel_inputs)
 
-## gcpos_sel_inputs_labeled[,
-##   selection_group := fcase(
-##     selection_group == "rGC", "R",
-##     selection_group == "uGC", "U",
-##     selection_group == "pGC", "P"
-##   )]
+gcpos_sel_inputs_labeled[,
+  selection_group := fcase(
+    selection_group == "rGC", "R",
+    selection_group == "uGC", "U",
+    selection_group == "pGC", "P"
+  )][]
 
 anatsite_pat <- "^[A-Z]+(?=_)"
 
-## ## Narrow anatomic site-specific parameters
-## narrow_gc_durat <- input_quantiles(
-##   gcpos_sel_inputs_labeled,
-##   "DURAT_NOTX",
-##   anatsite_pat
-## )
+## Narrow anatomic site-specific parameters
+narrow_gc_durat <- input_quantiles(
+  gcpos_sel_inputs_labeled,
+  "DURAT_NOTX",
+  anatsite_pat
+)
 
-## narrow_gc_rxinf <- input_quantiles(
-##   gcpos_sel_inputs_labeled,
-##   "RX_INFPR",
-##   anatsite_pat
-## )
+narrow_gc_rxinf <- input_quantiles(
+  gcpos_sel_inputs_labeled,
+  "RX_INFPR",
+  anatsite_pat
+)
 
-## narrow_gc_sympt <- input_quantiles(
-##   gcpos_sel_inputs_labeled,
-##   "SYMPT_PROB",
-##   anatsite_pat
-## )
+narrow_gc_sympt <- input_quantiles(
+  gcpos_sel_inputs_labeled,
+  "SYMPT_PROB",
+  anatsite_pat
+)
 
-## narrow_gc_asymp_test <- input_quantiles(
-##   gcpos_sel_inputs_labeled,
-##   "ASYMP",
-##   anatsite_pat
-## )
+narrow_gc_asymp_test <- input_quantiles(
+  gcpos_sel_inputs_labeled,
+  "ASYMP",
+  anatsite_pat
+)
+
+narrow_gc_symp_seek <- input_quantiles(
+  gcpos_sel_inputs_labeled,
+  "RR_SYMPT|C_SYMPT",
+  "UGC|RGC|PGC"
+)
+
+narrow_gc_aiscale <- gcpos_sel_inputs_labeled[
+  input == "SCALAR_AI_ACT_RATE",
+  .(
+    q25 = quantile(value, 0.25),
+    q75 = quantile(value, 0.75)
+  ),
+  selection_group
+]
+
+setnames(narrow_gc_aiscale, "selection_group", "input")
+narrow_gc_aiscale[, input := "SCALAR_AI_ACT_RATE"][]
 
 ## ## Narrow transmission pathway, universal prob. of STI testing
 ## ## due to symptoms, and act stopper prob.
-## gcpos_union <- gcpos_sel_inputs[, sort(unique(simid))]
+gcpos_union <- gcpos_sel_inputs[, sort(unique(simid))]
 
-## lhs_gcpos_union <- rbindlist(
-##   lapply(
-##     gcpos_union,
-##     function(.x) {
-##       as.data.table(
-##         lhs_groups[[as.numeric(.x)]], keep.rownames = TRUE
-##       )[V1 %like% "CONDOM_EFF_GC|GC_PROB|^STITEST|STOPPER"
-##         ][, .(input = V1, value = V2)][, simid := .x][]
-##     }
-##   )
-## )
+lhs_gcpos_union <- rbindlist(
+  lapply(
+    gcpos_union,
+    function(.x) {
+      as.data.table(
+        lhs_groups[[as.numeric(.x)]], keep.rownames = TRUE
+      )[V1 %like% "CONDOM_EFF_GC|GC_PROB|^STITEST|STOPPER|TRANS_RR"
+        ][, .(input = V1, value = V2)][, simid := .x][]
+    }
+  )
+)
 
-## narrow_gctrans_common <-
-##   lhs_gcpos_union[
-##     simid %in% simid_sel_hivprinc][, .(
-##                    q25 = quantile(value, 0.25),
-##                    q75 = quantile(value, 0.75)
-##                  ), by = input]
+narrow_gctrans_common <-
+  lhs_gcpos_union[
+    simid %in% simid_sel_hivprinc
+  ][, .(q25 = quantile(value, 0.25),
+        q75 = quantile(value, 0.75)), by = input]
 
 narrowed <- rbindlist(
   list(
@@ -337,19 +339,22 @@ narrowed <- rbindlist(
     narrow_late_tester,
     narrow_trans_prob,
     narrow_prep_discont,
-    narrow_aiscale_hivcond
-    ## narrow_gc_durat,
-    ## narrow_gc_rxinf,
-    ## narrow_gc_sympt,
-    ## narrow_gc_asymp_test,
-    ## narrow_gctrans_common
+    narrow_hivcond,
+    narrow_gc_durat,
+    narrow_gc_rxinf,
+    narrow_gc_sympt,
+    narrow_gc_asymp_test,
+    narrow_gctrans_common,
+    narrow_gc_aiscale
   ),
   use.name = FALSE
 )
 
+narrowed_min <- narrowed[, .(q25 = min(q25), q75 = max(q75)), by = input]
+
 ## Create a new set of priors for sim2
 sim1_priors <- readRDS(here::here("burnin", "cal", "sim1", "sim1_priors.rds"))
-new_priors <- merge(sim1_priors, narrowed, by = "input", all.x = TRUE)
+new_priors <- merge(sim1_priors, narrowed_min, by = "input", all.x = TRUE)
 
 new_priors <- new_priors[
   !is.na(q25) & !is.na(q75),
@@ -357,15 +362,7 @@ new_priors <- new_priors[
 
 setnames(new_priors, c("s1_ll", "s1_ul"), c("s2_ll", "s2_ul"))
 
-new_priors <- rbind(
-  new_priors,
-  data.table(
-    input = paste0(c("PHAR", "URETH", "RECT"), "_SYMP_STITEST_PROB"),
-    s2_ll = rep(0.5, 3),
-    s2_ul = rep(1, 3)
-  )
-)[]
-
+new_priors
 
 
 ################################################################################
@@ -379,8 +376,8 @@ saveRDS(
     prep = simid_sel_prep,
     hivp = simid_sel_hivpr,
     hivi = simid_sel_hivinc,
-    hivpi = simid_sel_hivprinc
-#    gcpos = simid_sel_gcpos
+    hivpi = simid_sel_hivprinc,
+    gcpos = simid_sel_gcpos
   ),
   here::here("inst", "cal", "sim1_simid_sel.rds")
 )
