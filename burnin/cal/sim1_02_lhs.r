@@ -98,6 +98,11 @@ param <- param_msm(
     fmt_getenv("URETH_ASYMP_STITEST_PROB"),
     fmt_getenv("PHAR_ASYMP_STITEST_PROB")
   ),
+  gc.sympt.prob.test = c(
+    fmt_getenv("RECT_SYMP_STITEST_PROB"),
+    fmt_getenv("URETH_SYMP_STITEST_PROB"),
+    fmt_getenv("PHAR_SYMP_STITEST_PROB"),
+  ),
   # HIV testing
   # @ORIG, prop. of MSM testing only at late-stage (AIDS)
   hiv.test.late.prob  = c(
