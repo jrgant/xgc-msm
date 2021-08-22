@@ -45,6 +45,10 @@ priors <- list(
   pvec(0.400, 0.800, "RECT_ASYMP_STITEST_PROB"),  # rectal
   pvec(0.497, 0.657, "URETH_ASYMP_STITEST_PROB"),  # urethral
   pvec(0.522, 0.749, "PHAR_ASYMP_STITEST_PROB"),  # pharyngeal
+  # Probability of testing at symptomatic sites in clinic
+  pvec(0.5, 1, "RECT_SYMP_STITEST_PROB"),  # rectal
+  pvec(0.5, 1, "URETH_SYMP_STITEST_PROB"),  # urethral
+  pvec(0.5, 1, "PHAR_SYMP_STITEST_PROB"),  # pharyngeal
   # HIV late-tester probability (priors from Singh 2017, MMWR)
   pvec(0.160, 0.419, "HIV_LATE_TESTER_PROB_BLACK"),
   pvec(0.202, 0.391, "HIV_LATE_TESTER_PROB_HISP"),
