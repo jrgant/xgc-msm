@@ -169,7 +169,7 @@ cbind(
 hivprinc_sel_inputs <-
   pull_params(
     simid_sel_hivprinc
-  )[input %like% "EFF_HIV|STOPPER|SCALAR_AI|TRANS_RR|^SCALAR"
+  )[input %like% "EFF_HIV|STOPPER|SCALAR_AI|TRANS_RR|P_STITEST|^SCALAR"
     ][, -c("selection_group")]
 
 hivprinc_sel_inputs_w <- dcast(
@@ -181,7 +181,7 @@ hivprinc_sel_inputs_w <- dcast(
 gcpos_sel_inputs <-
   pull_params(
     simid_sel_gcpos
-  )[input %like% "DURAT_NOTX|RX_INFPR|SYMPT_PROB|ASYMP|SYMP|SCALAR_AI"]
+  )[input %like% "DURAT_NOTX|RX_INFPR|SYMPT_PROB|ASYMP|SYMP|SCALAR_AI|STITEST"]
 
 gcpos_sel_inputs[,
   input_group := stringr::str_extract(input, "(?<=_)[A-Z0-9]+_[A-Z0-9]+$")]
@@ -294,7 +294,7 @@ narrow_gc_asymp_test <- input_quantiles(
 
 narrow_gc_symp_seek <- input_quantiles(
   gcpos_sel_inputs_labeled,
-  "RR_SYMPT|C_SYMPT",
+  "STITEST",
   "UGC|RGC|PGC"
 )
 
@@ -310,8 +310,7 @@ narrow_gc_aiscale <- gcpos_sel_inputs_labeled[
 setnames(narrow_gc_aiscale, "selection_group", "input")
 narrow_gc_aiscale[, input := "SCALAR_AI_ACT_RATE"][]
 
-## ## Narrow transmission pathway, universal prob. of STI testing
-## ## due to symptoms, and act stopper prob.
+## ## Narrow shared GC parameters (e.g., effect on HIV)
 gcpos_union <- gcpos_sel_inputs[, sort(unique(simid))]
 
 lhs_gcpos_union <- rbindlist(
@@ -354,9 +353,25 @@ narrowed_min <- narrowed[, .(q25 = min(q25), q75 = max(q75)), by = input]
 
 ## Create a new set of priors for sim2
 sim1_priors <- readRDS(here::here("burnin", "cal", "sim1", "sim1_priors.rds"))
-new_priors <- merge(sim1_priors, narrowed_min, by = "input", all.x = TRUE)
+merge_priors <- merge(sim1_priors, narrowed_min, by = "input", all.x = TRUE)
 
-new_priors <- new_priors[
+mp <- melt(merge_priors, id.vars = "input")
+
+mp[, type_prior :=
+       fifelse(variable %like% "s1", "orig", "new")]
+
+mp[, type_limit :=
+       fifelse(variable %like% "ll|q25", "lower", "upper")]
+
+
+
+mp[!(input %like% "RX_HALT")] %>%
+  ggplot(aes(x = type_limit, fill = type_prior)) +
+  geom_point(aes(y = value), shape = 21) +
+  facet_wrap(~ input, scales = "free_y", ncol = 4) +
+  theme_base(base_size = 12)
+
+new_priors <- merge_priors[
   !is.na(q25) & !is.na(q75),
   ":=" (s1_ll = q25, s1_ul = q75)][, -c("q25", "q75")]
 
