@@ -64,7 +64,17 @@ simid_sel_gcpos <- lapply(
   setNames(gcpos_slugs, gcpos_slugs),
   function(.x) {
     out_vs_targ[
-      variable == sprintf("prob.%s.tested", .x) & output_within_5pts,
+      variable == sprintf("prob.%s.tested", .x) & output_within_5pts == 1,
+      sort(simid)
+    ]
+  }
+)
+
+simid_sel_gcpos_permissive <- lapply(
+  setNames(gcpos_slugs, gcpos_slugs),
+  function(.x) {
+    out_vs_targ[
+      variable == sprintf("prob.%s.tested", .x) & between(output, 0.03, 0.15),
       sort(simid)
     ]
   }
@@ -119,6 +129,18 @@ quicktarget("cc.vsupp.%s",  fmt_list(rslugs, simid_sel_gcpos[[3]]))
 quicktarget("prepCov.%s",   fmt_list(rslugs, simid_sel_gcpos[[1]]))
 quicktarget("prepCov.%s",   fmt_list(rslugs, simid_sel_gcpos[[2]]))
 quicktarget("prepCov.%s",   fmt_list(rslugs, simid_sel_gcpos[[3]]))
+
+quicktarget("prob.%s.tested", fmt_list(gcpos_slugs, simid_sel_gcpos[[1]]))
+quicktarget("prob.%s.tested", fmt_list(gcpos_slugs, simid_sel_gcpos[[2]]))
+quicktarget("prob.%s.tested", fmt_list(gcpos_slugs, simid_sel_gcpos[[3]]))
+
+simid_sel_gcpos_perm_int <- Reduce(intersect, simid_sel_gcpos_permissive)
+quicktarget("prob.%s.tested", fmt_list(gcpos_slugs, simid_sel_gcpos_perm_int))
+quicktarget("i.prev", list(hiv = simid_sel_gcpos_perm_int))
+quicktarget("ir100.pop", list(hiv = simid_sel_gcpos_perm_int))
+quicktarget("cc.vsupp.%s", fmt_list(rslugs, simid_sel_gcpos_perm_int))
+quicktarget("i.prev.dx.inf.%s", fmt_list(ageslugs, simid_sel_gcpos_perm_int))
+quicktarget("prepCov.%s", fmt_list(rslugs, simid_sel_gcpos_perm_int))
 
 
 ################################################################################
@@ -351,19 +373,19 @@ narrowed <- rbindlist(
 
 narrowed_min <- narrowed[, .(q25 = min(q25), q75 = max(q75)), by = input]
 
+narrowed_gc_int <- pull_params(
+  simid_sel_gcpos_perm_int
+)[, .(min = min(value), max = max(value)), by = input]
+
 ## Create a new set of priors for sim2
 sim1_priors <- readRDS(here::here("burnin", "cal", "sim1", "sim1_priors.rds"))
-merge_priors <- merge(sim1_priors, narrowed_min, by = "input", all.x = TRUE)
+# merge_priors <- merge(sim1_priors, narrowed_min, by = "input", all.x = TRUE)
+
+merge_priors <- merge(sim1_priors, narrowed_gc_int, by = "input", all.x = TRUE)
 
 mp <- melt(merge_priors, id.vars = "input")
-
-mp[, type_prior :=
-       fifelse(variable %like% "s1", "orig", "new")]
-
-mp[, type_limit :=
-       fifelse(variable %like% "ll|q25", "lower", "upper")]
-
-
+mp[, type_prior := fifelse(variable %like% "s1", "orig", "new")]
+mp[, type_limit := fifelse(variable %like% "min|ll|q25", "lower", "upper")]
 
 mp[!(input %like% "RX_HALT")] %>%
   ggplot(aes(x = type_limit, fill = type_prior)) +
@@ -372,8 +394,8 @@ mp[!(input %like% "RX_HALT")] %>%
   theme_base(base_size = 12)
 
 new_priors <- merge_priors[
-  !is.na(q25) & !is.na(q75),
-  ":=" (s1_ll = q25, s1_ul = q75)][, -c("q25", "q75")]
+  !is.na(min) & !is.na(max),
+  ":=" (s1_ll = min, s1_ul = max)][, -c("min", "max")]
 
 setnames(new_priors, c("s1_ll", "s1_ul"), c("s2_ll", "s2_ul"))
 
