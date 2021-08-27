@@ -217,8 +217,8 @@ control <- control_msm(
   stitrans.FUN      = stitrans_msm_rand,
   prev.FUN          = prevalence_msm,
   # Epidemic simulation options
-  transRoute_Kissing      = FALSE,  # FLAG: Toggle kissing transmission
-  transRoute_Rimming      = FALSE,  # FLAG: Toggle rimming transmission
+  transRoute_Kissing      = TRUE,  # FLAG: Toggle kissing transmission
+  transRoute_Rimming      = TRUE,  # FLAG: Toggle rimming transmission
   gcUntreatedRecovDist    = "geom",
   stiScreeningProtocol    = "base",
   skip.check              = TRUE,
