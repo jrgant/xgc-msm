@@ -87,7 +87,7 @@ priors <- list(
   pvec(0.75, 3, "SCALAR_HIV_TRANS_PROB_BLACK"), # black
   pvec(0.75, 3, "SCALAR_HIV_TRANS_PROB_HISP"), # hispanic
   pvec(0.75, 3, "SCALAR_HIV_TRANS_PROB_OTHER"), # other
-  pvec(0.75, 3, "SCALAR_HIV_TRANS_PROB_WHITE"), # white
+  pvec(1, 1, "SCALAR_HIV_TRANS_PROB_WHITE"), # white
   # condom efficacy
   pvec(0.6, 1, "CONDOM_EFF_HIV"), # cond.eff (HIV), 1 - rel. risk, condom vs. no
   pvec(0.7, 1, "CONDOM_EFF_GC"),   # sti.cond.eff, rel. risk, condom vs. no
