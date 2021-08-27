@@ -64,15 +64,16 @@ param <- param_msm(
   # tweak marginal mortality to account for AIDS and achieve an arrival rate
   # that keeps population size at N = 20,000 (in expectation)
   a.rate            = netstats$demog$mortrate.marginal + fmt_getenv("ARRIVE_RATE_ADD_PER20K") / 20000,
-  u2rgc.tprob       = fmt_getenv("U2RGC_PROB"), # urethral-to-rectal transmission probability
-  u2pgc.tprob       = fmt_getenv("U2PGC_PROB"), # urethral-to-pharyngeal transmission probability
-  r2ugc.tprob       = fmt_getenv("R2UGC_PROB"), # rectal-to-urethral transmission probability
-  p2ugc.tprob       = fmt_getenv("P2UGC_PROB"), # pharyngeal-to-urethral transmission probability
+  u2rgc.tprob       = fmt_getenv("U2RGC_PROB"), # ureth-to-rect GC trans. prob.
+  u2pgc.tprob       = fmt_getenv("U2PGC_PROB"), # ureth-to-phar GC trans. prob.
+  r2ugc.tprob       = fmt_getenv("R2UGC_PROB"), # rect-to-ureth GC trans. prob.
+  p2ugc.tprob       = fmt_getenv("P2UGC_PROB"), # phar-to-ureth GC trans. prob.
   ## NOTE: Following tprobs used only if the kissing/rimming flags are active
   ## in control_msm.
-  r2pgc.tprob       = 0, # rectal-to-pharyngeal transmission probability
-  p2rgc.tprob       = 0, # pharyngeal-to-rectal transmission probability
-  p2pgc.tprob       = 0, # kissing transmission probability
+  r2pgc.tprob       = fmt_getenv("R2PGC_PROB"), # rect-to-phar GC trans. prob.
+  p2rgc.tprob       = fmt_getenv("P2RGC_PROB"), # phar-to-rect GC trans. prob.
+  p2pgc.tprob       = fmt_getenv("P2PGC_PROB"), # kissing GC trans. prob.
+  ## GC infection duration
   rgc.ntx.int       = fmt_getenv("RECT_GC_DURAT_NOTX"),
   ugc.ntx.int       = fmt_getenv("URETH_GC_DURAT_NOTX"),
   pgc.ntx.int       = fmt_getenv("PHAR_GC_DURAT_NOTX"),
@@ -80,9 +81,9 @@ param <- param_msm(
   rgc.tx.recov.pr   = c(1 - fmt_getenv("RECT_GC_RX_INFPR_WK1"), 0.5, 1),
   ugc.tx.recov.pr   = c(1 - fmt_getenv("URETH_GC_RX_INFPR_WK1"), 0.5, 1),
   pgc.tx.recov.pr   = c(1 - fmt_getenv("PHAR_GC_RX_INFPR_WK1"), 0.5, 1),
-  rgc.sympt.prob    = fmt_getenv("RECT_GC_SYMPT_PROB"), # rectal symptom probability
-  ugc.sympt.prob    = fmt_getenv("URETH_GC_SYMPT_PROB"), # urethral symptom probability
-  pgc.sympt.prob    = fmt_getenv("PHAR_GC_SYMPT_PROB"), # pharyngeal symptom probability
+  rgc.sympt.prob    = fmt_getenv("RECT_GC_SYMPT_PROB"), # rectal symptom prob
+  ugc.sympt.prob    = fmt_getenv("URETH_GC_SYMPT_PROB"), # ureth symptom prob
+  pgc.sympt.prob    = fmt_getenv("PHAR_GC_SYMPT_PROB"), # phar symptom prob
   # STI testing
   ugc.sympt.seek.test.prob = fmt_getenv("STITEST_PROB_UGC_SYMPT"),
   rgc.sympt.seek.test.rr = fmt_getenv("STITEST_RGC_RR_SYMPT"),
@@ -139,12 +140,14 @@ param <- param_msm(
   # Scaling parameters
   ai.acts.scale.mc    = fmt_getenv("SCALAR_AI_ACT_RATE"),
   oi.acts.scale.mc    = fmt_getenv("SCALAR_OI_ACT_RATE"),
-  kiss.rate.main      = 0,
-  kiss.rate.casl      = 0,
-  kiss.prob.oo        = 0,
-  rim.rate.main       = 0,
-  rim.rate.casl       = 0,
-  rim.prob.oo         = 0,
+  # kissing rate/prob
+  kiss.rate.main      = fmt_getenv("KISS_RATE_MAIN"),
+  kiss.rate.casl      = fmt_getenv("KISS_RATE_CASUAL"),
+  kiss.prob.oo        = fmt_getenv("KISS_PROB_ONETIME"),
+  # rimming rate/prob
+  rim.rate.main       = fmt_getenv("RIM_RATE_MAIN"),
+  rim.rate.casl       = fmt_getenv("RIM_RATE_CASUAL"),
+  rim.prob.oo         = fmt_getenv("RIM_PROB_ONETIME"),
   trans.scale         = c(
     fmt_getenv("SCALAR_HIV_TRANS_PROB_BLACK"),
     fmt_getenv("SCALAR_HIV_TRANS_PROB_HISP"),

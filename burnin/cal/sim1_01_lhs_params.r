@@ -25,6 +25,9 @@ priors <- list(
   pvec(0, 0.45, "U2PGC_PROB"), # u2pgc.prob
   pvec(0, 0.55, "R2UGC_PROB"), # r2ugc.prob
   pvec(0, 0.25, "P2UGC_PROB"), # p2ugc.prob
+  pvec(0, 0.45, "R2PGC_PROB"), # r2pgc.prob
+  pvec(0, 0.20, "P2RGC_PROB"), # p2rgc.prob
+  pvec(0, 0.10, "P2PGC_PROB"), # p2pgc.prob
   # Untreated infection durations
   pvec(2, 22, "RECT_GC_DURAT_NOTX"), # rectal
   pvec(1, 24, "URETH_GC_DURAT_NOTX"), # urethral
@@ -70,8 +73,16 @@ priors <- list(
   pvec(0.001, 0.99, "HIV_RX_REINIT_PROB_OTHER"),
   pvec(0.001, 0.99, "HIV_RX_REINIT_PROB_WHITE"),
   # sex act scalars
-  pvec(0.75, 3, "SCALAR_AI_ACT_RATE"), # ai.acts.scale
-  pvec(0.75, 3, "SCALAR_OI_ACT_RATE"), # oi.acts.scale
+  pvec(1, 1, "SCALAR_AI_ACT_RATE"), # ai.acts.scale
+  pvec(1, 1, "SCALAR_OI_ACT_RATE"), # oi.acts.scale
+  # kissing rate/prob priors
+  pvec(0, 10,  "KISS_RATE_MAIN"),
+  pvec(0, 10,  "KISS_RATE_CASUAL"),
+  pvec(0.5, 1, "KISS_PROB_ONETIME"),
+  # rimming rate/prob priors
+  pvec(0, 10,  "RIM_RATE_MAIN"),
+  pvec(0, 10,  "RIM_RATE_CASUAL"),
+  pvec(0, 1,   "RIM_PROB_ONETIME"),
   # HIV transmission prob. scalars
   pvec(0.75, 3, "SCALAR_HIV_TRANS_PROB_BLACK"), # black
   pvec(0.75, 3, "SCALAR_HIV_TRANS_PROB_HISP"), # hispanic
