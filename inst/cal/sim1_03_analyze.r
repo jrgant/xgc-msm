@@ -70,15 +70,17 @@ simid_sel_gcpos <- lapply(
   }
 )
 
-simid_sel_gcpos_permissive <- lapply(
-  setNames(gcpos_slugs, gcpos_slugs),
-  function(.x) {
-    out_vs_targ[
-      variable == sprintf("prob.%s.tested", .x) & between(output, 0.03, 0.15),
-      sort(simid)
-    ]
-  }
-)
+simid_sel_gcpos_int <- Reduce(intersect, simid_sel_gcpos)
+
+## simid_sel_gcpos_permissive <- lapply(
+##   setNames(gcpos_slugs, gcpos_slugs),
+##   function(.x) {
+##     out_vs_targ[
+##       variable == sprintf("prob.%s.tested", .x) & between(output, 0.03, 0.15),
+##       sort(simid)
+##     ]
+##   }
+## )
 
 simid_sel_hivpr <-
   out_vs_targ[variable == "i.prev" & output_within_5pts == 1, sort(simid)]
@@ -88,6 +90,7 @@ simid_sel_hivinc <-
 
 simid_sel_hivprinc <- intersect(simid_sel_hivpr, simid_sel_hivinc)
 
+## format a simid vector to produce quicktarget() output by subgroup
 fmt_list <- function(labvec, simids) {
   lapply(setNames(labvec, labvec), function(.x) simids)
 }
@@ -134,13 +137,12 @@ quicktarget("prob.%s.tested", fmt_list(gcpos_slugs, simid_sel_gcpos[[1]]))
 quicktarget("prob.%s.tested", fmt_list(gcpos_slugs, simid_sel_gcpos[[2]]))
 quicktarget("prob.%s.tested", fmt_list(gcpos_slugs, simid_sel_gcpos[[3]]))
 
-simid_sel_gcpos_perm_int <- Reduce(intersect, simid_sel_gcpos_permissive)
-quicktarget("prob.%s.tested", fmt_list(gcpos_slugs, simid_sel_gcpos_perm_int))
-quicktarget("i.prev", list(hiv = simid_sel_gcpos_perm_int))
-quicktarget("ir100.pop", list(hiv = simid_sel_gcpos_perm_int))
-quicktarget("cc.vsupp.%s", fmt_list(rslugs, simid_sel_gcpos_perm_int))
-quicktarget("i.prev.dx.inf.%s", fmt_list(ageslugs, simid_sel_gcpos_perm_int))
-quicktarget("prepCov.%s", fmt_list(rslugs, simid_sel_gcpos_perm_int))
+quicktarget("prob.%s.tested", fmt_list(gcpos_slugs, simid_sel_gcpos_int))
+quicktarget("i.prev", list(hiv = simid_sel_gcpos_int))
+quicktarget("ir100.pop", list(hiv = simid_sel_gcpos_int))
+quicktarget("cc.vsupp.%s", fmt_list(rslugs, simid_sel_gcpos_int))
+quicktarget("i.prev.dx.inf.%s", fmt_list(ageslugs, simid_sel_gcpos_int))
+quicktarget("prepCov.%s", fmt_list(rslugs, simid_sel_gcpos_int))
 
 
 ################################################################################
@@ -188,78 +190,87 @@ cbind(
   N_simid_list = sapply(simid_sel_prep, length)
 )
 
-hivprinc_sel_inputs <-
-  pull_params(
-    simid_sel_hivprinc
-  )[input %like% "EFF_HIV|STOPPER|SCALAR_AI|TRANS_RR|P_STITEST|^SCALAR"
-    ][, -c("selection_group")]
+## hivprinc_sel_inputs <-
+##   pull_params(
+##     simid_sel_hivprinc
+##   )[input %like% "EFF_HIV|TRANS_RR|SCALAR_HIV|STOPPER"
+##     ][, -c("selection_group")]
 
-hivprinc_sel_inputs_w <- dcast(
-  hivprinc_sel_inputs,
-  simid ~ input,
-  value.var = "value"
-)[simid %in% simid_sel_hivprinc]
+## hivprinc_sel_inputs[, length(unique(simid))]
 
-gcpos_sel_inputs <-
-  pull_params(
-    simid_sel_gcpos
-  )[input %like% "DURAT_NOTX|RX_INFPR|SYMPT_PROB|ASYMP|SYMP|SCALAR_AI|STITEST"]
+## hivprinc_sel_inputs %>%
+##   ggplot(aes(x = value)) +
+##   geom_boxplot() +
+##   facet_wrap(~ input, scales = "free")
 
-gcpos_sel_inputs[,
-  input_group := stringr::str_extract(input, "(?<=_)[A-Z0-9]+_[A-Z0-9]+$")]
+## hivprinc_sel_inputs
 
-gcpos_sel_inputs_w <- dcast(
-  gcpos_sel_inputs,
-  selection_group + simid ~ input,
-  value.var = "value"
-)[simid %in% simid_sel_hivprinc]
+## hivprinc_sel_inputs_w <- dcast(
+##   hivprinc_sel_inputs,
+##   simid ~ input,
+##   value.var = "value"
+## )[simid %in% simid_sel_hivprinc]
 
-gcpos_sel_inputs_w[, .N, selection_group]
+## gcpos_sel_inputs <-
+##   pull_params(
+##     simid_sel_gcpos_int
+##   )[input %like% "DURAT_NOTX|RX_INFPR|SYMPT_PROB|ASYMP|SYMP|STITEST|KISS|RIM|TRANS_RR|^SCALAR"]
 
-# Function to check to make sure we've captured all selected simids.
-check_input_simids <- function(x, simid_list, simid_inputs) {
-  data.table(
-    captured = sort(simid_inputs[selection_group == x, unique(simid)]),
-    sel = sort(simid_list[[x]])
-  )[, .N, .(captured, sel)][, all(N) == 1]
-}
+## gcpos_sel_inputs[,
+##   input_group := stringr::str_extract(input, "(?<=_)[A-Z0-9]+_[A-Z0-9]+$")]
 
-# check selected VLS input parameter sets
-sapply(
-  rslugs,
-  check_input_simids,
-  simid_list = simid_sel_vls,
-  simid_inputs = vls_sel_inputs
-)
+## gcpos_sel_inputs_w <- dcast(
+##   gcpos_sel_inputs,
+##   simid ~ input,
+##   value.var = "value"
+## )[simid %in% simid_sel_hivprinc]
 
-# check selected PrEP input parameter sets
-sapply(
-  rslugs,
-  check_input_simids,
-  simid_list = simid_sel_prep,
-  simid_inputs = prep_sel_inputs
-)
+## gcpos_sel_inputs_w[, .N, selection_group]
 
-# check select HIV input parameter sets
-data.table(
-  capture = sort(hivprinc_sel_inputs[, unique(simid)]),
-  sel = sort(simid_sel_hivprinc)
-)[, all(capture %in% sel) & all(sel %in% capture)]
+## # Function to check to make sure we've captured all selected simids.
+## check_input_simids <- function(x, simid_list, simid_inputs) {
+##   data.table(
+##     captured = sort(simid_inputs[selection_group == x, unique(simid)]),
+##     sel = sort(simid_list[[x]])
+##   )[, .N, .(captured, sel)][, all(N) == 1]
+## }
 
-# check selected GC input parameter sets
-sapply(
-  gcpos_slugs,
-  check_input_simids,
-  simid_list = simid_sel_gcpos,
-  simid_inputs = gcpos_sel_inputs
-)
+## # check selected VLS input parameter sets
+## sapply(
+##   rslugs,
+##   check_input_simids,
+##   simid_list = simid_sel_vls,
+##   simid_inputs = vls_sel_inputs
+## )
 
-## View distributions of RX_INIT and RX_REINIT for each selection group,
-## meaning simid sets chosen for matching race/ethnicity-specific viral
-## suppression. We're interested in seeing the how the corresponding
-## input parameter distribution (e.g., HIV_RX_INIT_PROB_BLACK) within
-## the B selection group. Here, the REINIT parameters are much stronger
-## drivers of VLS.
+## # check selected PrEP input parameter sets
+## sapply(
+##   rslugs,
+##   check_input_simids,
+##   simid_list = simid_sel_prep,
+##   simid_inputs = prep_sel_inputs
+## )
+
+## # check select HIV input parameter sets
+## data.table(
+##   capture = sort(hivprinc_sel_inputs[, unique(simid)]),
+##   sel = sort(simid_sel_hivprinc)
+## )[, all(capture %in% sel) & all(sel %in% capture)]
+
+## # check selected GC input parameter sets
+## sapply(
+##   gcpos_slugs,
+##   check_input_simids,
+##   simid_list = simid_sel_gcpos_int,
+##   simid_inputs = gcpos_sel_inputs
+## )
+
+## ## View distributions of RX_INIT and RX_REINIT for each selection group,
+## ## meaning simid sets chosen for matching race/ethnicity-specific viral
+## ## suppression. We're interested in seeing the how the corresponding
+## ## input parameter distribution (e.g., HIV_RX_INIT_PROB_BLACK) within
+## ## the B selection group. Here, the REINIT parameters are much stronger
+## ## drivers of VLS.
 ggplot(vls_sel_inputs, aes(input, value)) +
   geom_boxplot() +
   facet_grid(selection_group ~ input_group, scale = "free_x") +
@@ -268,121 +279,134 @@ ggplot(vls_sel_inputs, aes(input, value)) +
 
 narrow_rx_init      <- input_quantiles(vls_sel_inputs, "RX_INIT")
 narrow_rx_reinit    <- input_quantiles(vls_sel_inputs, "RX_REINIT")
-narrow_trans_prob   <- input_quantiles(vls_sel_inputs, "TRANS")
+#narrow_trans_prob   <- input_quantiles(vls_sel_inputs, "TRANS")
 
 narrow_late_tester  <- input_quantiles(dx_sel_inputs, "LATE_TESTER")
 narrow_prep_discont <- input_quantiles(prep_sel_inputs, "DISCONT")
 
-narrow_hivcond <- hivprinc_sel_inputs[,
-  .(q25 = quantile(value, 0.25), q75 = quantile(value, 0.75)),
-  input
-]
+## narrow_hivcond <- hivprinc_sel_inputs[,
+##   .(q25 = quantile(value, 0.25), q75 = quantile(value, 0.75)),
+##   input
+## ]
 
-gcpos_sel_inputs_labeled <- copy(gcpos_sel_inputs)
+## gcpos_sel_inputs_labeled <- copy(gcpos_sel_inputs)
 
-gcpos_sel_inputs_labeled[,
-  selection_group := fcase(
-    selection_group == "rGC", "R",
-    selection_group == "uGC", "U",
-    selection_group == "pGC", "P"
-  )][]
+## gcpos_sel_inputs_labeled[,
+##   selection_group := fcase(
+##     selection_group == "rGC", "R",
+##     selection_group == "uGC", "U",
+##     selection_group == "pGC", "P"
+##   )][]
 
-anatsite_pat <- "^[A-Z]+(?=_)"
+## anatsite_pat <- "^[A-Z]+(?=_)"
 
-## Narrow anatomic site-specific parameters
-narrow_gc_durat <- input_quantiles(
-  gcpos_sel_inputs_labeled,
-  "DURAT_NOTX",
-  anatsite_pat
-)
+## ## Narrow anatomic site-specific parameters
+## narrow_gc_durat <- input_quantiles(
+##   gcpos_sel_inputs_labeled,
+##   "DURAT_NOTX",
+##   anatsite_pat
+## )
 
-narrow_gc_rxinf <- input_quantiles(
-  gcpos_sel_inputs_labeled,
-  "RX_INFPR",
-  anatsite_pat
-)
+## gcpos_sel_inputs[
+##   simid %in% simid_sel_hivprinc,
+##   .(ll = min(value),
+##     ul = max(value)), by = input][]
 
-narrow_gc_sympt <- input_quantiles(
-  gcpos_sel_inputs_labeled,
-  "SYMPT_PROB",
-  anatsite_pat
-)
+## narrow_gc_rxinf <- input_quantiles(
+##   gcpos_sel_inputs_labeled,
+##   "RX_INFPR",
+##   anatsite_pat
+## )
 
-narrow_gc_asymp_test <- input_quantiles(
-  gcpos_sel_inputs_labeled,
-  "ASYMP",
-  anatsite_pat
-)
+## narrow_gc_sympt <- input_quantiles(
+##   gcpos_sel_inputs_labeled,
+##   "SYMPT_PROB",
+##   anatsite_pat
+## )
 
-narrow_gc_symp_seek <- input_quantiles(
-  gcpos_sel_inputs_labeled,
-  "STITEST",
-  "UGC|RGC|PGC"
-)
+## narrow_gc_asymp_test <- input_quantiles(
+##   gcpos_sel_inputs_labeled,
+##   "ASYMP",
+##   anatsite_pat
+## )
 
-narrow_gc_aiscale <- gcpos_sel_inputs_labeled[
-  input == "SCALAR_AI_ACT_RATE",
-  .(
-    q25 = quantile(value, 0.25),
-    q75 = quantile(value, 0.75)
-  ),
-  selection_group
-]
+## narrow_gc_symp_seek <- input_quantiles(
+##   gcpos_sel_inputs_labeled,
+##   "STITEST",
+##   "UGC|RGC|PGC"
+## )
 
-setnames(narrow_gc_aiscale, "selection_group", "input")
-narrow_gc_aiscale[, input := "SCALAR_AI_ACT_RATE"][]
+## narrow_gc_aiscale <- gcpos_sel_inputs_labeled[
+##   input == "KISS|RIM",
+##   .(q25 = quantile(value, 0.25),
+##     q75 = quantile(value, 0.75)),
+##   selection_group
+## ]
 
-## ## Narrow shared GC parameters (e.g., effect on HIV)
-gcpos_union <- gcpos_sel_inputs[, sort(unique(simid))]
+## setnames(narrow_gc_aiscale, "selection_group", "input")
+## narrow_gc_aiscale[, input := "SCALAR_AI_ACT_RATE"][]
 
-lhs_gcpos_union <- rbindlist(
-  lapply(
-    gcpos_union,
-    function(.x) {
-      as.data.table(
-        lhs_groups[[as.numeric(.x)]], keep.rownames = TRUE
-      )[V1 %like% "CONDOM_EFF_GC|GC_PROB|^STITEST|STOPPER|TRANS_RR"
-        ][, .(input = V1, value = V2)][, simid := .x][]
-    }
-  )
-)
+## ## ## Narrow shared GC parameters (e.g., effect on HIV)
+## gcpos_union <- gcpos_sel_inputs[, sort(unique(simid))]
 
-narrow_gctrans_common <-
-  lhs_gcpos_union[
-    simid %in% simid_sel_hivprinc
-  ][, .(q25 = quantile(value, 0.25),
-        q75 = quantile(value, 0.75)), by = input]
+## lhs_gcpos_union <- rbindlist(
+##   lapply(
+##     gcpos_union,
+##     function(.x) {
+##       as.data.table(
+##         lhs_groups[[as.numeric(.x)]], keep.rownames = TRUE
+##       )[V1 %like% "CONDOM_EFF_GC|GC_PROB|^STITEST|STOPPER|TRANS_RR"
+##         ][, .(input = V1, value = V2)][, simid := .x][]
+##     }
+##   )
+## )
+
+## narrow_gctrans_common <-
+##   lhs_gcpos_union[
+##     simid %in% simid_sel_hivprinc
+##   ][, .(q25 = quantile(value, 0.25),
+##         q75 = quantile(value, 0.75)), by = input]
+
+## narrowed <- rbindlist(
+##   list(
+##     narrow_rx_init,
+##     narrow_rx_reinit,
+##     narrow_late_tester,
+##     narrow_trans_prob,
+##     narrow_prep_discont,
+##     narrow_hivcond,
+##     narrow_gc_durat,
+##     narrow_gc_rxinf,
+##     narrow_gc_sympt,
+##     narrow_gc_asymp_test,
+##     narrow_gctrans_common,
+##     narrow_gc_aiscale
+##   ),
+##   use.name = FALSE
+## )
 
 narrowed <- rbindlist(
   list(
     narrow_rx_init,
     narrow_rx_reinit,
     narrow_late_tester,
-    narrow_trans_prob,
-    narrow_prep_discont,
-    narrow_hivcond,
-    narrow_gc_durat,
-    narrow_gc_rxinf,
-    narrow_gc_sympt,
-    narrow_gc_asymp_test,
-    narrow_gctrans_common,
-    narrow_gc_aiscale
-  ),
-  use.name = FALSE
+    narrow_prep_discont
+  )
 )
 
-narrowed_min <- narrowed[, .(q25 = min(q25), q75 = max(q75)), by = input]
+## narrowed_min <- narrowed[, .(q25 = min(q25), q75 = max(q75)), by = input]
 
-narrowed_gc_int <- pull_params(
-  simid_sel_gcpos_perm_int
-)[, .(min = min(value), max = max(value)), by = input]
+## narrowed_gc_int <- pull_params(
+##   simid_sel_gcpos_perm_int
+## )[, .(min = min(value), max = max(value)), by = input]
 
 ## Create a new set of priors for sim2
 sim1_priors <- readRDS(here::here("burnin", "cal", "sim1", "sim1_priors.rds"))
 # merge_priors <- merge(sim1_priors, narrowed_min, by = "input", all.x = TRUE)
 
-merge_priors <- merge(sim1_priors, narrowed_gc_int, by = "input", all.x = TRUE)
+merge_priors <- merge(sim1_priors, narrowed, by = "input", all.x = TRUE)
 
+## Visualize narrowed priors
 mp <- melt(merge_priors, id.vars = "input")
 mp[, type_prior := fifelse(variable %like% "s1", "orig", "new")]
 mp[, type_limit := fifelse(variable %like% "min|ll|q25", "lower", "upper")]
@@ -393,9 +417,10 @@ mp[!(input %like% "RX_HALT")] %>%
   facet_wrap(~ input, scales = "free_y", ncol = 4) +
   theme_base(base_size = 12)
 
+## Finalize new priors
 new_priors <- merge_priors[
-  !is.na(min) & !is.na(max),
-  ":=" (s1_ll = min, s1_ul = max)][, -c("min", "max")]
+  !is.na(q25) & !is.na(q75),
+  ":=" (s1_ll = q25, s1_ul = q75)][, -c("q25", "q75")]
 
 setnames(new_priors, c("s1_ll", "s1_ul"), c("s2_ll", "s2_ul"))
 
@@ -414,7 +439,7 @@ saveRDS(
     hivp = simid_sel_hivpr,
     hivi = simid_sel_hivinc,
     hivpi = simid_sel_hivprinc,
-    gcpos = simid_sel_gcpos
+    gcpos = simid_sel_gcpos_int
   ),
   here::here("inst", "cal", "sim1_simid_sel.rds")
 )
