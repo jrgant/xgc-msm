@@ -30,6 +30,9 @@ priors <- list(
   pvec2("U2PGC_PROB"), # u2pgc.prob
   pvec2("R2UGC_PROB"), # r2ugc.prob
   pvec2("P2UGC_PROB"), # p2ugc.prob
+  pvec2("R2PGC_PROB"), # r2pgc.prob
+  pvec2("P2RGC_PROB"), # p2rgc.prob
+  pvec2("P2PGC_PROB"), # p2pgc.prob
   # Untreated infection durations
   pvec2("RECT_GC_DURAT_NOTX"), # rectal
   pvec2("URETH_GC_DURAT_NOTX"), # urethral
@@ -77,6 +80,14 @@ priors <- list(
   # sex act scalars
   pvec2("SCALAR_AI_ACT_RATE"), # ai.acts.scale
   pvec2("SCALAR_OI_ACT_RATE"), # oi.acts.scale
+  # kissing rate/prob priors
+  pvec2("KISS_RATE_MAIN"),
+  pvec2("KISS_RATE_CASUAL"),
+  pvec2("KISS_PROB_ONETIME"),
+  # rimming rate/prob priors
+  pvec2("RIM_RATE_MAIN"),
+  pvec2("RIM_RATE_CASUAL"),
+  pvec2("RIM_PROB_ONETIME"),
   # HIV transmission prob. scalars
   pvec2("SCALAR_HIV_TRANS_PROB_BLACK"), # black
   pvec2("SCALAR_HIV_TRANS_PROB_HISP"), # hispanic
@@ -96,6 +107,12 @@ priors <- list(
   pvec2("HIV_TRANS_RR_RGC"),
   pvec2("HIV_TRANS_RR_UGC")
 )
+
+# CHECK INPUTS AGAINST SIM1 PRIORS  ---------------------------------------------
+s1p <- readRDS(here::here("burnin/cal/sim1/sim1_priors.rds"))
+
+all(s1p$input %in% sapply(priors, function(.x) .x[[4]])) == TRUE
+s1p[, .N] == length(priors)
 
 
 # DRAW LATIN HYPERCUBE ---------------------------------------------------------
