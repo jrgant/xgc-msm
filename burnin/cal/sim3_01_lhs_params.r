@@ -30,6 +30,9 @@ priors <- list(
   pvec2("U2PGC_PROB"), # u2pgc.prob
   pvec2("R2UGC_PROB"), # r2ugc.prob
   pvec2("P2UGC_PROB"), # p2ugc.prob
+  pvec2("R2PGC_PROB"), # r2pgc.prob
+  pvec2("P2RGC_PROB"), # p2rgc.prob
+  pvec2("P2PGC_PROB"), # p2pgc.prob
   # Untreated infection durations
   pvec2("RECT_GC_DURAT_NOTX"), # rectal
   pvec2("URETH_GC_DURAT_NOTX"), # urethral
@@ -43,11 +46,17 @@ priors <- list(
   pvec2("URETH_GC_SYMPT_PROB"), # urethral
   pvec2("PHAR_GC_SYMPT_PROB"), # pharyngeal
   # GC symptomatic, weekly probability of testing
-  pvec2("STITEST_PROB_GC_SYMPT"),
+  pvec2("STITEST_PROB_UGC_SYMPT"),
+  pvec2("STITEST_RGC_RR_SYMPT"),
+  pvec2("STITEST_PGC_RR_SYMPT"),
   # Probability of testing at asymptomatic sites in clinic
   pvec2("RECT_ASYMP_STITEST_PROB"),  # rectal
   pvec2("URETH_ASYMP_STITEST_PROB"),  # urethral
   pvec2("PHAR_ASYMP_STITEST_PROB"),  # pharyngeal
+  # Probability of testing at symptomatic sites in clinic
+  pvec2("RECT_SYMP_STITEST_PROB"),  # rectal
+  pvec2("URETH_SYMP_STITEST_PROB"),  # urethral
+  pvec2("PHAR_SYMP_STITEST_PROB"),  # pharyngeal
   # HIV late-tester probability (priors from Singh 2017, MMWR)
   pvec2("HIV_LATE_TESTER_PROB_BLACK"),
   pvec2("HIV_LATE_TESTER_PROB_HISP"),
@@ -71,6 +80,14 @@ priors <- list(
   # sex act scalars
   pvec2("SCALAR_AI_ACT_RATE"), # ai.acts.scale
   pvec2("SCALAR_OI_ACT_RATE"), # oi.acts.scale
+  # kissing rate/prob priors
+  pvec2("KISS_RATE_MAIN"),
+  pvec2("KISS_RATE_CASUAL"),
+  pvec2("KISS_PROB_ONETIME"),
+  # rimming rate/prob priors
+  pvec2("RIM_RATE_MAIN"),
+  pvec2("RIM_RATE_CASUAL"),
+  pvec2("RIM_PROB_ONETIME"),
   # HIV transmission prob. scalars
   pvec2("SCALAR_HIV_TRANS_PROB_BLACK"), # black
   pvec2("SCALAR_HIV_TRANS_PROB_HISP"), # hispanic
@@ -84,10 +101,20 @@ priors <- list(
   pvec2("PREP_DISCONT_RATE_HISP"),
   pvec2("PREP_DISCONT_RATE_OTHER"),
   pvec2("PREP_DISCONT_RATE_WHITE"),
+  # probability that an agent is of the type to stop sexual activity
+  # while symptomatic or on treatment
   pvec2("ACT_STOPPER_PROB"),
   pvec2("HIV_TRANS_RR_RGC"),
   pvec2("HIV_TRANS_RR_UGC")
 )
+
+# CHECK INPUTS AGAINST SIM1 PRIORS  ---------------------------------------------
+
+## sim1_sel_lhs_limits.rds contains the sim2 priors (based on analysis of sim1)
+s2p <- readRDS(here::here("inst/cal/sim1_sel_lhs_limits.rds"))
+
+all(s2p$input %in% sapply(priors, function(.x) .x[[4]])) == TRUE
+s2p[, .N] == length(priors)
 
 
 # DRAW LATIN HYPERCUBE ---------------------------------------------------------

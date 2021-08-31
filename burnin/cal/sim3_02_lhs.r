@@ -70,9 +70,9 @@ param <- param_msm(
   p2ugc.tprob       = fmt_getenv("P2UGC_PROB"), # pharyngeal-to-urethral transmission probability
   ## NOTE: Following tprobs used only if the kissing/rimming flags are active
   ## in control_msm.
-  r2pgc.tprob       = 0, # rectal-to-pharyngeal transmission probability
-  p2rgc.tprob       = 0, # pharyngeal-to-rectal transmission probability
-  p2pgc.tprob       = 0, # kissing transmission probability
+  r2pgc.tprob       = fmt_getenv("R2PGC_PROB"), # rect-to-phar GC trans. prob.
+  p2rgc.tprob       = fmt_getenv("P2RGC_PROB"), # phar-to-rect GC trans. prob.
+  p2pgc.tprob       = fmt_getenv("P2PGC_PROB"), # kissing GC trans. prob.
   rgc.ntx.int       = fmt_getenv("RECT_GC_DURAT_NOTX"),
   ugc.ntx.int       = fmt_getenv("URETH_GC_DURAT_NOTX"),
   pgc.ntx.int       = fmt_getenv("PHAR_GC_DURAT_NOTX"),
@@ -84,17 +84,23 @@ param <- param_msm(
   ugc.sympt.prob    = fmt_getenv("URETH_GC_SYMPT_PROB"), # urethral symptom probability
   pgc.sympt.prob    = fmt_getenv("PHAR_GC_SYMPT_PROB"), # pharyngeal symptom probability
   # STI testing
-  gc.sympt.seek.test.prob = fmt_getenv("STITEST_PROB_GC_SYMPT"),
+  ugc.sympt.seek.test.prob = fmt_getenv("STITEST_PROB_UGC_SYMPT"),
+  rgc.sympt.seek.test.rr = fmt_getenv("STITEST_RGC_RR_SYMPT"),
+  pgc.sympt.seek.test.rr = fmt_getenv("STITEST_PGC_RR_SYMPT"),
   ## NOTE: Changed the treatment probs to be conditional on someone's seeking
   ##       STI treatment. Repeat 3 times, one for each anatomic site.
   ##       Tune asymptomatic treatment probability to achieve the overall
   ##       probability of receiving an STI test.
-  gc.sympt.prob.test  = rep(1, 3),
   ## NOTE: Order of probs: rectal, urethral, pharyngeal
   gc.asympt.prob.test = c(
     fmt_getenv("RECT_ASYMP_STITEST_PROB"),
     fmt_getenv("URETH_ASYMP_STITEST_PROB"),
     fmt_getenv("PHAR_ASYMP_STITEST_PROB")
+  ),
+  gc.sympt.prob.test  = c(
+    fmt_getenv("RECT_SYMP_STITEST_PROB"),
+    fmt_getenv("URETH_SYMP_STITEST_PROB"),
+    fmt_getenv("PHAR_SYMP_STITEST_PROB")
   ),
   # HIV testing
   # @ORIG, prop. of MSM testing only at late-stage (AIDS)
@@ -133,12 +139,14 @@ param <- param_msm(
   # Scaling parameters
   ai.acts.scale.mc    = fmt_getenv("SCALAR_AI_ACT_RATE"),
   oi.acts.scale.mc    = fmt_getenv("SCALAR_OI_ACT_RATE"),
-  kiss.rate.main      = 0,
-  kiss.rate.casl      = 0,
-  kiss.prob.oo        = 0,
-  rim.rate.main       = 0,
-  rim.rate.casl       = 0,
-  rim.prob.oo         = 0,
+  # kissing rate/prob
+  kiss.rate.main      = fmt_getenv("KISS_RATE_MAIN"),
+  kiss.rate.casl      = fmt_getenv("KISS_RATE_CASUAL"),
+  kiss.prob.oo        = fmt_getenv("KISS_PROB_ONETIME"),
+  # rimming rate/prob
+  rim.rate.main       = fmt_getenv("RIM_RATE_MAIN"),
+  rim.rate.casl       = fmt_getenv("RIM_RATE_CASUAL"),
+  rim.prob.oo         = fmt_getenv("RIM_PROB_ONETIME"),
   trans.scale         = c(
     fmt_getenv("SCALAR_HIV_TRANS_PROB_BLACK"),
     fmt_getenv("SCALAR_HIV_TRANS_PROB_HISP"),
@@ -162,7 +170,8 @@ param <- param_msm(
     fmt_getenv("PREP_DISCONT_RATE_WHITE")
   ),
   # act stopper prob
-  act.stopper.prob = fmt_getenv("ACT_STOPPER_PROB"),
+  act.stopper.prob    = fmt_getenv("ACT_STOPPER_PROB"),
+  # HIV risk ratio due to GC
   hiv.rgc.rr = fmt_getenv("HIV_TRANS_RR_RGC"),
   hiv.ugc.rr = fmt_getenv("HIV_TRANS_RR_UGC")
 )
@@ -207,8 +216,8 @@ control <- control_msm(
   stitrans.FUN      = stitrans_msm_rand,
   prev.FUN          = prevalence_msm,
   # Epidemic simulation options
-  transRoute_Kissing      = FALSE,  # FLAG: Toggle kissing transmission
-  transRoute_Rimming      = FALSE,  # FLAG: Toggle rimming transmission
+  transRoute_Kissing      = TRUE,  # FLAG: Toggle kissing transmission
+  transRoute_Rimming      = TRUE,  # FLAG: Toggle rimming transmission
   gcUntreatedRecovDist    = "geom",
   stiScreeningProtocol    = "base",
   skip.check              = TRUE,
