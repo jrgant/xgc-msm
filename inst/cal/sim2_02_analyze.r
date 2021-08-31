@@ -159,18 +159,6 @@ sapply(simid_sel_gcpos, length)
 simid_sel_gcpos_intersect <- Reduce(intersect, simid_sel_gcpos)
 length(simid_sel_gcpos_intersect)
 
-simid_sel_dp_intersect <- Reduce(
-  intersect,
-  list(
-    simid_sel_hivprinc,
-    simid_sel_vls_race_intersect,
-    simid_sel_dx_age_intersect,
-    simid_sel_dx_age_rel_intersect
-  )
-)
-
-length(simid_sel_dp_intersect)
-
 plot_targets <- function(simids) {
   out_vs_targ[simid %in% simids] %>%
     ggplot(aes(x = variable, y = output)) +
@@ -189,7 +177,7 @@ plot_targets <- function(simids) {
     )
 }
 
-plot_targets(simid_sel_dp_intersect)
+plot_targets(simid_sel_gcpos_intersect)
 
 
 ################################################################################
@@ -206,7 +194,7 @@ lhsdt <- rbindlist(
 lhsdt[, simid := sprintf("%04d", simid)][]
 setnames(lhsdt, c("V1", "V2"), c("input", "value"))
 
-lhsdt[simid %in% simid_sel_dp_intersect] %>%
+lhsdt[simid %in% simid_sel_gcpos_intersect] %>%
   ggplot(aes(x = input, y = value, group = simid)) +
   geom_line() +
   theme(
@@ -219,25 +207,28 @@ lhsdt[simid %in% simid_sel_dp_intersect] %>%
 
 sim2_priors <- readRDS(here::here("inst/cal", "sim1_sel_lhs_limits.rds"))
 
-sel_hiv_inputs <-
-  pull_params(simid_sel_dp_intersect)[, -c("selection_group")]
+sel_gcpos_inputs <-
+  pull_params(simid_sel_gcpos_intersect)[, -c("selection_group")]
 
-sel_hiv_inputs[!(input %like% "RX_HALT")] %>%
+sel_gcpos_inputs[
+  !(input %like% "SCALAR_AI|SCALAR_OI|RX_HALT|TRANS_PROB_WHITE")
+  ] %>%
   ggplot(aes(x = value)) +
   geom_histogram() +
-  facet_wrap(~ input, scales = "free_x")
+  geom_density() +
+  facet_wrap(~ input, scales = "free")
 
-sel_hiv_inputs_w <- dcast(
-  sel_hiv_inputs[!(input %like% "RX_HALT")],
+sel_gcpos_inputs_w <- dcast(
+  sel_gcpos_inputs,
   simid ~ input,
   value.var = "value"
 )
 
-ggcorrplot(cor(sel_hiv_inputs_w[, -c(1:2)]), type = "upper")
+ggcorrplot(cor(sel_gcpos_inputs_w[, -c(1:2)]), type = "upper")
 
-narrowed_priors <- sel_hiv_inputs[, .(
-  ll = min(value),
-  ul = max(value)
+narrowed_priors <- sel_gcpos_inputs[, .(
+ ll = quantile(value, 0.25),
+ ul = quantile(value, 0.75)
 ), input]
 ##[!(input %like% "_GC|GC_|ASYMP|SYMP|OI_ACT")]
 
@@ -250,12 +241,31 @@ narrowed_priors <- sel_hiv_inputs[, .(
 ##   geom_histogram() +
 ##   facet_wrap(~ input, scale = "free_x")
 
-new_priors <- merge(
+new_priors_merge <- merge(
   sim2_priors,
   narrowed_priors,
   by = "input",
   all.x = TRUE
 )
+
+head(new_priors_merge)
+
+npm <- melt(
+  new_priors_merge,
+  measure.vars = c("s2_ll", "s2_ul", "ll", "ul")
+)[, ":=" (
+      round = fifelse(variable %like% "s2", "sim2", "sim3"),
+      limit = fifelse(variable %like% "ll", "lower", "upper")
+    )][]
+
+npm[!(input %like% "SCALAR_AI|SCALAR_OI|RX_HALT|TRANS_PROB_WHITE")] %>%
+  ggplot(aes(x = round, y = value)) +
+  geom_line(aes(group = limit)) +
+  geom_point(shape = 21, fill = "white", size = 2) +
+  facet_wrap(~ input, scales = "free_y", ncol = 4)
+
+## finalize new priors
+new_priors <- copy(new_priors_merge)
 
 new_priors[
   !is.na(ll) & !is.na(ul),
@@ -264,9 +274,12 @@ new_priors[
     s2_ul = ul
   )][]
 
+head(new_priors)
+
 new_priors[, ":=" (ll = NULL, ul = NULL)][]
 
 setnames(new_priors, c("s2_ll", "s2_ul"), c("s3_ll", "s3_ul"))
+new_priors
 
 
 ################################################################################
