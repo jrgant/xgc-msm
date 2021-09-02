@@ -72,16 +72,6 @@ simid_sel_gcpos <- lapply(
 
 simid_sel_gcpos_int <- Reduce(intersect, simid_sel_gcpos)
 
-## simid_sel_gcpos_permissive <- lapply(
-##   setNames(gcpos_slugs, gcpos_slugs),
-##   function(.x) {
-##     out_vs_targ[
-##       variable == sprintf("prob.%s.tested", .x) & between(output, 0.03, 0.15),
-##       sort(simid)
-##     ]
-##   }
-## )
-
 simid_sel_hivpr <-
   out_vs_targ[variable == "i.prev" & output_within_5pts == 1, sort(simid)]
 
