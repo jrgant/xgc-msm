@@ -208,38 +208,73 @@ lhsdt[simid %in% simid_sel_gcpos_intersect] %>%
 
 sim2_priors <- readRDS(here::here("inst/cal", "sim1_sel_lhs_limits.rds"))
 
-sel_gcpos_inputs <-
-  pull_params(simid_sel_gcpos_intersect)[, -c("selection_group")]
+## selected params, narrowed by VLS targets
+vls_sel_inputs <- pull_params(
+  simid_sel_vls_race
+)[input %like% "RX_INIT|RX_REINIT"]
 
-sel_gcpos_inputs[
-  !(input %like% "SCALAR_AI|SCALAR_OI|RX_HALT|TRANS_PROB_WHITE")
-  ] %>%
+vls_sel_inputs[,
+  input_group := stringr::str_extract(input, "RX_[A-Z]+")][]
+
+vls_sel_inputs_w <- dcast(
+  vls_sel_inputs,
+  selection_group + simid ~ input,
+  value.var = "value"
+)[simid %in% simid_sel_hivprinc][]
+
+cbind(
+  vls_sel_inputs_w[, .(N_input_pull = .N), selection_group],
+  N_simid_list = sapply(simid_sel_vls_race, length)
+)
+
+## selected params, narrowed by GC targets
+gcpos_sel_inputs <- pull_params(
+  simid_sel_gcpos_intersect
+)[, -c("selection_group")][
+  !(input %like% "SCALAR_AI|SCALAR_OI|HIV_RX_|TRANS_PROB_WHITE")]
+
+gcpos_sel_inputs %>%
   ggplot(aes(x = value)) +
   geom_histogram() +
   geom_density() +
   facet_wrap(~ input, scales = "free")
 
-sel_gcpos_inputs_w <- dcast(
-  sel_gcpos_inputs,
+gcpos_sel_inputs_w <- dcast(
+  gcpos_sel_inputs,
   simid ~ input,
   value.var = "value"
 )
 
-ggcorrplot(cor(sel_gcpos_inputs_w[, -c(1:2)]), type = "upper")
+ggcorrplot(cor(gcpos_sel_inputs_w[, -c(1:2)]), type = "upper")
 
-narrowed_priors <- sel_gcpos_inputs[, .(
+
+################################################################################
+## NARROW PRIORS FOR NEXT ROUND ##
+################################################################################
+
+## Prior narrowing based on VLS targets
+narrowed_priors_vls <- input_quantiles(vls_sel_inputs, "RX_")
+
+## Prior narrowing based on GC targets
+narrowed_priors_gc <- gcpos_sel_inputs[, .(
  ll = quantile(value, 0.25),
  ul = quantile(value, 0.75)
 ), input]
 ##[!(input %like% "_GC|GC_|ASYMP|SYMP|OI_ACT")]
 
-narrowed_mid80 <- sel_gcpos_inputs[, .(
+narrowed_mid80_gc <- gcpos_sel_inputs[, .(
   ll = quantile(value, 0.1),
   ul = quantile(value, 0.9)
 ), input]
 
+## Compare narrowing thresholds based on GC targets
 lc <- merge(
-  merge(narrowed_priors, narrowed_mid80, by = "input", suffixes = c("q", "m")),
+  merge(
+    narrowed_priors_gc,
+    narrowed_mid80_gc,
+    by = "input",
+    suffixes = c("q", "m")
+  ),
   sim2_priors,
   by = "input"
 )
@@ -254,10 +289,9 @@ lcm[, type := fcase(
       )][]
 
 lcm[, type := factor(type, levels = tlabs)]
-
 lcm[, limit := fifelse(variable %like% "ll", "lower", "upper")][]
 
-lcm[!(input %like% "RX_HALT|TRANS_PROB_WHITE|_AI|_OI")] %>%
+lcm[!(input %like% "HIV_RX_|TRANS_PROB_WHITE|_AI|_OI")] %>%
   ggplot(aes(x = type, y = value)) +
   geom_line(aes(group = limit)) +
   geom_point() +
@@ -270,19 +304,23 @@ lcm[!(input %like% "RX_HALT|TRANS_PROB_WHITE|_AI|_OI")] %>%
     )
   )
 
+narrowed_priors <- rbind(
+  narrowed_mid80_gc,
+  narrowed_priors_vls,
+  use.names = FALSE
+)
+
 new_priors_merge <- merge(
   sim2_priors,
-  narrowed_mid80,
+  narrowed_priors,
   by = "input",
   all.x = TRUE
 )
 
-head(new_priors_merge)
-
 npm <- melt(
   new_priors_merge,
   measure.vars = c("s2_ll", "s2_ul", "ll", "ul")
-)[, ":=" (
+  )[, ":=" (
       round = fifelse(variable %like% "s2", "sim2", "sim3"),
       limit = fifelse(variable %like% "ll", "lower", "upper")
     )][]
@@ -317,7 +355,10 @@ new_priors
 
 ## Write selected simulation ids to file.
 saveRDS(
-  simid_sel_gcpos_intersect,
+  list(
+    simid_sel_gcpos_intersect = simid_sel_gcpos_intersect,
+    simid_sel_vls_race = simid_sel_vls_race
+  ),
   here::here("inst", "cal", "sim2_simid_sel.rds")
 )
 
