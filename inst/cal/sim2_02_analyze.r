@@ -44,7 +44,7 @@ simid_sel_hivpr <-
   out_vs_targ[variable == "i.prev" & output_within_5pts == 1, sort(simid)]
 
 simid_sel_hivinc <- out_vs_targ[
-  variable == "ir100.pop" & between(output, 0.444, 0.584), sort(simid)]
+  variable == "ir100.pop" & between(output, 0.4, 0.6), sort(simid)]
 
 simid_sel_hivprinc <- intersect(simid_sel_hivpr, simid_sel_hivinc)
 length(simid_sel_hivprinc)
@@ -156,6 +156,7 @@ simid_sel_gcpos <- lapply(
 
 sapply(simid_sel_gcpos, length)
 
+# NOTE: These are the only simids used to select runs in this round.
 simid_sel_gcpos_intersect <- Reduce(intersect, simid_sel_gcpos)
 length(simid_sel_gcpos_intersect)
 
@@ -232,18 +233,46 @@ narrowed_priors <- sel_gcpos_inputs[, .(
 ), input]
 ##[!(input %like% "_GC|GC_|ASYMP|SYMP|OI_ACT")]
 
-## plot_targets(intersect(simid_sel_gcpos$rGC, simid_sel_hivpr))
-## plot_targets(intersect(simid_sel_gcpos$uGC, simid_sel_hivprinc))
-## plot_targets(intersect(simid_sel_gcpos$pGC, simid_sel_hivprinc))
+narrowed_mid80 <- sel_gcpos_inputs[, .(
+  ll = quantile(value, 0.1),
+  ul = quantile(value, 0.9)
+), input]
 
-## lhsdt[simid %in% simid_sel_gcpos$pGC & !(input %like% "RX_HALT")] %>%
-##   ggplot(aes(x = value)) +
-##   geom_histogram() +
-##   facet_wrap(~ input, scale = "free_x")
+lc <- merge(
+  merge(narrowed_priors, narrowed_mid80, by = "input", suffixes = c("q", "m")),
+  sim2_priors,
+  by = "input"
+)
+
+lcm <- melt(lc, id.vars = "input")
+
+tlabs <- c("Sim2 Priors", "Mid80", "IQR")
+lcm[, type := fcase(
+        variable %like% "q", tlabs[3],
+        variable %like% "m", tlabs[2],
+        variable %like% "s2", tlabs[1]
+      )][]
+
+lcm[, type := factor(type, levels = tlabs)]
+
+lcm[, limit := fifelse(variable %like% "ll", "lower", "upper")][]
+
+lcm[!(input %like% "RX_HALT|TRANS_PROB_WHITE|_AI|_OI")] %>%
+  ggplot(aes(x = type, y = value)) +
+  geom_line(aes(group = limit)) +
+  geom_point() +
+  facet_wrap(~input, scales = "free_y") +
+  theme(
+    axis.text.x = element_text(
+      angle = 90,
+      vjust = 0.5,
+      hjust = 1
+    )
+  )
 
 new_priors_merge <- merge(
   sim2_priors,
-  narrowed_priors,
+  narrowed_mid80,
   by = "input",
   all.x = TRUE
 )
@@ -288,7 +317,7 @@ new_priors
 
 ## Write selected simulation ids to file.
 saveRDS(
-  simid_sel_dp_intersect,
+  simid_sel_gcpos_intersect,
   here::here("inst", "cal", "sim2_simid_sel.rds")
 )
 
