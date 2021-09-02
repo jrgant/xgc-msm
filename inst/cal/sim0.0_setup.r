@@ -526,3 +526,27 @@ input_quantiles <- function(data, inputstring,
 
   inputsub[, -c("selection_group")]
 }
+
+
+################################################################################
+## PLOT TARGETS AMONG SELECTION OF SIMIDS ##
+################################################################################
+plot_targets <- function(simids, filter_out = "") {
+  out_vs_targ[simid %in% simids][!(variable %like% filter_out)] %>%
+    ggplot(aes(x = variable, y = output)) +
+    geom_point(position = position_jitter(width = 0.1)) +
+    geom_point(
+      aes(y = target_val, color = "target"),
+      shape = 21,
+      size = 4,
+      stroke = 2,
+      fill = NA
+    ) +
+    ggtitle(paste("Number of simids selected:", length(unique(simids)))) +
+    theme_minimal(base_size = 20) +
+    theme(
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+      panel.grid.major.x = element_line(color = "gray80"),
+      plot.title = element_text(face = "bold")
+    )
+}
