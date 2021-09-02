@@ -531,7 +531,7 @@ input_quantiles <- function(data, inputstring,
 ################################################################################
 ## PLOT TARGETS AMONG SELECTION OF SIMIDS ##
 ################################################################################
-plot_targets <- function(simids, filter_out = "") {
+plot_targets <- function(simids, filter_out = " ") {
   out_vs_targ[simid %in% simids][!(variable %like% filter_out)] %>%
     ggplot(aes(x = variable, y = output)) +
     geom_point(position = position_jitter(width = 0.1)) +
