@@ -120,7 +120,7 @@ s2p[, .N] == length(priors)
 # DRAW LATIN HYPERCUBE ---------------------------------------------------------
 
 set.seed(9087)
-lhs_unif <- randomLHS(1000, length(priors))
+lhs_unif <- randomLHS(5000, length(priors))
 
 draw_param <- function(lhscol, lhsrow) {
   p_min <- as.numeric(priors[[lhscol]][2])
@@ -186,13 +186,13 @@ saveRDS(.lec.Random.seed.table, file.path(caldir, "sim3", "seeds_sim3.rds"))
 
 ## # make batch scripts to submit arrays
 ## # SLURM limit is 1200 job requests at a time
-## nbatches <- 5
-## start_index <- seq(1, length(lhs_real), length(lhs_real) / nbatches)
+nbatches <- 5
+start_index <- seq(1, length(lhs_real), length(lhs_real) / nbatches)
 
-## arrays <- sapply(
-##   start_index,
-##   function(.x) paste0(.x, "-", .x + (length(lhs_real) / nbatches) - 1)
-## )
+arrays <- sapply(
+  start_index,
+  function(.x) paste0(.x, "-", .x + (length(lhs_real) / nbatches) - 1)
+)
 
 # This function writes a batch script to submit a job array.
 make_batch_script <- function(jobname, walltime, partition, mem,
@@ -233,17 +233,19 @@ make_batch_script <- function(jobname, walltime, partition, mem,
 
 }
 
-make_batch_script(
-  jobname = "Sim3-LHS-XGC",
-  walltime = "3:00:00",
-  partition = "batch",
-  mem = "3GB",
-  ncores = 1,
-  array = "1-1000",
-  log_fullpath = "LHS-Sim3_ARRAY-%A_JOB-%J_SIMNO-%4a.log",
-  batchid = 1,
-  nsims = 1,
-  nsteps = 3120,
-  add_arrivals = 1.285,
-  simdir = "~/scratch/sim3"
-)
+for (i in seq_along(arrays)) {
+  make_batch_script(
+    jobname = "Sim3-LHS-XGC",
+    walltime = "3:00:00",
+    partition = "batch",
+    mem = "3GB",
+    ncores = 1,
+    array = arrays[i],
+    log_fullpath = "LHS-Sim3_ARRAY-%A_JOB-%J_SIMNO-%4a.log",
+    batchid = i,
+    nsims = 1,
+    nsteps = 3120,
+    add_arrivals = 1.285,
+    simdir = "~/scratch/sim3"
+  )
+}
