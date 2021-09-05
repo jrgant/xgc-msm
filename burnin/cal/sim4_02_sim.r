@@ -31,15 +31,19 @@ netstats    <- get_est("netstats")
 est         <- get_est("netest")
 epistats    <- get_est("epistats")
 
-lhs_real    <- readRDS(
+input_list <- readRDS(
   here::here("burnin", "cal", "sim4", "sampled_sim4.rds")
 )
+
+selected_input <- input_list[[slurm_array_task_id]]
+
+param_sets <- readRDS(here::here("inst", "cal", "main_analysis_inputs.rds"))
 
 # Set environment variables (parameter sets) based on list position
 # corresponding to SLURM_ARRAY_TASK_ID.
 do.call(
   Sys.setenv,
-  as.list(lhs_real[[slurm_array_task_id]])
+  as.list(param_sets[[selected_input]])
 )
 
 # Check that manually set environment variables (set in sbatch)

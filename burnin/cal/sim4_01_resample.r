@@ -13,7 +13,7 @@ pacman::p_load(
   rlecuyer
 )
 
-inputs <- readRDS(here::here("inst", "cal", "sim2_sel_lhs_limits.rds"))
+inputs <- readRDS(here::here("inst", "cal", "main_analysis_inputs.rds"))
 
 
 # RANDOMLY RESAMPLE FROM SELECTED INPUTS ---------------------------------------
