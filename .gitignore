@@ -48,3 +48,4 @@ dump*.rda
 # ignore graveyard directories
 .graveyard
 .logs
+*.BAK
