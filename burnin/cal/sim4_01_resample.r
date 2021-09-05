@@ -80,7 +80,7 @@ make_batch_script <- function(jobname, walltime, partition, mem,
     paste(  sb, "--mail-user=jrgant@brown.edu"),
     "module load R/4.0.3",
     "cd ~/data/jgantenb/xgcmsm/",
-    "Rscript ./burnin/cal/sim4_02_lhs.r --vanilla",
+    "Rscript ./burnin/cal/sim4_02_sim.r --vanilla",
     sep = "\n"
   )
 
@@ -94,13 +94,13 @@ make_batch_script <- function(jobname, walltime, partition, mem,
 
 for (i in seq_along(arrays)) {
   make_batch_script(
-    jobname = "Sim4-LHS-XGC",
+    jobname = "Sim4-XGC",
     walltime = "3:00:00",
     partition = "batch",
     mem = "3GB",
     ncores = 1,
     array = arrays[i],
-    log_fullpath = "LHS-Sim4_ARRAY-%A_JOB-%J_SIMNO-%4a.log",
+    log_fullpath = "Sim4_ARRAY-%A_JOB-%J_SIMNO-%4a.log",
     batchid = i,
     nsims = 1,
     nsteps = 3120,
