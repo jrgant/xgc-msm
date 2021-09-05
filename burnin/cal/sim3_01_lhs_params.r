@@ -110,11 +110,11 @@ priors <- list(
 
 # CHECK INPUTS AGAINST SIM1 PRIORS  ---------------------------------------------
 
-## sim1_sel_lhs_limits.rds contains the sim2 priors (based on analysis of sim1)
-s2p <- readRDS(here::here("inst/cal/sim1_sel_lhs_limits.rds"))
+## sim2_sel_lhs_limits.rds contains the sim3 priors (based on analysis of sim1)
+s3p <- lhs_new_limits
 
-all(s2p$input %in% sapply(priors, function(.x) .x[[4]])) == TRUE
-s2p[, .N] == length(priors)
+all(s3p$input %in% sapply(priors, function(.x) .x[[4]])) == TRUE
+s3p[, .N] == length(priors)
 
 
 # DRAW LATIN HYPERCUBE ---------------------------------------------------------
