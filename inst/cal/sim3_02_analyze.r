@@ -193,10 +193,24 @@ mase_fitsqt <- lapply(
 
 best_fits10 <- mase[order(mase), simid][1:10]
 
-plot_targets(mase_fitsqt[[1]]) # smallest 5% of mase
-plot_targets(mase_fitsqt[[2]]) # smallest 1% of mase
-plot_targets(mase_fitsqt[[3]]) # smallest 0.25% of mase
-plot_targets(best_fits10) # smallest 10 mases
+gridExtra::grid.arrange(
+             plot_targets(mase_fitsqt[[1]]) +
+             coord_cartesian(ylim = c(0, 1.25)), # smallest 5% of mase
+
+             plot_targets(mase_fitsqt[[2]]) +
+             coord_cartesian(ylim = c(0, 1.25)), # smallest 1% of mase
+
+             plot_targets(mase_fitsqt[[3]]) +
+             coord_cartesian(ylim = c(0, 1.25)), # smallest 0.25% of mase
+
+             plot_targets(best_fits10) +
+             coord_cartesian(ylim = c(0, 1.25)) # smallest 10 mases
+           )
+
+mase[simid %in% mase_fitsqt[[1]], summary(mase)]
+mase[simid %in% mase_fitsqt[[2]], summary(mase)]
+mase[simid %in% mase_fitsqt[[3]], summary(mase)]
+mase[simid %in% best_fits10, summary(mase)]
 
 
 ################################################################################
@@ -225,8 +239,18 @@ input_dist(mase_fitsqt[[1]])
 input_dist(mase_fitsqt[[2]])
 input_dist(mase_fitsqt[[3]])
 
+cor_sel <- cor(
+  dcast(
+    lhsdt[simid %in% mase_fitsqt[[2]]],
+    simid ~ input,
+    value.var = "value"
+  )[, -1]
+)
+
+ggcorrplot(cor_sel)
+
 main_analysis_inputs <- lapply(
-  setNames(best_fits10, paste0("s3_", best_fits10)),
+  setNames(mase_fitsqt[[2]], paste0("s3_", mase_fitsqt[[2]])),
   function(.x) {
     lhs_groups[[as.numeric(.x)]]
   })
