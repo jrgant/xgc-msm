@@ -222,7 +222,7 @@ control <- control_msm(
   # Epidemic simulation options
   transRoute_Kissing      = TRUE,  # FLAG: Toggle kissing transmission
   transRoute_Rimming      = TRUE,  # FLAG: Toggle rimming transmission
-  gcUntreatedRecovDist    = "geom",
+  gcUntreatedRecovDist    = "pois",
   stiScreeningProtocol    = "base",
   skip.check              = TRUE,
   cdcExposureSite_Kissing = FALSE, # FLAG: Kissing considered exposure for CDC protocol?

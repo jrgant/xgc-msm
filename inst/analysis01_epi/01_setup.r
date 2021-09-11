@@ -6,7 +6,7 @@ library(pacman)
 p_load(EpiModelHIV, rlecuyer)
 
 selected_paramsets <-
-  readRDS(here::here("inst", "cal", "analysis_param_sets.rds"))
+  readRDS(here::here("inst", "cal", "main_analysis_inputs.rds"))
 
 an01_path <- here::here("inst", "analysis01_epi")
 

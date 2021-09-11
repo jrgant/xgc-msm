@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J Main-CleanEpi
+#SBATCH -J CleanEpi
 #SBATCH--time=2:00:00
 #SBATCH -p batch
 #SBATCH--mem=150GB
@@ -10,4 +10,4 @@
 module load R/4.0.3
 
 cd ~/data/jgantenb/xgcmsm/
-Rscript ./inst/analysis01_epi/03_main_clean.r --vanilla
+Rscript ./inst/analysis01_epi/sim_clean.r --vanilla
