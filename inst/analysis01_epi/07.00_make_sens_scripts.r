@@ -79,7 +79,7 @@ makescript <- function(x, type = c("kissrim", "actstop")) {
 
   paste0(
     "sbatch -J ", x$jname, " --export=ALL,SIMDIR=~/scratch/", x$jname,
-    paste0(",NSIMS=1,NSTEPS=3380,", pline),
+    paste0(",NSIMS=1,NSTEPS=3380,ARRIVE_RATE_ADD_PER20K=1.285,", pline),
     " 02_main.sh"
   )
 }
