@@ -46,6 +46,20 @@ do.call(
   as.list(param_sets[[selected_input]])
 )
 
+## Check for KISS and RIM rate sensitivity analysis specifications.
+## Reset select environment variables related ALTPARAM-tagged environment variables
+## are specified in sbatch.
+
+envars <- names(Sys.getenv())
+altvars <- envars[envars %like% "ALTPARAM"]
+
+if (length(altvars) > 0) {
+  altvalues <- do.call(Sys.getenv, list(altvars))
+  baseslugs <- stringr::str_remove(names(altvalues), "_ALTPARAM")
+  names(altvalues) <- baseslugs
+  do.call(Sys.setenv, as.list(altvalues))
+}
+
 # Check that manually set environment variables (set in sbatch)
 if (Sys.getenv("SIMDIR") == "") {
   outpath <- "~/scratch/analysis01_epi"
