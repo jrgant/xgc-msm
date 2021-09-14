@@ -275,7 +275,7 @@ epi[, ir100.pop := incid / num * 5200][]
 race.ir100.pop <- paste0("ir100.pop", rdxlabs)[-1]
 
 epi[, (race.ir100.pop) := lapply(1:4, function(x) {
-  get(paste0("incid", rdxlabs[x])) / get(paste0("num", rdxlabs[x]))
+  get(paste0("incid", rdxlabs[x])) / get(paste0("num", rdxlabs[x])) * 5200
 })][]
 
 
