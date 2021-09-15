@@ -3,6 +3,7 @@
 ################################################################################
 
 library(data.table)
+library(stringr)
 
 rates <- c(5, 10)
 probs <- c(0.5, 1)
@@ -38,17 +39,28 @@ rimlabs <- c(
   "RIM_PROB_ONETIME_ALTPARAM"
 )
 
-specit <- function(index, data) {
+specit <- function(index, data, ids) {
   vec <- data[index, ]
   capnames <- toupper(names(vec))
   jobnames <- paste(capnames, vec, sep = "_", collapse = "_")
-  fullnames <- paste0("SENS_", jobnames)
-  out <- list(jname = fullnames, params = vec)
+  fullnames <- paste0("SENS_07.", sprintf("%02d", ids[index]), "_", jobnames)
+  out <- list(jname = fullnames, params = vec, id = ids[index])
   out
 }
 
-kissx_specs <- lapply(seq_len(nrow(kissX_rim0)), specit, data = kissX_rim0)
-rimx_specs <- lapply(seq_len(nrow(rimX_kiss0)), specit, data = rimX_kiss0)
+kissx_specs <- lapply(
+  seq_len(nrow(kissX_rim0)),
+  specit,
+  data = kissX_rim0,
+  ids = seq_len(nrow(kissX_rim0))
+)
+
+rimx_specs <- lapply(
+  seq_len(nrow(rimX_kiss0)),
+  specit,
+  data = rimX_kiss0,
+  ids = nrow(kissX_rim0) + seq_len(nrow(rimX_kiss0))
+)
 
 
 ################################################################################
@@ -56,12 +68,20 @@ rimx_specs <- lapply(seq_len(nrow(rimX_kiss0)), specit, data = rimX_kiss0)
 ################################################################################
 
 actstop <- c(0.25, 0.5, 0.75)
-actstop_names <- paste0("SENS_ActStopper_", format(actstop, digits = 2))
+
+actstop_ids <-
+  sum(c(nrow(kissX_rim0), nrow(rimX_kiss0))) + seq_len(length(actstop))
+
+actstop_names <- paste0(
+  "SENS_07.", sprintf("%02d", actstop_ids),
+  "_ActStopper_", format(actstop, digits = 2)
+)
 
 actstop_specs <- lapply(1:3, function(.x) {
   list(
     jname = actstop_names[.x],
-    params = actstop[.x]
+    params = actstop[.x],
+    ids = actstop_ids[.x]
   )
 })
 
@@ -78,15 +98,19 @@ makescript <- function(x, type = c("kissrim", "actstop")) {
   }
 
   paste0(
-    "sbatch -J ", x$jname, " --export=ALL,SIMDIR=~/scratch/", x$jname,
+    "sbatch -J ", x$jname,
+    " -o ", str_extract(x$jname, "SENS_07\\.[0-9]{2}"),
+    "_ARRAY-%A_JOB-%J_SIMNO-%4a.log",
+    " --export=ALL,SIMDIR=~/scratch/", x$jname,
     paste0(",NSIMS=1,NSTEPS=3380,ARRIVE_RATE_ADD_PER20K=1.285,", pline),
     " 02_main.sh"
   )
 }
 
 jobs <- c(
-  sapply(kissx_specs, makescript, type = "kissrim"),
-  sapply(rimx_specs, makescript, type = "kissrim")
+  sapply(kissx_specs,   makescript,  type = "kissrim"),
+  sapply(rimx_specs,    makescript,  type = "kissrim"),
+  sapply(actstop_specs, makescript,  type = "actstop")
 )
 
 for (i in seq_len(length(jobs))) {
@@ -95,24 +119,9 @@ for (i in seq_len(length(jobs))) {
     here::here(
       "inst", "analysis01_epi",
       paste0(
-        "07.", sprintf("%02d", i), "_",
-        stringr::str_extract(jobs[[i]], "(?<=J ).*(?= \\-)"), ".sh"
-      )
-    )
-  )
-}
-
-actindex <- c((length(jobs) + 1) : (length(jobs) + 3))
-ajobs <- sapply(actstop_specs, makescript, type = "actstop")
-
-for (i in seq_len(length(ajobs))) {
-  writeLines(
-    ajobs[[i]],
-    here::here(
-      "inst", "analysis01_epi",
-      paste0(
-        "07.", sprintf("%02d", actindex[i]), "_",
-        stringr::str_extract(ajobs[[i]], "(?<=J ).*(?= \\-)"), ".sh"
+        str_extract(jobs[[i]], "(?<=J SENS_)07\\.[0-9]{2}(?=_)"), "_SENS_",
+        str_extract(jobs[[i]], "(?<=J SENS_07\\.[0-9]{2}_).*(?= \\-o)"),
+        ".sh"
       )
     )
   )
