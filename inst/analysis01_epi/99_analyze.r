@@ -214,3 +214,155 @@ sresult_gcpop[, .(
   iqr = paste0(" [", q25, ", ", q75, "]"),
   si95 = paste0("(", si025, ", ", si975, ")")
 ), by = .(analysis, variable)]
+
+
+getnames <- function(pattern, dt) {
+  names(dt)[names(dt) %like% pattern]
+}
+
+
+################################################################################
+## GC INCIDENCE BY RACE/ETHNICITY ##
+################################################################################
+
+## Bind the weekly datasets so we can calculate incidence rates by
+## rac/ethnicity and age group.
+simb_at <- rbindlist(
+  list(
+    Main = smain,
+    Poisson = spois
+  ),
+  idcol = "analysis"
+)
+
+## Variable lists
+idvars <- c("analysis", "simid", "at")
+
+rethvars <- c(
+  idvars,
+  getnames("(incid.[B,H,O,W].[r,u,p]gc)|(^num.[B,H,O,W])$", smain)
+)
+
+simb_at_reth <- simb_at[, ..rethvars]
+
+reth_incid_names <- getnames("incid.[B,H,O,W]", simb_at_reth)
+reth_incnames <- str_replace(reth_incid_names, "incid", "ir100.pop")
+
+calc_gc_ir100 <- function(incid, num) incid / num * 5200
+
+simb_at_reth[, ":=" (
+  ir100.pop.B.rgc = calc_gc_ir100(incid.B.rgc, num.B),
+  ir100.pop.H.rgc = calc_gc_ir100(incid.H.rgc, num.H),
+  ir100.pop.O.rgc = calc_gc_ir100(incid.O.rgc, num.O),
+  ir100.pop.W.rgc = calc_gc_ir100(incid.W.rgc, num.W),
+  ir100.pop.B.ugc = calc_gc_ir100(incid.B.ugc, num.B),
+  ir100.pop.H.ugc = calc_gc_ir100(incid.H.ugc, num.H),
+  ir100.pop.O.ugc = calc_gc_ir100(incid.O.ugc, num.O),
+  ir100.pop.W.ugc = calc_gc_ir100(incid.W.ugc, num.W),
+  ir100.pop.B.pgc = calc_gc_ir100(incid.B.pgc, num.B),
+  ir100.pop.H.pgc = calc_gc_ir100(incid.H.pgc, num.H),
+  ir100.pop.O.pgc = calc_gc_ir100(incid.O.pgc, num.O),
+  ir100.pop.W.pgc = calc_gc_ir100(incid.W.pgc, num.W)
+)][]
+
+reths <- simb_at_reth[,
+  lapply(.SD, mean),
+  .SDcols = reth_incnames,
+  by = .(analysis, simid)
+]
+
+rethsm <- melt(reths, id.vars = c("analysis", "simid"))
+
+rethsum <- rethsm[, .(
+    median = median(value),
+    mean = mean(value),
+    sd = sd(value),
+    si025 = quantile(value, 0.025),
+    si975 = quantile(value, 0.975),
+    q25 = quantile(value, 0.25),
+    q75 = quantile(value, 0.75)
+  ), keyby = .(analysis, variable)]
+
+rethsm[, ":=" (
+  anatsite = str_extract(variable, "[r,u,p]gc$"),
+  race = str_extract(variable, "[B,H,O,W]")
+)][]
+
+rethsm %>%
+  ggplot(aes(x = race, y = value)) +
+  geom_point(
+    alpha = 0.1,
+    position = position_jitter(width = 0.2)
+  ) +
+  geom_boxplot(
+    width = 0.6,
+    alpha = 0.6,
+    outlier.alpha = 0
+  ) +
+  facet_grid(analysis ~ anatsite) +
+  theme_few()
+
+
+################################################################################
+## GC INCIDENCE BY AGE GROUP ##
+################################################################################
+
+simb_at_age <- simb_at[, ..agevars]
+
+age_incid_names <- getnames("incid.age", simb_at_age)
+age_incnames <- str_replace(age_incid_names, "incid", "ir100.pop")
+
+simb_at_age[, ":=" (
+  ir100.pop.age1.rgc = calc_gc_ir100(incid.age1.rgc, num.age1),
+  ir100.pop.age2.rgc = calc_gc_ir100(incid.age2.rgc, num.age2),
+  ir100.pop.age3.rgc = calc_gc_ir100(incid.age3.rgc, num.age3),
+  ir100.pop.age4.rgc = calc_gc_ir100(incid.age4.rgc, num.age4),
+  ir100.pop.age5.rgc = calc_gc_ir100(incid.age5.rgc, num.age5),
+  ir100.pop.age1.ugc = calc_gc_ir100(incid.age1.ugc, num.age1),
+  ir100.pop.age2.ugc = calc_gc_ir100(incid.age2.ugc, num.age2),
+  ir100.pop.age3.ugc = calc_gc_ir100(incid.age3.ugc, num.age3),
+  ir100.pop.age4.ugc = calc_gc_ir100(incid.age4.ugc, num.age4),
+  ir100.pop.age5.ugc = calc_gc_ir100(incid.age5.ugc, num.age5),
+  ir100.pop.age1.pgc = calc_gc_ir100(incid.age1.pgc, num.age1),
+  ir100.pop.age2.pgc = calc_gc_ir100(incid.age2.pgc, num.age2),
+  ir100.pop.age3.pgc = calc_gc_ir100(incid.age3.pgc, num.age3),
+  ir100.pop.age4.pgc = calc_gc_ir100(incid.age4.pgc, num.age4),
+  ir100.pop.age5.pgc = calc_gc_ir100(incid.age5.pgc, num.age5)
+)][]
+
+ages <- simb_at_age[,
+  lapply(.SD, mean),
+  .SDcols = age_incnames,
+  by = .(analysis, simid)
+]
+
+agesm <- melt(ages, id.vars = c("analysis", "simid"))
+
+agesum <- agesm[, .(
+    median = median(value),
+    mean = mean(value),
+    sd = sd(value),
+    si025 = quantile(value, 0.025),
+    si975 = quantile(value, 0.975),
+    q25 = quantile(value, 0.25),
+    q75 = quantile(value, 0.75)
+  ), keyby = .(analysis, variable)]
+
+agesm[, ":=" (
+  anatsite = str_extract(variable, "[r,u,p]gc$"),
+  agegrp = str_extract(variable, "age[1-5]")
+)][]
+
+agesm %>%
+  ggplot(aes(x = agegrp, y = value)) +
+  geom_point(
+    alpha = 0.1,
+    position = position_jitter(width = 0.2)
+  ) +
+  geom_boxplot(
+    width = 0.6,
+    alpha = 0.6,
+    outlier.alpha = 0
+  ) +
+  facet_grid(analysis ~ anatsite) +
+  theme_few()
