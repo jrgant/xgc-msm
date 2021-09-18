@@ -43,7 +43,7 @@ epi <- foreach(i = seq_along(cs), .combine = rbind) %dopar% {
   cde <- as.data.table(cd$epi)
   cde[, simid := i]
   cde[, at := 1:.N]
-  cde[at > 3021] # keep last 5 years of 60-year burnin
+  cde[at > 3120] # keep last 5 years after a 60-year burnin
 }
 
 an01_path <- here::here("inst", "analysis01_epi")
