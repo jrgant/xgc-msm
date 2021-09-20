@@ -54,10 +54,18 @@ envars <- names(Sys.getenv())
 altvars <- envars[envars %like% "ALTPARAM"]
 
 if (length(altvars) > 0) {
-  altvalues <- do.call(Sys.getenv, list(altvars))
-  baseslugs <- stringr::str_remove(names(altvalues), "_ALTPARAM")
-  names(altvalues) <- baseslugs
-  do.call(Sys.setenv, as.list(altvalues))
+  if (length(altvars) == 1) {
+    altvalues <- Sys.getenv(altvars)
+    baseslug <- stringr::str_remove(altvars, "_ALTPARAM")
+    altlist <- list(altvalues)
+    names(altlist) <- baseslug
+    do.call(Sys.setenv, altlist)
+  } else {
+    altvalues <- do.call(Sys.getenv, list(altvars))
+    baseslugs <- stringr::str_remove(names(altvalues), "_ALTPARAM")
+    names(altvalues) <- baseslugs
+    do.call(Sys.setenv, as.list(altvalues))
+  }
 }
 
 # Check that manually set environment variables (set in sbatch)
