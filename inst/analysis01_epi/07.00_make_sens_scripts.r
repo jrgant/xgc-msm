@@ -126,3 +126,17 @@ for (i in seq_len(length(jobs))) {
     )
   )
 }
+
+
+################################################################################
+## SAVE SPECS ##
+################################################################################
+
+quickdt <- function(data) rbindlist(lapply(data, as.data.table))
+
+speclist <- list(
+  kissrim = Reduce(rbind, list(quickdt(kissx_specs), quickdt(rimx_specs))),
+  actstop = quickdt(actstop_specs)
+)
+
+saveRDS(speclist, here::here("inst/analysis01_epi", "specs_SENS07.rds"))
