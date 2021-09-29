@@ -11,4 +11,4 @@
 #SBATCH --mail-user=jrgant@brown.edu
 module load R/4.0.3
 cd ~/data/jgantenb/xgcmsm/
-Rscript ./inst/analysis02_epi/02_main.r --vanilla
+Rscript ./inst/analysis02_screening/02.00_main.r --vanilla
