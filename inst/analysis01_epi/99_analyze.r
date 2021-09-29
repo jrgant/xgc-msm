@@ -137,6 +137,9 @@ epim[, ":=" (
 epim[, agegrp := str_replace(agegrp, "\\.", "")]
 epim[, .N, agegrp]
 
+## replace NA/NaN with 0
+epim[is.na(value), value := 0]
+
 sresult <- epim[, .(
   median = median(value),
   mean = mean(value),
@@ -153,7 +156,7 @@ sresult_gcpop <-
 sumquants <- c("median", "mean", "sd", "si025", "si975", "q25", "q75")
 
 sresult_gcpop[,
-  (sumquants) := lapply(.SD, round, digits = 2),
+  (sumquants) := lapply(.SD, round, digits = 3),
   .SDcols = sumquants
   ]
 
