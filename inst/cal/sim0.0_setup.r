@@ -71,14 +71,14 @@ cat("Figures are being saved to:\n", figpath, "\n")
 
 ## Helper function to save plots.
 ## Just a thin wrapper around ggsave() with some dimension presets
-psave <- function(f, p, w = 12, h = 25, caldir = figpath) {
+psave <- function(f, p, w = 14, h = 14, ext = ".png", caldir = figpath) {
   # f = filename (no extension)
   # p = plot object
   # w = width
   # h = height
   # caldir = directory in which to save calibration figures
   ggsave(
-    here::here(caldir, paste0(f, ".pdf")),
+    here::here(caldir, paste0(f, ext)),
     p, width = w, height = h, units = "in"
   )
 }

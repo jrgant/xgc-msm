@@ -77,7 +77,9 @@ drop_static <- c(
 io_joinfil <- io_join[!param %in% drop_static]
 
 ## Function to create scatterplots of inputs vs. outputs and correlations.
-io_scatter <- function(outcome, ylab = NULL, data = io_joinfil) {
+io_scatter <- function(outcome, ylab = NULL, data = io_joinfil,
+                       base_font_size = 7, axis_title_font_size = 14,
+                       caption_font_size = 12, numcols = 9) {
 
   vars <- data[, unique(param)]
   cors <- lapply(
@@ -111,7 +113,7 @@ io_scatter <- function(outcome, ylab = NULL, data = io_joinfil) {
         color = "black",
         size = 2
       ) +
-      facet_wrap(~param, scales = "free_x", ncol = 4) +
+      facet_wrap(~param, scales = "free_x", ncol = numcols) +
       scale_color_scico(
         name = "Spearman correlation",
         limits = c(-1, 1),
@@ -127,15 +129,21 @@ io_scatter <- function(outcome, ylab = NULL, data = io_joinfil) {
           format(data[, length(unique(simid))], big.mark = ",")
         )
       ) +
-    theme_base(base_size = 11) +
+    theme_base(base_size = base_font_size) +
     theme(
-      axis.title = element_text(size = 15, face = "bold"),
-      plot.caption = element_text(size = 12, hjust = 0, face = "italic"),
+      axis.title = element_text(size = axis_title_font_size, face = "bold"),
+      plot.caption = element_text(
+        size = caption_font_size,
+        hjust = 0,
+        face = "italic"
+      ),
       plot.margin = margin(1, 1, 1, 1, "cm"),
       legend.position = "top",
       legend.spacing.x = unit(1, "cm"),
       legend.key.width = unit(1, "cm"),
-      legend.title = element_text(face = "bold", vjust = 1)
+      legend.title = element_text(
+        face = "bold", vjust = 1, size = axis_title_font_size
+      )
     )
 
   return(plotout)
@@ -161,28 +169,28 @@ gcpp_labs <- paste0(
 )
 
 ## HIV prevalence
-psave("output_i.prev", io_scatter("i.prev", hivp_labs[1]))
+psave("output_i.prev",   io_scatter("i.prev", hivp_labs[1]))
 psave("output_i.prev.B", io_scatter("i.prev.B", hivp_labs[2]))
 psave("output_i.prev.H", io_scatter("i.prev.H", hivp_labs[3]))
 psave("output_i.prev.O", io_scatter("i.prev.O", hivp_labs[4]))
 psave("output_i.prev.W", io_scatter("i.prev.W", hivp_labs[5]))
 
 ## HIV diagnosis prevalence among infected
-psave("output_i.prev.dx.inf", io_scatter("i.prev.dx.inf",   hivd_labs[1]))
+psave("output_i.prev.dx.inf",   io_scatter("i.prev.dx.inf",   hivd_labs[1]))
 psave("output_i.prev.dx.inf.B", io_scatter("i.prev.dx.inf.B", hivd_labs[2]))
 psave("output_i.prev.dx.inf.H", io_scatter("i.prev.dx.inf.H", hivd_labs[3]))
 psave("output_i.prev.dx.inf.O", io_scatter("i.prev.dx.inf.O", hivd_labs[4]))
 psave("output_i.prev.dx.inf.W", io_scatter("i.prev.dx.inf.W", hivd_labs[5]))
 
 ## HIV incidence rate
-psave("output_ir100.pop", io_scatter("ir100.pop",   hivi_labs[1]))
+psave("output_ir100.pop",   io_scatter("ir100.pop",   hivi_labs[1]))
 psave("output_ir100.pop.B", io_scatter("ir100.pop.B", hivi_labs[2]))
 psave("output_ir100.pop.H", io_scatter("ir100.pop.H", hivi_labs[3]))
 psave("output_ir100.pop.O", io_scatter("ir100.pop.O", hivi_labs[4]))
 psave("output_ir100.pop.W", io_scatter("ir100.pop.W", hivi_labs[5]))
 
 ## HIV viral suppression among diagnosed (by race/ethnicity)
-psave("output_cc.vsupp", io_scatter("cc.vsupp",   hivv_labs[1]))
+psave("output_cc.vsupp",   io_scatter("cc.vsupp",   hivv_labs[1]))
 psave("output_cc.vsupp.B", io_scatter("cc.vsupp.B", hivv_labs[2]))
 psave("output_cc.vsupp.H", io_scatter("cc.vsupp.H", hivv_labs[3]))
 psave("output_cc.vsupp.O", io_scatter("cc.vsupp.O", hivv_labs[4]))
@@ -195,22 +203,10 @@ psave("output_cc.vsupp.age3", io_scatter("cc.vsupp", "VLS, Age 3"))
 psave("output_cc.vsupp.age4", io_scatter("cc.vsupp", "VLS, Age 4"))
 psave("output_cc.vsupp.age5", io_scatter("cc.vsupp", "VLS, Age 5"))
 
-## ## GC prevalence
-## psave("output_prev.gc", io_scatter("prev.gc",  gcpr_labs[1]))
-## psave("output_prev.rgc", io_scatter("prev.rgc", gcpr_labs[2]))
-## psave("output_prev.ugc", io_scatter("prev.ugc", gcpr_labs[3]))
-## psave("output_prev.pgc", io_scatter("prev.pgc", gcpr_labs[4]))
-
-## ## GC incidence rate, by anatomic site
-## psave("output_ir100.gc", io_scatter("ir100.gc",  gcin_labs[1]))
-## psave("output_ir100.rgc", io_scatter("ir100.rgc", gcin_labs[2]))
-## psave("output_ir100.ugc", io_scatter("ir100.ugc", gcin_labs[3]))
-## psave("output_ir100.pgc", io_scatter("ir100.pgc", gcin_labs[4]))
-
 ## Proportion tested for GC in clinic, by anatomic site
-psave("output_prop.rect.tested", io_scatter("prop.rect.tested",  gcpt_labs[2]))
+psave("output_prop.rect.tested",  io_scatter("prop.rect.tested",  gcpt_labs[2]))
 psave("output_prop.ureth.tested", io_scatter("prop.ureth.tested", gcpt_labs[3]))
-psave("output_prop.phar.tested", io_scatter("prop.phar.tested",  gcpt_labs[4]))
+psave("output_prop.phar.tested",  io_scatter("prop.phar.tested",  gcpt_labs[4]))
 
 ## Proportion GC-positive among tested in clinic, by anatomic site
 psave("output_prob.rGC.tested", io_scatter("prob.rGC.tested", gcpp_labs[2]))
@@ -218,7 +214,7 @@ psave("output_prob.uGC.tested", io_scatter("prob.uGC.tested", gcpp_labs[3]))
 psave("output_prob.pGC.tested", io_scatter("prob.pGC.tested", gcpp_labs[4]))
 
 ## Proportion eligible for PrEP on PrEP
-psave("output_prepCov", io_scatter("prepCov", prep_labs[1]))
+psave("output_prepCov",   io_scatter("prepCov", prep_labs[1]))
 psave("output_prepCov.B", io_scatter("prepCov.B", prep_labs[2]))
 psave("output_prepCov.H", io_scatter("prepCov.H", prep_labs[3]))
 psave("output_prepCov.O", io_scatter("prepCov.O", prep_labs[4]))
