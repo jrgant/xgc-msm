@@ -241,14 +241,69 @@ input_dist(mase_fitsqt[[3]])
 
 cor_sel <- cor(
   dcast(
-    lhsdt[simid %in% mase_fitsqt[[2]]],
+    lhsdt[simid %in% mase_fitsqt[[2]] &
+          !(input %like% "HIV_RX_HALT|SCALAR_(AI|OI)|HIV_TRANS_PROB_WHITE")],
     simid ~ input,
     value.var = "value"
-  )[, -1]
+  )[, -1],
+  method = "spearman"
 )
 
-ggcorrplot(cor_sel)
+ggcorrplot(cor_sel, type = "upper")
 
+cordat <- as.data.table(cor_sel, keep.rownames = TRUE)
+names(cordat)
+
+cordatl <- melt(cordat, id.vars = "rn", value.name = "spearman")
+
+## create coarse variable groups (cvg) to split up plots for readability
+## identify variables using regular expressions
+
+cvg <- list(
+  stibehave     = "ACT_STOPPER|RIM|KISS",
+  clingc_phar   = "PHAR.*(DURAT|INFPR|GC_SYMPT_PROB)",
+  clingc_rect   = "RECT.*(DURAT|INFPR|GC_SYMPT_PROB)",
+  clingc_ureth  = "URETH.*(DURAT|INFPR|GC_SYMPT_PROB)",
+  stitest_phar  = "^PHAR.*STITEST|PGC_RR",
+  stitest_rect  = "^RECT.*STITEST|RGC_RR",
+  stitest_ureth = "^URETH.*STITEST|UGC_SYMPT",
+  transpath     = "((R|P|U)2)|CONDOM_EFF_GC",
+  hivlate       = "HIV_LATE",
+  hivart        = "HIV_RX",
+  hivtrans      = "HIV_TRANS",
+  prep          = "PREP"
+)
+
+cortiles <- function(subpattern, numrows = 1) {
+  cordatl[rn != variable & rn %like% subpattern] %>%
+    ggplot(aes(y = variable, x = factor(1))) +
+    geom_tile(
+      aes(fill = spearman),
+      color = "white",
+      size = 0,
+      width = 0.75,
+      height = 0.9
+    ) +
+    facet_wrap(~rn, nrow = numrows) +
+    scale_fill_scico(name = "Spearman correlation", palette = "vikO") +
+    labs(
+      x = "",
+      caption = "Correlations between input parameters among selected parameter sets."
+    ) +
+    theme(
+      panel.spacing = unit(0, "in"),
+      panel.grid.major.y = element_line(color = "black", size = 0.1),
+      axis.ticks = element_blank(),
+      axis.text.x = element_blank(),
+      legend.position = "top",
+      legend.key.width = unit(2, "cm"),
+      legend.title = element_text(vjust = 1),
+      plot.caption = element_text(face = "italic", size = 28)
+    )
+}
+
+
+## Save main analysis inputs
 main_analysis_inputs <- lapply(
   setNames(mase_fitsqt[[2]], paste0("s3_", mase_fitsqt[[2]])),
   function(.x) {
@@ -277,3 +332,19 @@ lapply(
     invisible()
   }
 )
+
+## Save correlation plots
+plabs <- paste0("calibrated_corr_", names(cvg))
+
+psave(plabs[1],   cortiles(cvg$stibehave),      w = 25, h = 20)
+psave(plabs[2],   cortiles(cvg$clingc_phar),    w = 16, h = 20)
+psave(plabs[3],   cortiles(cvg$clingc_rect),    w = 16, h = 20)
+psave(plabs[4],   cortiles(cvg$clingc_ureth),   w = 16, h = 20)
+psave(plabs[5],   cortiles(cvg$stitest_phar),   w = 20, h = 20)
+psave(plabs[6],   cortiles(cvg$stitest_rect),   w = 20, h = 20)
+psave(plabs[7],   cortiles(cvg$stitest_ureth),  w = 20, h = 20)
+psave(plabs[8],   cortiles(cvg$transpath),      w = 30, h = 20)
+psave(plabs[9],   cortiles(cvg$hivlate),        w = 25, h = 20)
+psave(plabs[10],  cortiles(cvg$hivart),         w = 40, h = 20)
+psave(plabs[11],  cortiles(cvg$hivtrans),       w = 35, h = 20)
+psave(plabs[12],  cortiles(cvg$prep),           w = 25, h = 20)
