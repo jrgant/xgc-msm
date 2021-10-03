@@ -9,7 +9,7 @@ library(lhs)
 rates <- c(5, 10)
 probs <- c(0.5, 1)
 
-selparams <- readRDS("inst/cal/main_analysis_inputs.rds")
+selparams <- readRDS(here::here("inst/cal/main_analysis_inputs.rds"))
 
 pard <- rbindlist(
   lapply(selparams, as.data.table, keep.rownames = T),
@@ -130,6 +130,12 @@ makescript <- function(x, type = c("prep", "sympt"), stiscreen) {
 
   currscreen <- screen_specs[[stiscreen]]
 
+  bfile <- paste0(names(match.arg(
+    stiscreen,
+    c("02.01" = "sti_base", "02.02" = "sti_symp", "02.03" = "sti_cdc1",
+      "02.04" = "sti_cdc2.sh", "02.05" = "sti_univ")
+  )), "_", stiscreen, ".sh")
+
   paste0(
     "sbatch -J ", paste0(x$jname, "_SCREENTYPE_", toupper(stiscreen)),
     " -o ", str_extract(x$jname, "SENS_03\\.[0-9]{2}"),
@@ -139,7 +145,7 @@ makescript <- function(x, type = c("prep", "sympt"), stiscreen) {
     ",STI_SCREEN_TYPE=", currscreen$scenario,
     ",STI_SCREEN_KISS_EXPOSURE=", currscreen$kiss_exposure,
     paste0(",NSIMS=1,NSTEPS=3380,ARRIVE_RATE_ADD_PER20K=1.285,", pline),
-    " 02_main.sh"
+    " ", bfile
   )
 }
 
