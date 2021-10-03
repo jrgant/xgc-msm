@@ -83,6 +83,17 @@ sprintf("Output will be saved in %s", outpath)
 ## in numeric format.
 fmt_getenv <- function(x) as.numeric(Sys.getenv(x))
 
+## Set PrEP scale
+## We want this to work with the main analyses already run, so
+## if no alternative scalar for PrEP discontinuation is detected,
+## set the scalar to 1.
+if (Sys.getenv("PREP_SCALE_ALTPARAM") == "") {
+  Sys.setenv("PREP_SCALE_ALTPARAM" = 1)
+}
+
+prep_scale <- fmt_getenv("PREP_SCALE_ALTPARAM")
+
+
 param <- param_msm(
   # external objects
   netstats          = netstats,
@@ -192,10 +203,10 @@ param <- param_msm(
   circ.prob           = netstats$inputs$circ.probs,
   # PrEP parameters
   prep.discont.rate   = c(
-    fmt_getenv("PREP_DISCONT_RATE_BLACK"),
-    fmt_getenv("PREP_DISCONT_RATE_HISP"),
-    fmt_getenv("PREP_DISCONT_RATE_OTHER"),
-    fmt_getenv("PREP_DISCONT_RATE_WHITE")
+    fmt_getenv("PREP_DISCONT_RATE_BLACK") * prep_scale,
+    fmt_getenv("PREP_DISCONT_RATE_HISP") * prep_scale,
+    fmt_getenv("PREP_DISCONT_RATE_OTHER") * prep_scale,
+    fmt_getenv("PREP_DISCONT_RATE_WHITE") * prep_scale
   ),
   # act stopper prob
   act.stopper.prob    = fmt_getenv("ACT_STOPPER_PROB"),
