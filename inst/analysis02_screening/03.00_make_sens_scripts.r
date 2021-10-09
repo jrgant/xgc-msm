@@ -6,9 +6,6 @@ library(data.table)
 library(stringr)
 library(lhs)
 
-rates <- c(5, 10)
-probs <- c(0.5, 1)
-
 selparams <- readRDS(here::here("inst/cal/main_analysis_inputs.rds"))
 
 pard <- rbindlist(
@@ -52,7 +49,7 @@ gcsympt_ins <- pardlims[input %like% "GC_SYMPT_PROB"]
 set.seed(7348938)
 
 lhs_sample <- as.data.table(
-  geneticLHS(n = 10, k = 3, pop = 1000, gen = 100, pMut = 0.1)
+  geneticLHS(n = 5, k = 3, pop = 10000, gen = 1000, pMut = 0.1)
 )[, id := 1:.N]
 
 names(lhs_sample)[1:3] <- gcsympt_ins$input
@@ -77,7 +74,8 @@ plot_ly(
   x = ~RECT_GC_SYMPT_PROB,
   y = ~URETH_GC_SYMPT_PROB,
   z = ~PHAR_GC_SYMPT_PROB,
-  type = "scatter3d"
+  type = "scatter3d",
+  mode = "markers+text"
 )
 
 sympt_alt <- dcast(lhsmatch, id ~ input, value.var = "value")
@@ -140,6 +138,7 @@ makescript <- function(x, type = c("prep", "sympt"), stiscreen) {
     "sbatch -J ", paste0(x$jname, "_SCREENTYPE_", toupper(stiscreen)),
     " -o ", str_extract(x$jname, "SENS_03\\.[0-9]{2}"),
     "_ARRAY-%A_JOB-%J_SIMNO-%4a.log",
+    " -t 5:00:00 ",
     " --export=ALL,SIMDIR=~/scratch/",
     paste0(x$jname, "_SCREEN_", toupper(stiscreen)),
     ",STI_SCREEN_TYPE=", currscreen$scenario,
