@@ -140,6 +140,7 @@ makescript <- function(x, type = c("prep", "sympt"), stiscreen) {
     "sbatch -J ", paste0(x$jname, "_SCREENTYPE_", toupper(stiscreen)),
     " -o ", str_extract(x$jname, "SENS_03\\.[0-9]{2}"),
     "_ARRAY-%A_JOB-%J_SIMNO-%4a.log",
+    " -t 5:00:00",
     " --export=ALL,SIMDIR=~/scratch/",
     paste0(x$jname, "_SCREEN_", toupper(stiscreen)),
     ",STI_SCREEN_TYPE=", currscreen$scenario,
