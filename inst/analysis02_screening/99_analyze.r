@@ -246,7 +246,7 @@ epim <- suppressWarnings(
 )
 
 ## create grouping variables
-epim[, ":="(
+epim[, ":=" (
   anatsite = str_extract(variable, "[r,u,p]gc$"),
   race = str_extract(variable, "[B,H,O,W]"),
   agegrp = str_extract(variable, "age(\\.[1-5]|[1-5])")
