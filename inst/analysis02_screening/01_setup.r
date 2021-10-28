@@ -64,8 +64,9 @@ saveRDS(
 # This function writes a batch script to submit a job array.
 make_batch_script <- function(jobname, walltime, partition, mem,
                               ncores, array, log_fullpath, batchid,
-                              nsims, nsteps, add_arrivals, sti_screen_type,
-                              kiss_exposure, starttime, isburnin, simdir) {
+                              nsims, nsteps, add_arrivals, runtype,
+                              sti_screen_type, kiss_exposure, starttime,
+                              isburnin, simdir) {
 
   sb <- "#SBATCH"
 
@@ -83,6 +84,7 @@ make_batch_script <- function(jobname, walltime, partition, mem,
       " --export=ALL,NSIMS=", nsims,
       ",NSTEPS=", nsteps,
       ",ARRIVE_RATE_ADD_PER20K=", add_arrivals,
+      ",EPI_RUN_TYPE=", runtype,
       ",STI_SCREEN_TYPE=", sti_screen_type,
       ",STI_SCREEN_KISS_EXPOSURE=", kiss_exposure,
       ",STARTTIME=", starttime,
@@ -113,36 +115,42 @@ make_batch_script <- function(jobname, walltime, partition, mem,
 ##       Set to FALSE by default.
 screen_specs_main <- list(
   sti_burnin = data.table(
-    scenario      = "burnin",
+    runtype       = "burnin",
+    scenario      = "base",
     kiss_exposure = "FALSE",
     starttime     = 1,
     num_steps     = 52 * 60
   ),
   sti_base = data.table(
+    runtype       = "scenario",
     scenario      = "base",
     kiss_exposure = "FALSE",
     starttime     = 3121,
     num_steps     = 52 * 5
   ),
   sti_symp = data.table(
+    runtype       = "scenario",
     scenario      = "symptomatic",
     kiss_exposure = "FALSE",
     starttime     = 3121,
     num_steps     = 52 * 5
   ),
   sti_cdc1 = data.table(
+    runtype       = "scenario",
     scenario      = "cdc",
     kiss_exposure = "FALSE",
     starttime     = 3121,
     num_steps     = 52 * 5
   ),
   sti_cdc2 = data.table(
+    runtype       = "scenario",
     scenario      = "cdc",
     kiss_exposure = "TRUE",
     starttime     = 3121,
     num_steps     = 52 * 5
   ),
   sti_univ = data.table(
+    runtype       = "scenario",
     scenario      = "universal",
     kiss_exposure = "FALSE",
     starttime     = 3121,
@@ -167,6 +175,7 @@ lapply(names(screen_specs_main), function(.x) {
     nsims = 1,
     nsteps = tmp[, num_steps],
     add_arrivals = 1.285,
+    runtype = tmp[, runtype],
     sti_screen_type = tmp[, scenario],
     kiss_exposure = tmp[, kiss_exposure],
     starttime = tmp[, starttime],
@@ -243,7 +252,7 @@ sympt_labs <- paste0(names(sympt_alt)[-1], "_ALTPARAM")
 
 ## Specify sensitivity analysis specs.
 specit <- function(index, data,
-                   startnum = length(prep_ids) + length(screen_specs_main)) {
+                   startnum = length(prep_ids) + 1) {
 
   vec <- unlist(data[index, -c("id")])
   pnames <- str_extract(names(vec), "[A-Z]+(?=_)")
@@ -279,16 +288,6 @@ make_sens_script <- function(x, type = c("prep", "sympt"), stiscreen) {
   }
 
   currscreen <- screen_specs_main[[stiscreen]]
-
-  ## bfile <- paste0(names(match.arg(
-  ##   stiscreen,
-  ##   c("02.03" = "sti_base",
-  ##     "02.04" = "sti_symp",
-  ##     "02.05" = "sti_cdc1",
-  ##     "02.06" = "sti_cdc2.sh",
-  ##     "02.07" = "sti_univ")
-  ## )), "_", stiscreen, ".sh")
-
   bfile <- paste0("02.01_", stiscreen, ".sh")
 
   paste0(
@@ -298,6 +297,7 @@ make_sens_script <- function(x, type = c("prep", "sympt"), stiscreen) {
     " -t 5:00:00 ",
     " --export=ALL,SIMDIR=~/scratch/",
     paste0(x$jname, "_SCREEN_", toupper(stiscreen)),
+    ",EPI_RUN_TYPE=", currscreen$runtype,
     ",STI_SCREEN_TYPE=", currscreen$scenario,
     ",STI_SCREEN_KISS_EXPOSURE=", currscreen$kiss_exposure,
     paste0(",NSIMS=1,NSTEPS=3380,ARRIVE_RATE_ADD_PER20K=1.285,", pline),
