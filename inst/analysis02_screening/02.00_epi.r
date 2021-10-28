@@ -23,7 +23,7 @@ an02_path <- "analysis02_screening"
 ##  if BURNIN = use netsim from ERGM fits
 ##  if SCENARIO_X = find corresponding burnin to restart at time 3121
 
-if (Sys.getenv("STI_SCREEN_TYPE") == "burnin") {
+if (Sys.getenv("EPI_RUN_TYPE") == "burnin") {
 
   ## select seed for the current job and read it into the current environment
   .lec.Random.seed.table <- readRDS(
@@ -36,7 +36,7 @@ if (Sys.getenv("STI_SCREEN_TYPE") == "burnin") {
 
   est <- get_est("netest")
 
-} else {
+} else if (Sys.getenv("EPI_RUN_TYPE") == "scenario") {
 
   .lec.Random.seed.table <- readRDS(
     here::here("inst", an02_path, "seeds_scenario.rds")
