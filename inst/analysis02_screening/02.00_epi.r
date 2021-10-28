@@ -42,7 +42,7 @@ if (Sys.getenv("STI_SCREEN_TYPE") == "burnin") {
     here::here("inst", an02_path, "seeds_scenario.rds")
   )
 
-  .lec.CurrentSream(
+  .lec.CurrentStream(
     .lec.Random.seed.table$name[slurm_array_task_id]
   )
 
