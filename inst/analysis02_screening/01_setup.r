@@ -125,36 +125,36 @@ screen_specs_main <- list(
     runtype       = "scenario",
     scenario      = "base",
     kiss_exposure = "FALSE",
-    starttime     = 3121,
-    num_steps     = 52 * 5
+    starttime     = 52 * 60 + 1,
+    num_steps     = 52 * 65
   ),
   sti_symp = data.table(
     runtype       = "scenario",
     scenario      = "symptomatic",
     kiss_exposure = "FALSE",
-    starttime     = 3121,
-    num_steps     = 52 * 5
+    starttime     = 52 * 60 + 1,
+    num_steps     = 52 * 65
   ),
   sti_cdc1 = data.table(
     runtype       = "scenario",
     scenario      = "cdc",
     kiss_exposure = "FALSE",
-    starttime     = 3121,
-    num_steps     = 52 * 5
+    starttime     = 52 * 60 + 1,
+    num_steps     = 52 * 65
   ),
   sti_cdc2 = data.table(
     runtype       = "scenario",
     scenario      = "cdc",
     kiss_exposure = "TRUE",
-    starttime     = 3121,
-    num_steps     = 52 * 5
+    starttime     = 52 * 60 + 1,
+    num_steps     = 52 * 65
   ),
   sti_univ = data.table(
     runtype       = "scenario",
     scenario      = "universal",
     kiss_exposure = "FALSE",
-    starttime     = 3121,
-    num_steps     = 52 * 5
+    starttime     = 52 * 60 + 1,
+    num_steps     = 52 * 65
   )
 )
 
@@ -179,7 +179,7 @@ lapply(names(screen_specs_main), function(.x) {
     sti_screen_type = tmp[, scenario],
     kiss_exposure = tmp[, kiss_exposure],
     starttime = tmp[, starttime],
-    simdir = paste0("~/scratch/ScreenEpi-", slug)
+    simdir = paste0("~/scratch/", "MAIN_02.01_", "ScreenEpi-", slug)
   )
 })
 
@@ -300,6 +300,7 @@ make_sens_script <- function(x, type = c("prep", "sympt"), stiscreen) {
     ",EPI_RUN_TYPE=", currscreen$runtype,
     ",STI_SCREEN_TYPE=", currscreen$scenario,
     ",STI_SCREEN_KISS_EXPOSURE=", currscreen$kiss_exposure,
+    ",STARTTIME=", currscreen$starttime,
     paste0(",NSIMS=1,NSTEPS=3380,ARRIVE_RATE_ADD_PER20K=1.285,", pline),
     " ", bfile
   )

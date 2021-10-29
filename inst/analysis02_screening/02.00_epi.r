@@ -14,6 +14,7 @@ pacman::p_load(
 )
 
 slurm_array_task_id <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))
+epi_run_type <- Sys.getenv("EPI_RUN_TYPE")
 an02_path <- "analysis02_screening"
 
 
@@ -23,7 +24,7 @@ an02_path <- "analysis02_screening"
 ##  if BURNIN = use netsim from ERGM fits
 ##  if SCENARIO_X = find corresponding burnin to restart at time 3121
 
-if (Sys.getenv("EPI_RUN_TYPE") == "burnin") {
+if (epi_run_type == "burnin") {
 
   ## select seed for the current job and read it into the current environment
   .lec.Random.seed.table <- readRDS(
@@ -36,7 +37,7 @@ if (Sys.getenv("EPI_RUN_TYPE") == "burnin") {
 
   est <- get_est("netest")
 
-} else if (Sys.getenv("EPI_RUN_TYPE") == "scenario") {
+} else if (epi_run_type == "scenario") {
 
   .lec.Random.seed.table <- readRDS(
     here::here("inst", an02_path, "seeds_scenario.rds")
@@ -46,9 +47,20 @@ if (Sys.getenv("EPI_RUN_TYPE") == "burnin") {
     .lec.Random.seed.table$name[slurm_array_task_id]
   )
 
+  pbatch  <- str_extract(
+    Sys.getenv("SIMDIR"),
+    pattern = "(?<=(MAIN|SENS)_)[0-9]{2}\\.[0-9]{2}"
+  )
+
+  burndir <- list.files(
+    "~/scratch",
+    pattern = paste0(pbatch, ".*BURNIN$"),
+    full.names = T
+  )
+
   burnins <- sort(
     list.files(
-      "~/scratch/ScreenEpi-STI_BURNIN/",
+      burndir,
       full.names = T
     )
   )
@@ -125,7 +137,6 @@ if (Sys.getenv("PREP_SCALE_ALTPARAM") == "") {
 }
 
 prep_scale <- fmt_getenv("PREP_SCALE_ALTPARAM")
-
 arate_adjust <- fmt_getenv("ARRIVE_RATE_ADD_PER20K")
 
 param <- param_msm(
@@ -271,15 +282,18 @@ starttime <- fmt_getenv("STARTTIME")
 print(paste("NSIMS:", nsim_env))
 print(paste("NSTEPS:", nsteps_env))
 print(paste("SLURM_NPROCS:", ncores_env))
+print(paste("STARTTIME:", starttime))
+print(paste("STI_SCREEN_TYPE:", Sys.getenv("STI_SCREEN_TYPE")))
+print(paste("STI_SCREEN_KISS_EXPOSURE:", Sys.getenv("STI_SCREEN_KISS_EXPOSURE")))
 
 control <- control_msm(
   # Computing options (set in batch script or using sbatch on SLURM)
   nsims   = nsim_env,
+  start   = starttime,
   nsteps  = nsteps_env,
   ncores  = ncores_env,
-  start   = starttime,
   # Epidemic simulation Modules
-  initialize.FUN    = initialize_msm,
+  initialize.FUN = ifelse(epi_run_type == "burnin", initialize_msm, reinit_msm),
   aging.FUN         = aging_msm,
   departure.FUN     = departure_msm,
   arrival.FUN       = arrival_msm,
