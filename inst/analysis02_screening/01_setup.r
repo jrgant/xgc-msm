@@ -301,7 +301,9 @@ make_sens_script <- function(x, type = c("prep", "sympt"), stiscreen) {
     ",STI_SCREEN_TYPE=", currscreen$scenario,
     ",STI_SCREEN_KISS_EXPOSURE=", currscreen$kiss_exposure,
     ",STARTTIME=", currscreen$starttime,
-    paste0(",NSIMS=1,NSTEPS=3380,ARRIVE_RATE_ADD_PER20K=1.285,", pline),
+    paste0(",NSIMS=1"),
+    paste0(",NSTEPS=", ifelse(stiscreen %like% "burnin", 3120, 3380)),
+    paste0(",ARRIVE_RATE_ADD_PER20K=1.285,", pline),
     " ", bfile
   )
 }
