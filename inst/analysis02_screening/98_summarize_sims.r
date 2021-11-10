@@ -51,17 +51,21 @@ getnames <- function(pattern, dt) {
 ## Denominator is all men in a given strata.
 calc_gc_ir100 <- function(incid, num) incid / num * 5200
 
+
 ################################################################################
 ## IMPORT AND CREATE 5-YEAR SUMMARIES BY SIMULATION ID ##
 ################################################################################
 
 sims <- list.files(simpath, pattern = "^epi_02.*rds")
 
+## incomplete epi files (in progress) will return filesizes of 43
+keepsims <- which(file.size(file.path(simpath, sims)) != 43)
+
 ncores <- detectCores() - 2 # avoid using all cores on a personal machine
 registerDoParallel(ncores)
 
 ## loop
-epil <- foreach(i = seq_along(sims)) %dopar% {
+epil <- foreach(i = seq_along(sims[keepsims])) %dopar% {
 
   slug <- stringr::str_extract(sims[i], "(?<=epi_).*(?=\\.rds)")
   fullpath <- file.path(simpath, sims[i])

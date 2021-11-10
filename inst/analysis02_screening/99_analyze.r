@@ -33,6 +33,25 @@ anatlabs <- c("rect", "ureth", "phar")
 gclabsl <- c("rgc", "ugc", "pgc")
 gclabsh <- c("rGC", "uGC", "pGC")
 
+## variable names
+## tags:
+##  i, incidence
+##  p, prevalence
+##  v, variable
+##  r, race/ethnicity
+##  a, age group
+##  s, anatomic site
+##  g, anatomic site-specific gonorrhea
+##  p, pathway
+hivp_vr <- paste0("i.prev.", rlabs)
+hivi_vr <- paste0("ir100.", rlabs)
+hivp_ar <- paste0("i.prev.", agelabs)
+hivi_ar <- paste0("ir100.", agelabs)
+
+gcp_vg <- paste0("prev.", c("gc", gclabsl))
+gci_vg <- paste0("ir100.", c("gc", gclabsl))
+gci_vp <- names(epi)[names(epi) %like% "(r|u|p)2"]
+
 ## time series
 epitime <- rbindlist(
   lapply(
@@ -50,7 +69,7 @@ epitime <- rbindlist(
   )
 )
 
-format(object.size(epitime), units = "MB")
+format(object.size(epitime), units = "GB")
 
 ## sensitivity analysis parameter lookup
 sens_specs <- readRDS(file.path(simpath, "specs_SENS.rds"))
@@ -93,56 +112,6 @@ plotepi <- function(var, data) {
       theme_few()
   }
 }
-
-
-################################################################################
-## PLOTS ##
-################################################################################
-
-## variable names
-## tags:
-##  i, incidence
-##  p, prevalence
-##  v, variable
-##  r, race/ethnicity
-##  a, age group
-##  s, anatomic site
-##  g, anatomic site-specific gonorrhea
-##  p, pathway
-hivp_vr <- paste0("i.prev.", rlabs)
-hivi_vr <- paste0("ir100.", rlabs)
-hivp_ar <- paste0("i.prev.", agelabs)
-hivi_ar <- paste0("ir100.", agelabs)
-
-gcp_vg <- paste0("prev.", c("gc", gclabsl))
-gci_vg <- paste0("ir100.", c("gc", gclabsl))
-gci_vp <- names(epi)[names(epi) %like% "(r|u|p)2"]
-
-## HIV
-plotepi(hivp_vr, epi[analysis %like% "main_base"])
-plotepi(hivi_vr, epi[analysis %like% "main_base"])
-plotepi(hivp_ar, epi[analysis %like% "main_base"])
-
-## Gonorrhea
-plotepi(gcp_vg, epi[analysis %like% "main_base"])
-plotepi(gci_vg, epi[analysis %like% "main_base"])
-plotepi(gci_vp, epi[analysis %like% "main_base"])
-
-plotepi(gcp_vg, epi[analysis %like% "main_cdc1"])
-plotepi(gci_vg, epi[analysis %like% "main_cdc1"])
-plotepi(gci_vp, epi[analysis %like% "main_cdc1"])
-
-plotepi(gcp_vg, epi[analysis %like% "main_cdc2"])
-plotepi(gci_vg, epi[analysis %like% "main_cdc2"])
-plotepi(gci_vp, epi[analysis %like% "main_cdc2"])
-
-plotepi(gcp_vg, epi[analysis %like% "main_symp"])
-plotepi(gci_vg, epi[analysis %like% "main_symp"])
-plotepi(gci_vp, epi[analysis %like% "main_symp"])
-
-plotepi(gcp_vg, epi[analysis %like% "main_univ"])
-plotepi(gci_vg, epi[analysis %like% "main_univ"])
-plotepi(gci_vp, epi[analysis %like% "main_univ"])
 
 
 ################################################################################
@@ -309,24 +278,61 @@ epim[variable == "prev.gc"] %>%
   theme_base(base_size = 40) +
   theme(axis.text.x = element_text(angle = 90))
 
+epim[variable == "incid.gc",
+     .(mean = mean(value),
+       median = median(value),
+       q25 = quantile(value, 0.25),
+       q75 = quantile(value, 0.75)
+       ),
+     by = analysis]
+
 
 ################################################################################
 ## EPI TIME SERIES ##
 ################################################################################
 
+timesum <- epitime[aid %like% "main", .(mn = mean(prev.gc),
+                                        md = median(prev.gc)), .(aid, at)]
+
+convert_cols <- names(epitime)[!(names(epitime) %in% c("aid", "simid", "at"))]
+epitime[, (convert_cols) := lapply(.SD, as.numeric), .SDcols = convert_cols]
+
+epitime_mainl <- melt(
+  epitime[aid %like% "main"],
+  id.vars = c("aid", "simid", "at")
+)
+
+epitime_mainl[, ":=" (
+  measure = str_extract(variable, ".*(?=\\.)"),
+  anatsite = str_extract(variable, "(?<=\\.).*")
+)][]
+
+epitime_mainl[measure == "prev" & aid %like% "base"] %>%
+  ggplot(aes(x = at, y = value, color = anatsite)) +
+  geom_line(alpha = 0.05) +
+  facet_wrap(~ aid, nrow = 1) +
+  theme_base()
+
+
 epitime[aid %like% "main"] %>%
   ggplot(aes(x = at, y = prev.gc)) +
-  geom_line(aes(group = simid)) +
-  facet_wrap(~ aid) +
+  geom_line(aes(group = simid), alpha = 0.05) +
+  geom_line(
+    data = timesum,
+    aes(y = md),
+    color = "cyan",
+    size = 1
+  ) +
+  facet_wrap(~ aid, nrow = 1) +
   theme_base(base_size = 30) +
   theme(axis.text.x = element_text(angle = 90))
 
-epitime %>%
-  ggplot(aes(x = at, y = ir100.gc)) +
-  geom_line(aes(group = simid), alpha = 0.3) +
-  facet_wrap(~ aid, ncol = 5) +
-  theme_base(base_size = 30) +
-  theme(axis.text.x = element_text(angle = 90))
+## epitime %>%
+##   ggplot(aes(x = at, y = ir100.gc)) +
+##   geom_line(aes(group = simid), alpha = 0.3) +
+##   facet_wrap(~ aid, ncol = 5) +
+##   theme_base(base_size = 30) +
+##   theme(axis.text.x = element_text(angle = 90))
 
 
 ################################################################################
@@ -343,8 +349,40 @@ epirel[groupid == "02.01"] %>%
 
 
 ################################################################################
+## PLOTS ##
+################################################################################
+
+## HIV
+plotepi(hivp_vr, epi[analysis %like% "main_base"])
+plotepi(hivi_vr, epi[analysis %like% "main_base"])
+plotepi(hivp_ar, epi[analysis %like% "main_base"])
+
+## Gonorrhea
+plotepi(gcp_vg, epi[analysis %like% "main_base"])
+plotepi(gci_vg, epi[analysis %like% "main_base"])
+plotepi(gci_vp, epi[analysis %like% "main_base"])
+
+plotepi(gcp_vg, epi[analysis %like% "main_cdc1"])
+plotepi(gci_vg, epi[analysis %like% "main_cdc1"])
+plotepi(gci_vp, epi[analysis %like% "main_cdc1"])
+
+plotepi(gcp_vg, epi[analysis %like% "main_cdc2"])
+plotepi(gci_vg, epi[analysis %like% "main_cdc2"])
+plotepi(gci_vp, epi[analysis %like% "main_cdc2"])
+
+plotepi(gcp_vg, epi[analysis %like% "main_symp"])
+plotepi(gci_vg, epi[analysis %like% "main_symp"])
+plotepi(gci_vp, epi[analysis %like% "main_symp"])
+
+plotepi(gcp_vg, epi[analysis %like% "main_univ"])
+plotepi(gci_vg, epi[analysis %like% "main_univ"])
+plotepi(gci_vp, epi[analysis %like% "main_univ"])
+
+
+################################################################################
 ## WRITE FILES ##
 ################################################################################
+
 saveRDS(
   sresult_gcpop,
   file.path(simpath, "result_gc_summary.rds")
@@ -353,4 +391,9 @@ saveRDS(
 saveRDS(
   epirel,
   file.path(simpath, "result_screening_fx.rds")
+)
+
+saveRDS(
+  epitime[aid %like% "main"],
+  file.path(simpath, "result_epitime_main.rds")
 )
