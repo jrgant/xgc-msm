@@ -19,7 +19,7 @@ slurm_array_task_id <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))
 
 ## select seed for the current job and read it into the current environment
 .lec.Random.seed.table <- readRDS(
-  here::here("burnin", "cal", "sim1_altrim", "seeds_sim1.rds")
+  here::here("burnin", "cal", "sim1_altrim", "seeds_sim1_altrim.rds")
 )
 
 .lec.CurrentStream(
