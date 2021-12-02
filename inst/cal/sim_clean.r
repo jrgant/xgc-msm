@@ -26,7 +26,9 @@ first_timestep <- Sys.getenv("FIRST_TIME")
 
 if (simdir == "" | picksim == "" | first_timestep == "") {
   stop("Must set the environment variables SIMDIR and PICKSIM in sbatch.")
-} else if (str_extract(simdir, "sim[0-9]{1}") != picksim) {
+} else if (
+         str_extract(simdir, "sim[0-9]{1}") != str_extract(picksim, "sim[0-9]{1}")
+       ) {
   stop(
     "SIMDIR and PICKSIM indicate different simulation batches."
   )
