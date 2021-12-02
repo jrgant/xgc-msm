@@ -32,7 +32,7 @@ est         <- get_est("netest")
 epistats    <- get_est("epistats")
 
 lhs_real    <- readRDS(
-  here::here("burnin", "cal", "sim1_altrim", "lhs_sim1.rds")
+  here::here("burnin", "cal", "sim1_altrim", "lhs_sim1_altrim.rds")
 )
 
 # Set environment variables (parameter sets) based on list position
