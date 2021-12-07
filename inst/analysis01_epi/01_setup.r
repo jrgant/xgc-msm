@@ -81,7 +81,7 @@ make_batch_script <- function(jobname, walltime, partition, mem,
   sdir <- here::here("inst", "analysis01_epi")
   writeLines(
     text = specs,
-    con = file.path(sdir, paste0("main_epi", batchid, ".sh"))
+    con = file.path(sdir, paste0("02_main", batchid, ".sh"))
   )
 
 }
