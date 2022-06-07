@@ -15,14 +15,14 @@ p_load(
 )
 
 simpath <- here::here("inst", "analysis02_screening")
-epi <- readRDS(file.path(simpath, "epi_5yr_BOUND.rds"))
 
-# NOTE kissing exposure tracking not implemented
-epi <- epi[!(analysis %like% "CDC2")]
+## 5-year averages
+epi <- readRDS(file.path(simpath, "epi_5yr_BOUND.rds"))
 
 ## clean up age column names
 epnm <- names(epi)
 names(epi) <- str_replace(epnm, "age\\.", "age")
+
 
 ## labels
 rlabs <- c("B", "H", "O", "W")
@@ -33,8 +33,46 @@ anatlabs <- c("rect", "ureth", "phar")
 gclabsl <- c("rgc", "ugc", "pgc")
 gclabsh <- c("rGC", "uGC", "pGC")
 
+## variable names
+## tags:
+##  i, incidence
+##  p, prevalence
+##  v, variable
+##  r, race/ethnicity
+##  a, age group
+##  s, anatomic site
+##  g, anatomic site-specific gonorrhea
+##  p, pathway
+hivp_vr <- paste0("i.prev.", rlabs)
+hivi_vr <- paste0("ir100.", rlabs)
+hivp_ar <- paste0("i.prev.", agelabs)
+hivi_ar <- paste0("ir100.", agelabs)
+
+gcp_vg <- paste0("prev.", c("gc", gclabsl))
+gci_vg <- paste0("ir100.", c("gc", gclabsl))
+gci_vp <- names(epi)[names(epi) %like% "(r|u|p)2"]
+
+## time series
+epitime <- rbindlist(
+  lapply(
+    file.path(simpath, list.files(simpath, pattern = "^epi_02.*rds")),
+    function(.x) {
+      sname <- str_extract(.x, "(?<=epi_).*(?=\\.rds)")
+      tmp <- readRDS(.x)
+      tmp[, .(
+        simid, at, aid = sname,
+        incid.gc, incid.rgc, incid.ugc, incid.pgc,
+        prev.gc, prev.rgc, prev.ugc, prev.pgc,
+        ir100.gc, ir100.rgc, ir100.ugc, ir100.pgc
+      )]
+    }
+  )
+)
+
+format(object.size(epitime), units = "GB")
+
 ## sensitivity analysis parameter lookup
-sens03_specs <- readRDS(file.path(simpath, "specs_SENS03.rds"))
+sens_specs <- readRDS(file.path(simpath, "specs_SENS.rds"))
 
 
 ################################################################################
@@ -77,99 +115,37 @@ plotepi <- function(var, data) {
 
 
 ################################################################################
-## PLOTS ##
-################################################################################
-
-## variable names
-## tags:
-##  i, incidence
-##  p, prevalence
-##  v, variable
-##  r, race/ethnicity
-##  a, age group
-##  s, anatomic site
-##  g, anatomic site-specific gonorrhea
-##  p, pathway
-hivp_vr <- paste0("i.prev.", rlabs)
-hivi_vr <- paste0("ir100.", rlabs)
-hivp_ar <- paste0("i.prev.", agelabs)
-hivi_ar <- paste0("ir100.", agelabs)
-
-gcp_vg <- paste0("prev.", c("gc", gclabsl))
-gci_vg <- paste0("ir100.", c("gc", gclabsl))
-gci_vp <- names(epi)[names(epi) %like% "(r|u|p)2"]
-
-## HIV
-plotepi(hivp_vr, epi[analysis == "MAIN_STI_BASE"])
-plotepi(hivi_vr, epi[analysis == "MAIN_STI_BASE"])
-plotepi(hivp_ar, epi[analysis == "MAIN_STI_BASE"])
-
-## Gonorrhea
-plotepi(gcp_vg, epi[analysis == "MAIN_STI_BASE"])
-plotepi(gci_vg, epi[analysis == "MAIN_STI_BASE"])
-plotepi(gci_vp, epi[analysis == "MAIN_STI_BASE"])
-
-plotepi(gcp_vg, epi[analysis == "MAIN_STI_CDC1"])
-plotepi(gci_vg, epi[analysis == "MAIN_STI_CDC1"])
-plotepi(gci_vp, epi[analysis == "MAIN_STI_CDC1"])
-
-plotepi(gcp_vg, epi[analysis == "MAIN_STI_CDC2"])
-plotepi(gci_vg, epi[analysis == "MAIN_STI_CDC2"])
-plotepi(gci_vp, epi[analysis == "MAIN_STI_CDC2"])
-
-plotepi(gcp_vg, epi[analysis == "MAIN_STI_SYMP"])
-plotepi(gci_vg, epi[analysis == "MAIN_STI_SYMP"])
-plotepi(gci_vp, epi[analysis == "MAIN_STI_SYMP"])
-
-plotepi(gcp_vg, epi[analysis == "MAIN_STI_UNIV"])
-plotepi(gci_vg, epi[analysis == "MAIN_STI_UNIV"])
-plotepi(gci_vp, epi[analysis == "MAIN_STI_UNIV"])
-
-
-################################################################################
 ## MATCH SIMULATION RUNS ##
 ################################################################################
-
-## TODO After thinking about the current approach, I don't think burning all
-##      scenarios in makes a ton of sense. All the models reach similar
-##      steady states, except for CDC1. Calculating NIA, PIA, etc. based on
-##      models that were all burned in is not comparing what I originally
-##      intended. Rather, for each set of parameters, 1,000 BASE simulations
-##      should be burned in + 5 years. Then, for each alternative screening
-##      protocol, the model should be rewound so that each screening strategy
-##      is simulated as a switch to that strategy for 5 years.
 
 ## make row IDs
 epi[, rowid := 1:.N]
 
 ## make analysis abbreviations
-epi[analysis %like% "MAIN",
-  aslug := str_flatten(
+## aid = analysis ID
+## groupid = analysis group ID (main vs. sensitivity batches)
+## scenid = scenario ID
+epi[,
+  aid := str_flatten(
     str_extract_all(
       analysis,
-      "^[A-Z]{1}(?=.*_.*_)|[A-Z0-9]{4}$",
+      "([0-9]{2}\\.[0-9]{2})|((?<=[0-9]{1}_)[a-z]{1})|([a-z0-9]{4}$)",
       simplify = T
     )
   ),
   by = rowid
 ]
 
-epi[analysis %like% "SENS",
-  aslug := paste0(
-    "S",
-    str_remove_all(substring(analysis, 6, 10), "0|\\."),
-    str_extract(analysis, "[A-Z0-9]{4}$")
-  ),
-  by = rowid
-]
+epi[, groupid := str_extract(aid, "[0-9]{2}\\.[0-9]{2}")]
+epi[, scenid := str_extract(aid, "[a-z0-9]{4}$")]
 
-aslugtab <- epi[, .N, aslug]
-aslugtab[, all(N == 1000)] # check analysis slugs
+aidtab <- epi[, .N, aid]
+aidtab[, all(N == 1000)] # check analysis slugs
 
 ## calculate total number of tests administered during each simulation run
 epi[, num.gc.test := num.rgc.test + num.ugc.test + num.pgc.test]
 
-epi[, ":="(
+epi[, ":=" (
   sum_num.gc.test = num.gc.test * length(min_at:max_at),
   sum_num.rgc.test = num.rgc.test * length(min_at:max_at),
   sum_num.ugc.test = num.ugc.test * length(min_at:max_at),
@@ -186,44 +162,52 @@ getnames <- function(pattern, data) {
   names(data)[names(data) %like% pattern]
 }
 
-calc_relmeas <- function(sens_slug, alabs = c("gc", gclabsl), data = epi) {
-  tmp_base <- data[aslug == "MBASE"]
-  tmp_comp <- data[aslug == sens_slug]
-  tmp_merge <- merge(tmp_base, tmp_comp, by = "simid")
+calc_relmeas <- function(group, alabs = c("gc", gclabsl), data = epi) {
+
+  tmp_base <- data[groupid == group & scenid == "base"]
+  tmp_comp <- data[groupid == group & scenid != "base"]
+  tmp_merge <- merge(tmp_comp, tmp_base, by = "simid", all.x = T)
 
   ## NIA, number of infections averted
-  tmp_merge[, ":="(
-    nia_gc = sum_incid.gc.x - sum_incid.gc.y,
-    nia_rgc = sum_incid.rgc.x - sum_incid.rgc.y,
-    nia_ugc = sum_incid.ugc.x - sum_incid.ugc.y,
-    nia_pgc = sum_incid.pgc.x - sum_incid.pgc.y
+  tmp_merge[, ":=" (
+    nia_gc = sum_incid.gc.y - sum_incid.gc.x,
+    nia_rgc = sum_incid.rgc.y - sum_incid.rgc.x,
+    nia_ugc = sum_incid.ugc.y - sum_incid.ugc.x,
+    nia_pgc = sum_incid.pgc.y - sum_incid.pgc.x
   )]
 
   ## PIA, proportion of infections averted
-  tmp_merge[, ":="(
-    pia_gc = nia_gc / sum_incid.gc.x,
-    pia_rgc = nia_rgc / sum_incid.rgc.x,
-    pia_ugc = nia_ugc / sum_incid.ugc.x,
-    pia_pgc = nia_ugc / sum_incid.pgc.x
+  tmp_merge[, ":=" (
+    pia_gc = nia_gc / sum_incid.gc.y,
+    pia_rgc = nia_rgc / sum_incid.rgc.y,
+    pia_ugc = nia_ugc / sum_incid.ugc.y,
+    pia_pgc = nia_pgc / sum_incid.pgc.y
   )]
 
   ## NTIA, number tested per infection averted
-  tmp_merge[, ":="(
-    ntia_gc = sum_num.gc.test.y / nia_gc,
-    ntia_rgc = sum_num.rgc.test.y / nia_rgc,
-    ntia_ugc = sum_num.ugc.test.y / nia_ugc,
-    ntia_pgc = sum_num.pgc.test.y / nia_pgc
+  tmp_merge[, ":=" (
+    ntia_gc = sum_num.gc.test.x / nia_gc,
+    ntia_rgc = sum_num.rgc.test.x / nia_rgc,
+    ntia_ugc = sum_num.ugc.test.x / nia_ugc,
+    ntia_pgc = sum_num.pgc.test.x / nia_pgc
   )]
 
-  tmp_merge[, analysis := sens_slug]
+  tmp_merge[, ":=" (
+    groupid = groupid.x,
+    scenid = scenid.x,
+    aid = aid.x
+  )]
 
-  savecols <- c("simid", "analysis", getnames("nia|pia|ntia", tmp_merge))
+  #tmp_merge[, analysis := sens_slug]
+  savecols <- c(
+    "simid", "groupid", "aid", "scenid",
+    getnames("nia|pia|ntia|.x|.y", tmp_merge)
+  )
+
   tmp_merge[, ..savecols]
 }
 
-nobase_aslugs <- aslugtab[aslug %like% "^S" | !(aslug %like% "^M.*BASE"), aslug]
-
-epil <- rbindlist(lapply(nobase_aslugs, calc_relmeas))
+epirel <- rbindlist(lapply(unique(epi[, groupid]), calc_relmeas))
 
 
 ################################################################################
@@ -239,11 +223,13 @@ droppat <- paste(
 ## NOTE Suppress warnings about coercing integers to doubles.
 epim <- suppressWarnings(
   melt(
-    epi,
+    epi[, -c("aid", "groupid", "scenid")],
     id.vars = c("simid", "analysis"),
     variable.factor = FALSE
   )[!(variable %like% droppat)]
 )
+
+nrow(epim)
 
 ## create grouping variables
 epim[, ":=" (
@@ -255,17 +241,17 @@ epim[, ":=" (
 epim[, agegrp := str_replace(agegrp, "\\.", "")]
 epim[, .N, agegrp]
 
-## replace NA/NaN with 0
+## replace epi measures marked NA/NaN with 0
 epim[is.na(value), value := 0]
 
 sresult <- epim[, .(
-  median = median(value),
-  mean = mean(value),
-  sd = sd(value),
-  si025 = quantile(value, 0.025),
-  si975 = quantile(value, 0.975),
-  q25 = quantile(value, 0.25),
-  q75 = quantile(value, 0.75)
+  median  = median(value),
+  mean    = mean(value),
+  sd      = sd(value),
+  si025   = quantile(value, 0.025),
+  si975   = quantile(value, 0.975),
+  q25     = quantile(value, 0.25),
+  q75     = quantile(value, 0.75)
 ), keyby = .(analysis, variable)]
 
 sresult_gcpop <-
@@ -282,6 +268,118 @@ sresult_gcpop
 
 
 ################################################################################
+## GC EPI DISTRIBUTIONS ##
+################################################################################
+
+epim[variable == "prev.gc"] %>%
+  ggplot(aes(x = analysis, y = value)) +
+  geom_point() +
+  geom_boxplot() +
+  theme_base(base_size = 40) +
+  theme(axis.text.x = element_text(angle = 90))
+
+epim[variable == "incid.gc",
+     .(mean = mean(value),
+       median = median(value),
+       q25 = quantile(value, 0.25),
+       q75 = quantile(value, 0.75)
+       ),
+     by = analysis]
+
+
+################################################################################
+## EPI TIME SERIES ##
+################################################################################
+
+timesum <- epitime[aid %like% "main", .(mn = mean(prev.gc),
+                                        md = median(prev.gc)), .(aid, at)]
+
+convert_cols <- names(epitime)[!(names(epitime) %in% c("aid", "simid", "at"))]
+epitime[, (convert_cols) := lapply(.SD, as.numeric), .SDcols = convert_cols]
+
+epitime_mainl <- melt(
+  epitime[aid %like% "main"],
+  id.vars = c("aid", "simid", "at")
+)
+
+epitime_mainl[, ":=" (
+  measure = str_extract(variable, ".*(?=\\.)"),
+  anatsite = str_extract(variable, "(?<=\\.).*")
+)][]
+
+epitime_mainl[measure == "prev" & aid %like% "base"] %>%
+  ggplot(aes(x = at, y = value, color = anatsite)) +
+  geom_line(alpha = 0.05) +
+  facet_wrap(~ aid, nrow = 1) +
+  theme_base()
+
+
+epitime[aid %like% "main"] %>%
+  ggplot(aes(x = at, y = prev.gc)) +
+  geom_line(aes(group = simid), alpha = 0.05) +
+  geom_line(
+    data = timesum,
+    aes(y = md),
+    color = "cyan",
+    size = 1
+  ) +
+  facet_wrap(~ aid, nrow = 1) +
+  theme_base(base_size = 30) +
+  theme(axis.text.x = element_text(angle = 90))
+
+## epitime %>%
+##   ggplot(aes(x = at, y = ir100.gc)) +
+##   geom_line(aes(group = simid), alpha = 0.3) +
+##   facet_wrap(~ aid, ncol = 5) +
+##   theme_base(base_size = 30) +
+##   theme(axis.text.x = element_text(angle = 90))
+
+
+################################################################################
+## GC SCREENING EFFECT DISTRIBUTIONS ##
+################################################################################
+
+epirel[groupid == "02.01"] %>%
+  ggplot(aes(x = aid, y = pia_gc)) +
+  geom_hline(aes(yintercept = 0), color = "red") +
+  geom_point(alpha = 0.1, position = position_jitter(width = 0.05)) +
+  geom_boxplot(width = 0.2, fill = NA, outlier.alpha = 0) +
+  theme_tufte(base_size = 35) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+
+################################################################################
+## PLOTS ##
+################################################################################
+
+## HIV
+plotepi(hivp_vr, epi[analysis %like% "main_base"])
+plotepi(hivi_vr, epi[analysis %like% "main_base"])
+plotepi(hivp_ar, epi[analysis %like% "main_base"])
+
+## Gonorrhea
+plotepi(gcp_vg, epi[analysis %like% "main_base"])
+plotepi(gci_vg, epi[analysis %like% "main_base"])
+plotepi(gci_vp, epi[analysis %like% "main_base"])
+
+plotepi(gcp_vg, epi[analysis %like% "main_cdc1"])
+plotepi(gci_vg, epi[analysis %like% "main_cdc1"])
+plotepi(gci_vp, epi[analysis %like% "main_cdc1"])
+
+plotepi(gcp_vg, epi[analysis %like% "main_cdc2"])
+plotepi(gci_vg, epi[analysis %like% "main_cdc2"])
+plotepi(gci_vp, epi[analysis %like% "main_cdc2"])
+
+plotepi(gcp_vg, epi[analysis %like% "main_symp"])
+plotepi(gci_vg, epi[analysis %like% "main_symp"])
+plotepi(gci_vp, epi[analysis %like% "main_symp"])
+
+plotepi(gcp_vg, epi[analysis %like% "main_univ"])
+plotepi(gci_vg, epi[analysis %like% "main_univ"])
+plotepi(gci_vp, epi[analysis %like% "main_univ"])
+
+
+################################################################################
 ## WRITE FILES ##
 ################################################################################
 
@@ -291,11 +389,11 @@ saveRDS(
 )
 
 saveRDS(
-  rethsm,
-  file.path(simpath, "result_gcinc_byreth_bypois.rds")
+  epirel,
+  file.path(simpath, "result_screening_fx.rds")
 )
 
 saveRDS(
-  agesm,
-  file.path(simpath, "result_gcinc_byage_bypois.rds")
+  epitime[aid %like% "main"],
+  file.path(simpath, "result_epitime_main.rds")
 )

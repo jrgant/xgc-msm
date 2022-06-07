@@ -180,7 +180,11 @@ str(rethsm)
 ## plot labelers
 ## NOTE analysis labeler is reused for age plots below
 anat_lblr <- c(rgc = "Rectal", ugc = "Urethral", pgc = "Pharyngeal")
-analysis_lblr <- c(MAIN = "Main", SENS_poisdurat = "Poisson")
+analysis_lblr <- c(
+  MAIN = "Main",
+  MAIN_altrim = "Alternative rimming",
+  SENS_poisdurat = "Poisson"
+)
 
 rethsm %>%
   ggplot(aes(x = value, y = race, fill = stat(x))) +
