@@ -11,7 +11,6 @@ Description: This package contains the code necessary to calibrate and diagnose 
 Depends: 
   R (>= 3.5.0)
 Imports:
-  EpiModelHIV,
   EpiModel (== 1.8.0),
   magrittr,
   data.table,
