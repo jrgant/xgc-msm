@@ -84,6 +84,16 @@ ps_ct_gcpos <- pbox(
   plot_title = precal_plot_title
 )
 
+## ... Population-level GC prevalence
+ps_ct_gcprev <- pbox(
+  sprintf("prev.%s", c("rGC", "uGC")),
+  targets[target == "ct_gc_prev", value],
+  targets[target == "ct_gc_prev", ll95],
+  targets[target == "ct_gc_prev", ul95],
+  data = epi5k,
+  plot_title = precal_plot_title
+)
+
 
 ################################################################################
 ## ABSOLUTE DIFFERENCES BETWEEN MODEL OUTPUT AND TARGETS ##
@@ -165,6 +175,13 @@ t_gc_pos <- get_absdiffv(
   "ct_prop_anatsite_pos",
   c("rGC", "uGC", "pGC"),
   "prob.%s.tested"
+)
+
+# population-level gonorrhea prevalence, rectal and urethral
+t_gc_prev <- get_absdiffv(
+  "ct_gc_prev",
+  c("rGC", "uGC"),
+  "prev.%s"
 )
 
 ## Concatenate all t_ objects into a single list for input into

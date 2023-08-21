@@ -5,6 +5,8 @@
 ## Setup script used in subsequent sim analyses:
 ##   sim1_02_analyze.r
 ##   sim2_02_analyze.r
+##   sim3_01_analyze.r
+##   sim4_01_analyze.r
 
 library(pacman)
 
@@ -91,6 +93,7 @@ rslugs <- c("B", "H", "O", "W")
 ageslugs <- paste0("age", 1:5)
 anatslugs <- c("rect", "ureth", "phar")
 gcpos_slugs <- c("rGC", "uGC", "pGC")
+gcprev_slugs <- gcpos_slugs[gcpos_slugs %in% c("rGC", "uGC")]
 
 ## This function produces boxplots of selected variables.
 ## varnames: varnames output by the episims
@@ -155,7 +158,6 @@ pbox <- function(varnames, targets = NULL, targets_ll = NULL, targets_ul = NULL,
     theme_tufte(base_family = "sans", base_size = 22)
 }
 
-
 ################################################################################
 ## CALCULATE RELATIVE TARGETS ##
 ################################################################################
@@ -216,7 +218,7 @@ epi[, (age.dx) := lapply(1:5, function(x) {
   get(paste0("i.prev.dx.age.", x)) / get(paste0("i.prev.age.", x))
 })][]
 
-# PrEP coverage
+# ... PrEP coverage
 race.prep.cov <- paste0("prepCov", rdxlabs)
 
 epi[, (race.prep.cov) := lapply(1:5, function(x) {
@@ -253,7 +255,6 @@ epi[, (age.rel.vls) := lapply(age.vls, function(x) {
   get(x) / cc.vsupp.age5
 })][]
 
-
 # ... relative PrEP coverage, by race/ethnicity
 race.rel.prep <- paste0(race.prep.cov[2:4], ".rel.ref.W")
 
@@ -278,7 +279,6 @@ epi[, (race.ir100.pop) := lapply(1:4, function(x) {
   get(paste0("incid", rdxlabs[x])) / get(paste0("num", rdxlabs[x])) * 5200
 })][]
 
-
 # ... demographics
 epi[, paste0("prop", rdxlabs[-1]) := lapply(1:4, function(x) {
   get(paste0("num", rdxlabs[x + 1])) / num
@@ -288,6 +288,10 @@ epi[, paste0("prop.age.", 1:5) := lapply(1:5, function(x) {
   get(paste0("num.age.", x)) / num
 })][]
 
+## ... population-level rectal and urethral GC
+epi[, paste0("prev.", c("rGC", "uGC")) := lapply(c("rgc", "ugc"), function(x) {
+          get(paste0("i.num.", x)) / num
+        })][]
 
 ################################################################################
 ## CLEAN UP OUTPUT AND CALCULATE LAST-YEAR AVERAGES ##

@@ -34,6 +34,7 @@ ps_ct_vsupp_age
 ps_ct_prep
 ps_ct_gctested
 ps_ct_gcpos
+ps_ct_gcprev
 
 
 ################################################################################
@@ -171,6 +172,7 @@ plot_targets <- function(simids) {
       stroke = 2,
       fill = NA
     ) +
+    coord_flip() +
     theme_minimal(base_size = 20) +
     theme(
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
@@ -179,6 +181,19 @@ plot_targets <- function(simids) {
 }
 
 plot_targets(simid_sel_gcpos_intersect)
+
+## simid_sel_gcprev <- lapply(
+##   setNames(gcprev_slugs, gcprev_slugs),
+##   function(.x) {
+##     out_vs_targ[
+##       variable == sprintf("prev.%s", .x) & output_within_5pts == 1,
+##       sort(simid)
+##     ]
+##   }
+## )
+
+## simid_sel_gcpos_gcprev_intersect <-
+##   Reduce(intersect, list(simid_sel_gcpos_intersect, simid_sel_gcprev))
 
 
 ################################################################################

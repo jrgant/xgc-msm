@@ -13,7 +13,9 @@ ls()
 
  sel_regex <- paste(
   c("i.prev$", "i.prev.dx.inf\\.[A-Z]{1}$", "cc.vsupp$", "prepCov\\.[A-Z]{1}$",
-    "cc.vsupp.[A-Z]{1}$", "prob.*GC", "prop.*tested", "ir100.pop"),
+    "cc.vsupp.[A-Z]{1}$", "prob.*GC", "prop.*tested", "ir100.pop",
+    "prev.rGC", "prev.uGC"
+    ),
   collapse = "|"
 )
 
@@ -45,6 +47,136 @@ outcorr
 
 ## Write plot to file.
 psave("outcorr", outcorr)
+
+
+################################################################################
+## OUTCOME DISTRIBUTIONS ##
+################################################################################
+
+outdist <- function(varpat, title, varlabs, numcol = NULL,
+                    varlist = selepi,
+                    data = epi_mn) {
+
+  varsub <- varlist[varlist %like% varpat]
+  sumstats <- melt(
+    data[, ..varsub][, lapply(.SD, median), .SDcols = varsub],
+    measure.vars = varsub,
+    value.name = "median"
+  )
+  print(sumstats)
+
+  melt(data[, ..varsub], measure.vars = varsub) %>%
+    ggplot(aes(value)) +
+    geom_histogram(bins = 50, color = "white", fill = "#990000") +
+    facet_wrap(
+      vars(variable),
+      labeller = labeller(variable = varlabs),
+      ncol = if(is.null(numcol)) { 2 } else { numcol }
+    ) +
+    ggtitle(if (!is.null(title)) { title } else {""}) +
+    labs(x = "\nSimulated 5-year average", y = "Count\n") +
+    theme_tufte(ticks = F, base_size = 22, base_family = "sans") +
+    theme(axis.text = element_text(color = "gray", size = 12),
+          axis.title = element_text(color = "gray"),
+          plot.caption = element_text(face = "italic"),
+          plot.title = element_text(face = "bold", size = 16))
+}
+
+savedir <- "~/Downloads"
+
+od_hiv <- outdist(
+  "ir100|i.prev$",
+  "Simulated HIV prevalence and incidence",
+  c("i.prev" = "HIV prevalence",
+    "ir100.pop" = "HIV incidence, Overall",
+    "ir100.pop.B" = "HIV incidence, Black",
+    "ir100.pop.H" = "HIV incidence, Hispanic",
+    "ir100.pop.O" = "HIV incidence, Other",
+    "ir100.pop.W" = "HIV incidence, White")
+  ) +
+  labs(caption = "\nIncidence per 100 population per year (not limited to HIV-negative)")
+
+od_hiv
+
+od_hivdx <- outdist(
+  "i.prev.dx",
+  "Simulated proportion HIV-diagnosed among HIV-infected",
+  c("i.prev.dx.inf.B" = "Black",
+    "i.prev.dx.inf.H" = "Hispanic",
+    "i.prev.dx.inf.O" = "Other",
+    "i.prev.dx.inf.W" = "White"))
+
+od_hivdx
+
+od_prep <- outdist(
+  "prep",
+  "Simulated proportion on PrEP, among indicated",
+  c("prepCov.B" = "Black",
+    "prepCov.H" = "Hispanic",
+    "prepCov.O" = "Other",
+    "prepCov.W" = "White"))
+
+od_prep
+
+od_vsupp <- outdist(
+  "vsupp",
+  "Simulated proportion virally suppressed, among HIV-diagnosed",
+  c("cc.vsupp" = "Overall",
+    "cc.vsupp.B" = "Black",
+    "cc.vsupp.H" = "Hispanic",
+    "cc.vsupp.O" = "Other",
+    "cc.vsupp.W" = "White"))
+
+od_vsupp
+
+od_gcpos <- outdist(
+  "GC",
+  "Simulated gonorrhea positivity among tested in the STI clinic",
+  c("prob.pGC.tested" = "Pharynx",
+    "prob.uGC.tested" = "Urethra",
+    "prob.rGC.tested" = "Rectum"
+  ), 3)
+
+od_gcpos
+
+od_gctest <- outdist(
+  "prop",
+  "Simulated proportion of anatomic sites tested among test-seekers",
+  c("prop.phar.tested" = "Pharynx",
+    "prop.ureth.tested" = "Urethra",
+    "prop.rect.tested" = "Rectum"), 3)
+
+od_gctest
+
+ggsave(
+  file.path(savedir, "sim_outdist_hiv.pdf"),
+  od_hiv
+)
+
+ggsave(
+  file.path(savedir, "sim_outdist_hivdx.pdf"),
+  od_hivdx
+)
+
+ggsave(
+  file.path(savedir, "sim_outdist_prep.pdf"),
+  od_prep
+)
+
+ggsave(
+  file.path(savedir, "sim_outdist_vsupp.pdf"),
+  od_vsupp
+)
+
+ggsave(
+  file.path(savedir, "sim_outdist_gcpos.pdf"),
+  od_gcpos
+)
+
+ggsave(
+  file.path(savedir, "sim_outdist_gctest.pdf"),
+  od_gctest
+)
 
 
 ################################################################################

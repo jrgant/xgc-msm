@@ -24,6 +24,7 @@ ps_ct_vsupp_race
 ps_ct_vsupp_age
 ps_ct_gctested
 ps_ct_gcpos
+ps_ct_gcprev
 
 
 ################################################################################
@@ -72,6 +73,16 @@ simid_sel_gcpos <- lapply(
 
 simid_sel_gcpos_int <- Reduce(intersect, simid_sel_gcpos)
 
+simid_sel_gcprev <- lapply(
+  setNames(gcprev_slugs, gcprev_slugs),
+  function(.x) {
+    out_vs_targ[
+      variable == sprintf("prev.%s", .x) & output_within_5pts == 1,
+      sort(simid)
+    ]
+  }
+)
+
 simid_sel_hivpr <-
   out_vs_targ[variable == "i.prev" & output_within_5pts == 1, sort(simid)]
 
@@ -90,29 +101,42 @@ quicktarget("ir100.pop",    list(hiv = simid_sel_hivpr))
 quicktarget("cc.vsupp.%s",  fmt_list(rslugs, simid_sel_hivpr))
 quicktarget("prepCov.%s",   fmt_list(rslugs, simid_sel_hivpr))
 quicktarget("prob.%s.tested", fmt_list(gcpos_slugs, simid_sel_hivpr))
+quicktarget("prev.%s",        fmt_list(gcprev_slugs, simid_sel_hivpr))
 
 quicktarget("i.prev",       list(hiv = simid_sel_hivinc))
 quicktarget("ir100.pop",    list(hiv = simid_sel_hivinc))
 quicktarget("cc.vsupp.%s",  fmt_list(rslugs, simid_sel_hivinc))
 quicktarget("prepCov.%s",   fmt_list(rslugs, simid_sel_hivinc))
 quicktarget("prob.%s.tested", fmt_list(gcpos_slugs, simid_sel_hivinc))
+quicktarget("prev.%s",        fmt_list(gcprev_slugs, simid_sel_hivinc))
 
 quicktarget("i.prev",       list(hiv = simid_sel_hivprinc))
 quicktarget("ir100.pop",    list(hiv = simid_sel_hivprinc))
 quicktarget("cc.vsupp.%s",  fmt_list(rslugs, simid_sel_hivprinc))
 quicktarget("prepCov.%s",   fmt_list(rslugs, simid_sel_hivprinc))
 quicktarget("prob.%s.tested", fmt_list(gcpos_slugs, simid_sel_hivprinc))
+quicktarget("prev.%s",        fmt_list(gcprev_slugs, simid_sel_hivprinc))
 
 quicktarget("i.prev",       simid_sel_vls) + facet_wrap(~selection_group)
 quicktarget("ir100.pop",    simid_sel_vls) + facet_wrap(~selection_group)
 quicktarget("cc.vsupp.%s",  simid_sel_vls)
 quicktarget("prepCov.%s",   simid_sel_vls)
 quicktarget("prepCov.%s",   simid_sel_vls)
+quicktarget("prev.%s",      fmt_list(gcprev_slugs, simid_sel_vls[["B"]]))
+quicktarget("prev.%s",      fmt_list(gcprev_slugs, simid_sel_vls[["H"]]))
+quicktarget("prev.%s",      fmt_list(gcprev_slugs, simid_sel_vls[["O"]]))
+quicktarget("prev.%s",      fmt_list(gcprev_slugs, simid_sel_vls[["W"]]))
 
 quicktarget("i.prev",       simid_sel_prep) + facet_wrap(~selection_group)
 quicktarget("ir100.pop",    simid_sel_prep) + facet_wrap(~selection_group)
 quicktarget("cc.vsupp.%s",  simid_sel_prep)
 quicktarget("prepCov.%s",   simid_sel_prep)
+quicktarget("prev.%s",      fmt_list(gcprev_slugs, simid_sel_prep[["B"]]))
+quicktarget("prev.%s",      fmt_list(gcprev_slugs, simid_sel_prep[["H"]]))
+quicktarget("prev.%s",      fmt_list(gcprev_slugs, simid_sel_prep[["O"]]))
+quicktarget("prev.%s",      fmt_list(gcprev_slugs, simid_sel_prep[["W"]]))
+quicktarget("prev.%s",      fmt_list(gcprev_slugs,
+                                     Reduce(intersect, simid_sel_prep)))
 
 quicktarget("i.prev",       simid_sel_gcpos) + facet_wrap(~selection_group)
 quicktarget("ir100.pop",    simid_sel_gcpos) + facet_wrap(~selection_group)
@@ -122,10 +146,12 @@ quicktarget("cc.vsupp.%s",  fmt_list(rslugs, simid_sel_gcpos[[3]]))
 quicktarget("prepCov.%s",   fmt_list(rslugs, simid_sel_gcpos[[1]]))
 quicktarget("prepCov.%s",   fmt_list(rslugs, simid_sel_gcpos[[2]]))
 quicktarget("prepCov.%s",   fmt_list(rslugs, simid_sel_gcpos[[3]]))
-
 quicktarget("prob.%s.tested", fmt_list(gcpos_slugs, simid_sel_gcpos[[1]]))
 quicktarget("prob.%s.tested", fmt_list(gcpos_slugs, simid_sel_gcpos[[2]]))
 quicktarget("prob.%s.tested", fmt_list(gcpos_slugs, simid_sel_gcpos[[3]]))
+quicktarget("prev.%s",      fmt_list(gcprev_slugs, simid_sel_gcpos[[1]]))
+quicktarget("prev.%s",      fmt_list(gcprev_slugs, simid_sel_gcpos[[2]]))
+quicktarget("prev.%s",      fmt_list(gcprev_slugs, simid_sel_gcpos[[3]]))
 
 quicktarget("prob.%s.tested", fmt_list(gcpos_slugs, simid_sel_gcpos_int))
 quicktarget("i.prev", list(hiv = simid_sel_gcpos_int))
@@ -133,6 +159,7 @@ quicktarget("ir100.pop", list(hiv = simid_sel_gcpos_int))
 quicktarget("cc.vsupp.%s", fmt_list(rslugs, simid_sel_gcpos_int))
 quicktarget("i.prev.dx.inf.%s", fmt_list(ageslugs, simid_sel_gcpos_int))
 quicktarget("prepCov.%s", fmt_list(rslugs, simid_sel_gcpos_int))
+quicktarget("prev.%s",      fmt_list(gcprev_slugs, simid_sel_gcpos_int))
 
 
 ################################################################################
@@ -274,6 +301,8 @@ narrow_rx_reinit    <- input_quantiles(vls_sel_inputs, "RX_REINIT")
 narrow_late_tester  <- input_quantiles(dx_sel_inputs, "LATE_TESTER")
 narrow_prep_discont <- input_quantiles(prep_sel_inputs, "DISCONT")
 
+
+## TODO Review and remove commented code
 ## narrow_hivcond <- hivprinc_sel_inputs[,
 ##   .(q25 = quantile(value, 0.25), q75 = quantile(value, 0.75)),
 ##   input

@@ -1,7 +1,7 @@
 # Calculate the calibration targets against which to compare the simulated
 # results.
 
-pacman::p_load(xgcmsm, data.table)
+pacman::p_load(xgcmsm, data.table, DescTools)
 
 racelabs <- c("B", "H", "O", "W")
 anatlabs <- c("rect", "ureth", "phar")
@@ -319,6 +319,34 @@ ct_prop_anatsite_pos_dt <- data.table(
   subgroups = gclabs,
   ll95      = c(0.104, 0.057, 0.079),
   ul95      = c(0.132, 0.093, 0.103)
+)
+
+
+# GONORRHEA TARGETS (HIV-NEGATIVE POPULATION) ----------------------------------
+
+## SOURCE:
+## Grov, C. et al. Characteristics associated with urethral and rectal gonorrhea
+## and chlamydia diagnoses in a US national sample of gay and bisexual men:
+## Results from the One Thousand Strong Panel. 43(3), 165.
+## http://dx.doi.org/10.1097/OLQ.0000000000000410
+
+## From Table 1
+N_grov <- 1071 #nolint
+ngcrect_grov  <- 19
+ngcureth_grov <- 5
+
+# NOTE DescTools::BinomCI() Agresti-Coull confidence intervals
+bt_gcrect <- BinomCI(ngcrect_grov, N_grov, method = "agresti-coull")
+bt_gcureth <- BinomCI(ngcureth_grov, N_grov, method = "agresti-coull")
+
+# population prevalence of urethral and rectal gonorrhea
+# among HIV-negative MSM
+ct_gc_pop_dt <- data.table(
+  target = "ct_gc_prev",
+  value = c(unname(bt_gcrect[1, 1]), unname(bt_gcureth[1, 1])),
+  subgroups = gclabs[1:2],
+  ll95 = c(bt_gcrect[1, 2], bt_gcureth[1, 2]),
+  ul95 = c(bt_gcrect[1, 3], bt_gcureth[1, 3])
 )
 
 
